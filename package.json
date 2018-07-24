@@ -1,0 +1,32 @@
+{
+  "name": "isobmff-inspector",
+  "version": "0.1.0",
+  "description": "Simple ISOBMFF parser, compatible with JavaScript and Node.JS",
+  "main": "dist/bundle.js",
+  "scripts": {
+    "build": "rollup -c"
+  },
+  "author": "peaberberian",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-preset-env": "^1.7.0",
+    "eslint": "^5.2.0",
+    "rollup": "^0.63.4",
+    "rollup-plugin-babel": "^3.0.7"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/peaBerberian/isobmff-inspector.git"
+  },
+  "keywords": [
+    "isobmff",
+    "parser",
+    "inspector",
+    "mp4"
+  ],
+  "bugs": {
+    "url": "https://github.com/peaBerberian/isobmff-inspector/issues"
+  },
+  "homepage": "https://github.com/peaBerberian/isobmff-inspector#readme"
+}
