@@ -4,7 +4,8 @@
   "description": "Simple ISOBMFF parser, compatible with JavaScript and Node.JS",
   "main": "dist/bundle.js",
   "scripts": {
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "lint": "eslint src/**/*.js"
   },
   "author": "peaberberian",
   "license": "MIT",
