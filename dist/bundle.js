@@ -1,8 +1,8 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
-  (global.inspectISOBMFF = factory());
-}(this, (function () { 'use strict';
+  (global = global || self, global.inspectISOBMFF = factory());
+}(this, function () { 'use strict';
 
   /**
    * Translate groups of 2 big-endian bytes to Integer (from 0 up to 65535).
@@ -13,43 +13,47 @@
   function be2toi(bytes, off) {
     return (bytes[0 + off] << 8) + bytes[1 + off];
   }
-
   /**
    * Translate groups of 3 big-endian bytes to Integer.
    * @param {TypedArray} bytes
    * @param {Number} off - The offset (from the start of the given array)
    * @returns {Number}
    */
+
+
   function be3toi(bytes, off) {
     return bytes[0 + off] * 0x0010000 + bytes[1 + off] * 0x0000100 + bytes[2 + off];
   }
-
   /**
    * Translate groups of 4 big-endian bytes to Integer.
    * @param {TypedArray} bytes
    * @param {Number} off - The offset (from the start of the given array)
    * @returns {Number}
    */
+
+
   function be4toi(bytes, off) {
     return bytes[0 + off] * 0x1000000 + bytes[1 + off] * 0x0010000 + bytes[2 + off] * 0x0000100 + bytes[3 + off];
   }
-
   /**
    * Translate groups of 4 big-endian bytes to Integer.
    * @param {TypedArray} bytes
    * @param {Number} off - The offset (from the start of the given array)
    * @returns {Number}
    */
+
+
   function be5toi(bytes, off) {
     return bytes[0 + off] * 0x100000000 + bytes[1 + off] * 0x001000000 + bytes[2 + off] * 0x000010000 + bytes[3 + off] * 0x000000100 + bytes[4 + off];
   }
-
   /**
    * Translate groups of 8 big-endian bytes to Integer.
    * @param {TypedArray} bytes
    * @param {Number} off - The offset (from the start of the given array)
    * @returns {Number}
    */
+
+
   function be8toi(bytes, off) {
     return (bytes[0 + off] * 0x1000000 + bytes[1 + off] * 0x0010000 + bytes[2 + off] * 0x0000100 + bytes[3 + off]) * 0x100000000 + bytes[4 + off] * 0x1000000 + bytes[5 + off] * 0x0010000 + bytes[6 + off] * 0x0000100 + bytes[7 + off];
   }
@@ -61,6 +65,7 @@
 
     var arr = uint8arr.slice(off, nbBytes + off);
     var hexStr = "";
+
     for (var i = 0; i < arr.length; i++) {
       var hex = (arr[i] & 0xff).toString(16);
       hex = hex.length === 1 ? "0" + hex : hex;
@@ -68,9 +73,9 @@
     }
 
     return hexStr.toUpperCase();
-  }
+  } // XXX TODO test that
 
-  // XXX TODO test that
+
   function betoa(uint8arr, off, nbBytes) {
     if (!uint8arr) {
       return "";
@@ -89,9 +94,9 @@
    * @param {Uint8Array} buffer
    * @returns {Object}
    */
+
   function createBufferReader(buffer) {
     var currentOffset = 0;
-
     return {
       /**
        * Returns the following byte, as a number between 0 and 255.
@@ -100,7 +105,6 @@
       getNextByte: function getNextByte() {
         this.getNextBytes(1);
       },
-
 
       /**
        * Returns the N next bytes, as an Uint8Array
@@ -111,10 +115,10 @@
         if (this.getRemainingLength() < nb) {
           return;
         }
+
         currentOffset += nb;
         return buffer.slice(0, nb);
       },
-
 
       /**
        * Returns the N next bytes, as a single number.
@@ -132,26 +136,34 @@
         if (this.getRemainingLength() < nbBytes) {
           return;
         }
-        var res = void 0;
+
+        var res;
+
         switch (nbBytes) {
           case 1:
             res = buffer[currentOffset];
             break;
+
           case 2:
             res = be2toi(buffer, currentOffset);
             break;
+
           case 3:
             res = be3toi(buffer, currentOffset);
             break;
+
           case 4:
             res = be4toi(buffer, currentOffset);
             break;
+
           case 5:
             res = be5toi(buffer, currentOffset);
             break;
+
           case 8:
             res = be8toi(buffer, currentOffset);
             break;
+
           default:
             throw new Error("not implemented yet.");
         }
@@ -159,7 +171,6 @@
         currentOffset += nbBytes;
         return res;
       },
-
 
       /**
        * Returns the N next bytes into a string of Hexadecimal values.
@@ -170,11 +181,12 @@
         if (this.getRemainingLength() < nbBytes) {
           return;
         }
+
         var res = bytesToHex(buffer, currentOffset, nbBytes);
+
         currentOffset += nbBytes;
         return res;
       },
-
 
       /**
        * Returns the N next bytes into a string.
@@ -185,12 +197,11 @@
         if (this.getRemainingLength() < nbBytes) {
           return;
         }
-        var res = betoa(buffer, currentOffset, nbBytes);
 
+        var res = betoa(buffer, currentOffset, nbBytes);
         currentOffset += nbBytes;
         return res;
       },
-
 
       /**
        * Returns the total length of the buffer
@@ -200,7 +211,6 @@
         return buffer.length;
       },
 
-
       /**
        * Returns the length of the buffer which is not yet parsed.
        * @returns {number}
@@ -208,7 +218,6 @@
       getRemainingLength: function getRemainingLength() {
         return Math.max(0, buffer.length - currentOffset);
       },
-
 
       /**
        * Returns true if this buffer is entirely parsed.
@@ -230,20 +239,24 @@
     name: "Data Reference Box",
     description: "",
     container: true,
-
     parser: function parser(reader) {
       var version = reader.bytesToInt(1);
       var flags = reader.bytesToInt(3);
+
       if (version !== 0) {
         throw new Error("invalid version");
       }
+
       if (flags !== 0) {
         throw new Error("invalid flags");
       }
 
       var entry_count = reader.bytesToInt(4);
-
-      return { version: version, flags: flags, entry_count: entry_count };
+      return {
+        version: version,
+        flags: flags,
+        entry_count: entry_count
+      };
     }
   };
 
@@ -262,7 +275,8 @@
     name: "File Type Box",
     description: "File type and compatibility",
     content: [{
-      /* name: "major brand", */ // optional name
+      /* name: "major brand", */
+      // optional name
       key: "major_brand",
       description: "Brand identifier."
     }, {
@@ -272,13 +286,12 @@
       key: "compatible_brands",
       description: "List of brands"
     }],
-
     parser: function parser(reader) {
       var len = reader.getTotalLength();
       var major_brand = reader.bytesToASCII(4);
       var minor_version = reader.bytesToInt(4);
-
       var compatArr = [];
+
       for (var i = 8; i < len; i += 4) {
         compatArr.push(reader.bytesToASCII(4));
       }
@@ -293,8 +306,7 @@
 
   var hdlr = {
     name: "Handler Reference Box",
-    description: "This box within a Media Box declares media type of the track, and thus the process by which the media‐data in the track is presented",
-
+    description: "This box within a Media Box declares media type of the track, " + "and thus the process by which the media‐data in the track is presented",
     parser: function parser(r) {
       var ret = {
         version: r.bytesToInt(1),
@@ -303,9 +315,9 @@
         handler_type: r.bytesToInt(4),
         reserved: [r.bytesToInt(4), r.bytesToInt(4), r.bytesToInt(4)]
       };
-
       var remaining = r.getRemainingLength();
       ret.name = "";
+
       while (remaining--) {
         ret.name += String.fromCharCode(parseInt(r.bytesToInt(1), 10));
       }
@@ -321,13 +333,10 @@
 
   var leva = {
     name: "Level Assignment Box",
-
     // TODO
     parser: function parser(reader) {
       var version = reader.bytesToInt(1);
-      var flags = reader.bytesToInt(3);
-
-      // ...
+      var flags = reader.bytesToInt(3); // ...
 
       return {
         version: version,
@@ -343,7 +352,7 @@
 
   var mdhd = {
     name: "Media Header Box",
-    description: "The media header declares overall information that is media‐independent, and relevant to characteristics of the media in a track.",
+    description: "The media header declares overall information that is " + "media‐independent, and relevant to characteristics of the media in a track.",
     parser: function parser(r) {
       var version = r.bytesToInt(1);
       var flags = r.bytesToInt(3);
@@ -351,7 +360,6 @@
       var modification_time = r.bytesToInt(version ? 8 : 4);
       var timescale = r.bytesToInt(4);
       var duration = r.bytesToInt(version ? 8 : 4);
-
       var next2Bytes = r.bytesToInt(2);
       var pad = next2Bytes >> 15 & 0x01;
       var language = [String.fromCharCode((next2Bytes >> 10 & 0x1F) + 0x60), String.fromCharCode((next2Bytes >> 5 & 0x1F) + 0x60), String.fromCharCode((next2Bytes & 0x1F) + 0x60)].join("");
@@ -378,18 +386,16 @@
 
   var mehd = {
     name: "Movie Extends Header Box",
-    description: "Provides the overall duration, including fragments, of a fragmented movie. If this box is not present, the overall duration must be computed by examining each fragment.",
-
+    description: "Provides the overall duration, including fragments, of a " + "fragmented movie. If this box is not present, the overall duration must " + "be computed by examining each fragment.",
     parser: function parser(reader) {
       var version = reader.bytesToInt(1);
+
       if (version > 1) {
         throw new Error("invalid version");
       }
 
       var flags = reader.bytesToInt(3);
-
       var fragmentDuration = version === 1 ? reader.bytesToInt(8) : reader.bytesToInt(4);
-
       return {
         version: version,
         flags: flags,
@@ -401,7 +407,6 @@
   var mfhd = {
     name: "Movie Fragment Header Box",
     description: "This box contains just a sequence number (usually starting at 1), as a safety check.",
-
     parser: function parser(r) {
       return {
         version: r.bytesToInt(1),
@@ -447,27 +452,27 @@
       key: "flags"
     }, {
       name: "creation_time",
-      description: "An integer that declares the creation time of the presentation (in seconds since midnight, Jan. 1, 1904, in UTC time)",
+      description: "An integer that declares the creation time of the " + "presentation (in seconds since midnight, Jan. 1, 1904, in UTC time)",
       key: "creationTime"
     }, {
       name: "modification_time",
-      description: "An integer that declares the most recent time the presentation was modified (in seconds since midnight, Jan. 1, 1904, in UTC time)",
+      description: "An integer that declares the most recent time the " + "presentation was modified (in seconds since midnight, Jan. 1, 1904, " + "in UTC time)",
       key: "modificationTime"
     }, {
       name: "timescale",
-      description: "An integer that specifies the time‐scale for the entire presentation; this is the number of time units that pass in one second. For example, a t me coordinate system that measures time in sixtieths of a second has a time scale of 60.",
+      description: "An integer that specifies the time‐scale for the entire " + "presentation; this is the number of time units that pass in one second. " + "For example, a t me coordinate system that measures time in sixtieths " + "of a second has a time scale of 60.",
       key: "timescale"
     }, {
       name: "duration",
-      description: "An integer that declares length of the presentation (in the indicated timescale). This property is derived from the presentation’s tracks: the value of this field corresponds to the duration of the longest track in the presentation. If the durat ion cannot be determined then duration is set to all 1s.",
+      description: "An integer that declares length of the presentation (in the " + "indicated timescale). This property is derived from the presentation’s " + "tracks: the value of this field corresponds to the duration of the " + "longest track in the presentation. If the durat ion cannot be " + "determined then duration is set to all 1s.",
       key: "duration"
     }, {
       name: "rate",
-      description: "A fixed point 16.16 number that indicates the preferred rate to play the presentation; 1.0 (0x00010000) is normal forward playback ",
+      description: "A fixed point 16.16 number that indicates the preferred " + "rate to play the presentation; 1.0 (0x00010000) is normal forward playback ",
       key: "rate"
     }, {
       name: "volume",
-      description: "A fixed point 8.8 number that indicates the preferred playback volume. 1.0 (0x0100) is full volume.",
+      description: "A fixed point 8.8 number that indicates the preferred playback " + "volume. 1.0 (0x0100) is full volume.",
       key: "volume"
     }, {
       name: "reserved 1",
@@ -479,7 +484,7 @@
       key: "reserved2"
     }, {
       name: "matrix",
-      description: "Provides a transformation matrix for the video; (u,v,w) are restricted here to (0,0,1), hex values (0,0,0x40000000).",
+      description: "Provides a transformation matrix for the video; (u,v,w) are " + " restricted here to (0,0,1), hex values (0,0,0x40000000).",
       key: "matrix"
     }, {
       name: "pre-defined",
@@ -487,22 +492,19 @@
       key: "predefined"
     }, {
       name: "next_track_ID",
-      description: "A non‐zero integer that indicates a value to use for the track ID of the next track to be added to this presentation. Zero is not a valid track ID value. The value of next_track_ID shall be larger than the largest track‐ID in use. If this valu e is equal to all 1s (32‐bit maxint), and a new media track is to be added, then a s earch must be made in the file for an unused track identifier.",
+      description: "A non‐zero integer that indicates a value to use for the " + "track ID of the next track to be added to this presentation. " + "Zero is not a valid track ID value. The value of next_track_ID shall " + "be larger than the largest track‐ID in use. If this valu e is equal to " + "all 1s (32‐bit maxint), and a new media track is to be added, then a " + "search must be made in the file for an unused track identifier.",
       key: "nextTrackId"
     }],
-
     parser: function parser(reader) {
       var version = reader.bytesToInt(1);
+
       if (version > 1) {
         throw new Error("invalid version");
       }
 
       var flags = reader.bytesToInt(3);
+      var creationTime, modificationTime, timescale, duration;
 
-      var creationTime = void 0,
-          modificationTime = void 0,
-          timescale = void 0,
-          duration = void 0;
       if (version === 1) {
         creationTime = reader.bytesToInt(8);
         modificationTime = reader.bytesToInt(8);
@@ -516,21 +518,17 @@
       }
 
       var rate = [reader.bytesToInt(2), reader.bytesToInt(2)].join(".");
-
       var volume = [reader.bytesToInt(1), reader.bytesToInt(1)].join(".");
-
       var reserved1 = reader.bytesToInt(2);
       var reserved2 = [reader.bytesToInt(4), reader.bytesToInt(4)];
-
       var matrixArr = [];
+
       for (var i = 0; i < 9; i++) {
         matrixArr.push(reader.bytesToInt(4));
       }
 
       var predefined = [reader.bytesToInt(4), reader.bytesToInt(4), reader.bytesToInt(4), reader.bytesToInt(4), reader.bytesToInt(4), reader.bytesToInt(4)];
-
       var nextTrackId = reader.bytesToInt(4);
-
       return {
         version: version,
         flags: flags,
@@ -569,9 +567,9 @@
       description: "Suggested delay to use when playing the file, such " + "that if download continues at the given rate, all data within " + "the file will arrive in time for its use and playback should " + "not need to stall.",
       key: "delay"
     }],
-
     parser: function parser(reader) {
       var version = reader.bytesToInt(1);
+
       if (version !== 0) {
         throw new Error("invalid version");
       }
@@ -608,31 +606,30 @@
     "EDEF8BA979D64ACEA3C827DCD51D21ED": "Widevine",
     "F239E769EFA348509C16A903C6932EFB": "PrimeTime"
   };
-
   var pssh = {
     name: "Protection System Specific Header",
     description: "",
     parser: function parser(reader) {
       var ret = {};
       ret.version = reader.bytesToInt(1);
+
       if (ret.version > 1) {
         throw new Error("invalid version");
       }
 
       ret.flags = reader.bytesToInt(3);
       ret.systemID = reader.bytesToHex(16);
-
       var systemIDName = SYSTEM_IDS[ret.systemID];
+
       if (systemIDName) {
-        ret.systemID += " (" + systemIDName + ")";
+        ret.systemID += " (".concat(systemIDName, ")");
       }
 
       if (ret.version === 1) {
         ret.KID_count = reader.bytesToInt(4);
-
         ret.KIDs = [];
-
         var i = ret.KID_count;
+
         while (i--) {
           ret.KIDs.push(reader.bytesToASCII(16));
         }
@@ -647,17 +644,15 @@
   var sdtp = {
     name: "Independent and Disposable Samples Box",
     description: "",
-
     parser: function parser(r) {
       var ret = {
         version: r.bytesToInt(1),
         flags: r.bytesToInt(3)
       };
-
       var remaining = r.getRemainingLength();
-
       var i = remaining;
       ret.samples = [];
+
       while (i--) {
         var byte = r.bytesToInt(1);
         ret.samples.push({
@@ -667,6 +662,7 @@
           sample_has_redundancy: byte & 0x03
         });
       }
+
       return ret;
     }
   };
@@ -674,7 +670,6 @@
   var sidx = {
     name: "Segment Index Box",
     description: "Index of the media stream",
-
     parser: function parser(r) {
       var version = r.bytesToInt(1);
       var flags = r.bytesToInt(3);
@@ -684,9 +679,9 @@
       var first_offset = r.bytesToInt(version === 0 ? 4 : 8);
       var reserved = r.bytesToInt(2);
       var reference_count = r.bytesToInt(2);
-
       var items = [];
       var i = reference_count;
+
       while (i--) {
         var first4Bytes = r.bytesToInt(4);
         var second4Bytes = r.bytesToInt(4);
@@ -729,7 +724,7 @@
 
   var tfdt = {
     name: "Track Fragment Decode Time",
-    description: "The absolute decode time, measured on the media timeline, of the first sample in decode order in the track fragment",
+    description: "The absolute decode time, measured on the media timeline, of " + "the first sample in decode order in the track fragment",
     parser: function parser(r) {
       var version = r.bytesToInt(1);
       return {
@@ -743,13 +738,10 @@
   var tfhd = {
     name: "Track Fragment Header Box",
     description: "",
-
     parser: function parser(r) {
       var ret = {};
-
       ret.version = r.bytesToInt(1);
       var flags = r.bytesToInt(3);
-
       var hasBaseDataOffset = flags & 0x000001;
       var hasSampleDescriptionIndex = flags & 0x000002;
       var hasDefaultSampleDuration = flags & 0x000008;
@@ -757,7 +749,6 @@
       var hasDefaultSampleFlags = flags & 0x000020;
       var durationIsEmpty = flags & 0x010000;
       var defaultBaseIsMOOF = flags & 0x020000;
-
       ret.flags = {
         "base-data-offset-present": !!hasBaseDataOffset,
         "sample-description-index-present": !!hasSampleDescriptionIndex,
@@ -767,21 +758,24 @@
         "duration-is-empty": !!durationIsEmpty,
         "default-base-is-moof": !!defaultBaseIsMOOF
       };
-
       ret.track_ID = r.bytesToInt(4);
 
       if (hasBaseDataOffset) {
         ret.base_data_offset = r.bytesToInt(8);
       }
+
       if (hasSampleDescriptionIndex) {
         ret.sample_description_index = r.bytesToInt(4);
       }
+
       if (hasDefaultSampleDuration) {
         ret.default_sample_duration = r.bytesToInt(4);
       }
+
       if (hasDefaultSampleSize) {
         ret.default_sample_size = r.bytesToInt(4);
       }
+
       if (hasDefaultSampleFlags) {
         ret.default_sample_flags = r.bytesToInt(4);
       }
@@ -793,7 +787,6 @@
   var tkhd = {
     name: "Track Header Box",
     description: "Characteristics of a single track.",
-
     parser: function parser(r) {
       var version = r.bytesToInt(1);
       return {
@@ -805,7 +798,6 @@
         reserved1: r.bytesToInt(4),
         duration: r.bytesToInt(version ? 8 : 4),
         reserved2: [r.bytesToInt(4), r.bytesToInt(4)],
-
         // TODO template? signed?
         layer: r.bytesToInt(2),
         alternate_group: r.bytesToInt(2),
@@ -826,14 +818,13 @@
 
   var trak = {
     name: "Track Box",
-    description: "Container box for a single track of a presentation. A presentation consists of one or more tracks. Each track is independent of the other tracks in the presentation and carries its own temporal and spatial information. Each track will contain its associated Media Box.",
+    description: "Container box for a single track of a presentation. " + "A presentation consists of one or more tracks. Each track is independent " + "of the other tracks in the presentation and carries its own temporal and " + "spatial information. Each track will contain its associated Media Box.",
     container: true
   };
 
   var trex = {
     name: "Track Extends Box",
-    description: "sets up default values used by the movie fragments. By setting defaults in this way, space and complexity can be saved in each Track Fragment Box",
-
+    description: "sets up default values used by the movie fragments. " + "By setting defaults in this way, space and complexity can be saved " + "in each Track Fragment Box",
     parser: function parser(reader) {
       return {
         version: reader.bytesToInt(1),
@@ -849,20 +840,16 @@
 
   var trun = {
     name: "Track Fragment Run Box",
-
     parser: function parser(r) {
       var ret = {};
       ret.version = r.bytesToInt(1);
-
       var flags = r.bytesToInt(3);
-
       var hasDataOffset = flags & 0x000001;
       var hasFirstSampleFlags = flags & 0x000004;
       var hasSampleDuration = flags & 0x000100;
       var hasSampleSize = flags & 0x000200;
       var hasSampleFlags = flags & 0x000400;
       var hasSampleCompositionOffset = flags & 0x000800;
-
       ret.flags = {
         "data-offset-present": !!hasDataOffset,
         "first-sample-flags-present": !!hasFirstSampleFlags,
@@ -871,10 +858,8 @@
         "sample-flags-present": !!hasSampleFlags,
         "sample-composition-time-offset-present": !!hasSampleCompositionOffset
       };
+      ret.sample_count = r.bytesToInt(4); // two's complement
 
-      ret.sample_count = r.bytesToInt(4);
-
-      // two's complement
       if (hasDataOffset) {
         ret.data_offset = ~~r.bytesToInt(4);
       }
@@ -885,21 +870,26 @@
 
       var i = ret.sample_count;
       ret.samples = [];
+
       while (i--) {
         var sample = {};
 
         if (hasSampleDuration) {
           sample.sample_duration = r.bytesToInt(4);
         }
+
         if (hasSampleSize) {
           sample.sample_size = r.bytesToInt(4);
         }
+
         if (hasSampleFlags) {
           sample.sample_flags = r.bytesToInt(4);
         }
+
         if (hasSampleCompositionOffset) {
           sample.sample_composition_time_offset = ret.version === 0 ? r.bytesToInt(4) : ~~r.bytesToInt(4);
         }
+
         ret.samples.push(sample);
       }
 
@@ -914,12 +904,12 @@
       var ret = {};
       ret.version = r.bytesToInt(1);
       ret.flags = r.bytesToInt(3);
-
       var remaining = r.getRemainingLength();
 
       if (remaining) {
         ret.location = String.fromCharCode.apply(String, r.bytesToInt(r.getRemainingLength()));
       }
+
       return ret;
     }
   };
@@ -931,14 +921,13 @@
       var ret = {};
       ret.version = r.bytesToInt(1);
       ret.flags = r.bytesToInt(3);
-
-      var remaining = r.getRemainingLength();
-
-      // TODO Check NULL-terminated stream for name+location
+      var remaining = r.getRemainingLength(); // TODO Check NULL-terminated stream for name+location
       // might also check flags for that
+
       if (remaining) {
         ret.name = String.fromCharCode.apply(String, r.bytesToInt(r.getRemainingLength()));
       }
+
       return ret;
     }
   };
@@ -950,22 +939,28 @@
 
   var vmhd = {
     name: "Video Media Header",
-    description: "The video media header contains general presentation information, independent of the coding, for video media.",
-
+    description: "The video media header contains general presentation " + "information, independent of the coding, for video media.",
     parser: function parser(reader) {
       var version = reader.bytesToInt(1);
       var flags = reader.bytesToInt(3);
+
       if (version !== 0) {
         throw new Error("invalid version");
       }
+
       if (flags !== 1) {
         throw new Error("invalid flags");
-      }
+      } // TODO template?
 
-      // TODO template?
+
       var graphicsmode = reader.bytesToInt(2);
       var opcolor = [reader.bytesToInt(2), reader.bytesToInt(2), reader.bytesToInt(2)];
-      return { version: version, flags: flags, graphicsmode: graphicsmode, opcolor: opcolor };
+      return {
+        version: version,
+        flags: flags,
+        graphicsmode: graphicsmode,
+        opcolor: opcolor
+      };
     }
   };
 
@@ -1012,13 +1007,13 @@
    * @param {Uint8Array} arr
    * @returns {Array.<Object>}
    */
+
   function recursiveParseBoxes(arr) {
     var i = 0;
     var returnedArray = [];
 
     var _loop = function _loop() {
       var currentOffset = i;
-
       var size = be4toi(arr, currentOffset);
       currentOffset += 4;
 
@@ -1031,7 +1026,6 @@
 
       var name = betoa(arr, currentOffset, 4);
       currentOffset += 4;
-
       var atomObject = {
         alias: name,
         size: size,
@@ -1041,6 +1035,7 @@
       if (name === "uuid") {
         var subtype = [];
         var j = 16;
+
         while (j--) {
           subtype.push(arr[currentOffset]);
           currentOffset += 1;
@@ -1059,22 +1054,24 @@
             description: el.description | ""
           };
           return acc;
-        }, {}) : { name: "", description: "" };
-
+        }, {}) : {
+          name: "",
+          description: ""
+        };
         atomObject.name = config.name || "";
         atomObject.description = config.description || "";
         var hasChildren = !!config.container;
-
         var content = arr.slice(currentOffset, size + i);
-        var contentForChildren = void 0;
+        var contentForChildren;
 
         if (typeof config.parser === "function") {
           var parserReader = createBufferReader(content);
           var result = {};
+
           try {
             result = config.parser(parserReader);
           } catch (e) {
-            console.warn("impossible to parse \"" + name + "\" box.", e);
+            console.warn("impossible to parse \"".concat(name, "\" box."), e);
           }
 
           if (hasChildren) {
@@ -1103,6 +1100,7 @@
           atomObject.children = childrenResult;
         }
       }
+
       i += size;
     };
 
@@ -1112,26 +1110,30 @@
 
     return returnedArray;
   }
-
   /**
    * Parse ISOBMFF file and translate it into a more useful array containing
    * "atom objects".
    * @param {ArrayBuffer|Uint8Array} arr
    * @returns {Array.<Object>}
    */
+
+
   function parseBoxes(arr) {
     if (arr instanceof Uint8Array) {
       return recursiveParseBoxes(arr);
     }
+
     if (arr instanceof ArrayBuffer) {
       return recursiveParseBoxes(new Uint8Array(arr));
     }
+
     if (arr.buffer instanceof ArrayBuffer) {
       return recursiveParseBoxes(new Uint8Array(arr.buffer));
     }
+
     throw new Error("Unrecognized format. " + "Please give an ArrayBuffer or TypedArray instead.");
   }
 
   return parseBoxes;
 
-})));
+}));
