@@ -1,6 +1,8 @@
 export default {
   name: "Track Extends Box",
-  description: "sets up default values used by the movie fragments. By setting defaults in this way, space and complexity can be saved in each Track Fragment Box",
+  description: "sets up default values used by the movie fragments. " +
+    "By setting defaults in this way, space and complexity can be saved " +
+    "in each Track Fragment Box",
 
   parser(reader) {
     return {

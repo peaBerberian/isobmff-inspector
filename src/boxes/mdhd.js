@@ -1,6 +1,7 @@
 export default {
   name: "Media Header Box",
-  description: "The media header declares overall information that is media‐independent, and relevant to characteristics of the media in a track.",
+  description: "The media header declares overall information that is " +
+    "media‐independent, and relevant to characteristics of the media in a track.",
   parser(r) {
     const version = r.bytesToInt(1);
     const flags = r.bytesToInt(3);

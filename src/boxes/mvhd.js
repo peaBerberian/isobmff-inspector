@@ -16,32 +16,44 @@ export default {
     },
     {
       name: "creation_time",
-      description: "An integer that declares the creation time of the presentation (in seconds since midnight, Jan. 1, 1904, in UTC time)",
-      key: "creationTime"
+      description: "An integer that declares the creation time of the " +
+       "presentation (in seconds since midnight, Jan. 1, 1904, in UTC time)",
+      key: "creationTime",
     },
     {
       name: "modification_time",
-      description: "An integer that declares the most recent time the presentation was modified (in seconds since midnight, Jan. 1, 1904, in UTC time)",
-      key: "modificationTime"
+      description: "An integer that declares the most recent time the " +
+      "presentation was modified (in seconds since midnight, Jan. 1, 1904, " +
+      "in UTC time)",
+      key: "modificationTime",
     },
     {
       name: "timescale",
-      description: "An integer that specifies the time‐scale for the entire presentation; this is the number of time units that pass in one second. For example, a t me coordinate system that measures time in sixtieths of a second has a time scale of 60.",
+      description: "An integer that specifies the time‐scale for the entire " +
+        "presentation; this is the number of time units that pass in one second. " +
+        "For example, a t me coordinate system that measures time in sixtieths " +
+        "of a second has a time scale of 60.",
       key: "timescale",
     },
     {
       name: "duration",
-      description: "An integer that declares length of the presentation (in the indicated timescale). This property is derived from the presentation’s tracks: the value of this field corresponds to the duration of the longest track in the presentation. If the durat ion cannot be determined then duration is set to all 1s.",
+      description: "An integer that declares length of the presentation (in the " +
+        "indicated timescale). This property is derived from the presentation’s " +
+        "tracks: the value of this field corresponds to the duration of the " +
+        "longest track in the presentation. If the durat ion cannot be " +
+        "determined then duration is set to all 1s.",
       key: "duration",
     },
     {
       name: "rate",
-      description: "A fixed point 16.16 number that indicates the preferred rate to play the presentation; 1.0 (0x00010000) is normal forward playback ",
+      description: "A fixed point 16.16 number that indicates the preferred " +
+        "rate to play the presentation; 1.0 (0x00010000) is normal forward playback ",
       key: "rate",
     },
     {
       name: "volume",
-      description: "A fixed point 8.8 number that indicates the preferred playback volume. 1.0 (0x0100) is full volume.",
+      description: "A fixed point 8.8 number that indicates the preferred playback " +
+        "volume. 1.0 (0x0100) is full volume.",
       key: "volume",
     },
     {
@@ -56,7 +68,8 @@ export default {
     },
     {
       name: "matrix",
-      description: "Provides a transformation matrix for the video; (u,v,w) are restricted here to (0,0,1), hex values (0,0,0x40000000).",
+      description: "Provides a transformation matrix for the video; (u,v,w) are " +
+        " restricted here to (0,0,1), hex values (0,0,0x40000000).",
       key: "matrix",
     },
     {
@@ -66,7 +79,12 @@ export default {
     },
     {
       name: "next_track_ID",
-      description: "A non‐zero integer that indicates a value to use for the track ID of the next track to be added to this presentation. Zero is not a valid track ID value. The value of next_track_ID shall be larger than the largest track‐ID in use. If this valu e is equal to all 1s (32‐bit maxint), and a new media track is to be added, then a s earch must be made in the file for an unused track identifier.",
+      description: "A non‐zero integer that indicates a value to use for the " +
+        "track ID of the next track to be added to this presentation. " +
+        "Zero is not a valid track ID value. The value of next_track_ID shall " +
+        "be larger than the largest track‐ID in use. If this valu e is equal to " +
+        "all 1s (32‐bit maxint), and a new media track is to be added, then a " +
+        "search must be made in the file for an unused track identifier.",
       key: "nextTrackId",
     },
   ],

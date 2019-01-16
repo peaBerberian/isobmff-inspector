@@ -68,12 +68,12 @@ function be8toi(bytes, off) {
       (bytes[0+off] * 0x1000000) +
       (bytes[1+off] * 0x0010000) +
       (bytes[2+off] * 0x0000100) +
-       (bytes[3+off])
-     ) * 0x100000000 +
-     (bytes[4+off] * 0x1000000) +
-     (bytes[5+off] * 0x0010000) +
-     (bytes[6+off] * 0x0000100) +
-     (bytes[7+off])
+      (bytes[3+off])
+    ) * 0x100000000 +
+    (bytes[4+off] * 0x1000000) +
+    (bytes[5+off] * 0x0010000) +
+    (bytes[6+off] * 0x0000100) +
+    (bytes[7+off])
   );
 }
 

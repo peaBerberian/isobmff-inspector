@@ -1,6 +1,7 @@
 export default {
   name: "Track Fragment Decode Time",
-  description: "The absolute decode time, measured on the media timeline, of the first sample in decode order in the track fragment",
+  description: "The absolute decode time, measured on the media timeline, of " +
+    "the first sample in decode order in the track fragment",
   parser(r) {
     const version = r.bytesToInt(1);
     return {

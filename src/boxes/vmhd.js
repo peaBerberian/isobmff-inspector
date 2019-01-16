@@ -1,6 +1,7 @@
 export default {
   name: "Video Media Header",
-  description: "The video media header contains general presentation information, independent of the coding, for video media.",
+  description: "The video media header contains general presentation " +
+    "information, independent of the coding, for video media.",
 
   parser(reader) {
     const version = reader.bytesToInt(1);

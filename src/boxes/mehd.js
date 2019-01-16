@@ -1,6 +1,8 @@
 export default {
   name: "Movie Extends Header Box",
-  description: "Provides the overall duration, including fragments, of a fragmented movie. If this box is not present, the overall duration must be computed by examining each fragment.",
+  description: "Provides the overall duration, including fragments, of a " +
+    "fragmented movie. If this box is not present, the overall duration must " +
+    "be computed by examining each fragment.",
 
   parser(reader) {
     const version = reader.bytesToInt(1);
