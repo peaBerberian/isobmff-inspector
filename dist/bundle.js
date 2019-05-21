@@ -177,7 +177,7 @@
        * @param {number}
        * @returns {string}
        */
-      bytesToHex: function bytesToHex$$1(nbBytes) {
+      bytesToHex: function bytesToHex$1(nbBytes) {
         if (this.getRemainingLength() < nbBytes) {
           return;
         }
@@ -271,7 +271,7 @@
     description: "This box can be completely ignored"
   };
 
-  var ftypBox = {
+  var ftyp = {
     name: "File Type Box",
     description: "File type and compatibility",
     content: [{
@@ -654,12 +654,13 @@
       ret.samples = [];
 
       while (i--) {
-        var byte = r.bytesToInt(1);
+        var _byte = r.bytesToInt(1);
+
         ret.samples.push({
-          is_leading: byte >> 6 & 0x03,
-          sample_depends_on: byte >> 4 & 0x03,
-          sample_is_depended_on: byte >> 2 & 0x03,
-          sample_has_redundancy: byte & 0x03
+          is_leading: _byte >> 6 & 0x03,
+          sample_depends_on: _byte >> 4 & 0x03,
+          sample_is_depended_on: _byte >> 2 & 0x03,
+          sample_has_redundancy: _byte & 0x03
         });
       }
 
@@ -718,8 +719,8 @@
   var styp = {
     name: "Segment Type Box",
     description: "",
-    content: ftypBox.content,
-    parser: ftypBox.parser
+    content: ftyp.content,
+    parser: ftyp.parser
   };
 
   var tfdt = {
@@ -969,7 +970,7 @@
     dref: dref,
     edts: edts,
     free: free,
-    ftyp: ftypBox,
+    ftyp: ftyp,
     hdlr: hdlr,
     iods: iods,
     leva: leva,
