@@ -18,9 +18,17 @@ import mvex from "./mvex.js";
 import mvhd from "./mvhd.js";
 import pdin from "./pdin.js";
 import pssh from "./pssh.js";
+import saio from "./saio.js";
+import saiz from "./saiz.js";
 import sdtp from "./sdtp.js";
 import sidx from "./sidx.js";
 import skip from "./skip.js";
+import stbl from "./stbl.js";
+import stco from "./stco.js";
+import stsc from "./stsc.js";
+import stsd from "./stsd.js";
+import stsz from "./stsz.js";
+import stts from "./stts.js";
 import styp from "./styp.js";
 import tfdt from "./tfdt.js";
 import tfhd from "./tfhd.js";
@@ -55,9 +63,17 @@ export default {
   mvhd,
   pdin,
   pssh,
+  saio,
+  saiz,
   sdtp,
   sidx,
   skip,
+  stbl,
+  stco,
+  stsc,
+  stsd,
+  stsz,
+  stts,
   styp,
   tfdt,
   tfhd,
