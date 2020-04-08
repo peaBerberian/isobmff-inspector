@@ -12,7 +12,7 @@ export default {
     // might also check flags for that
     if (remaining) {
       ret.name = String.fromCharCode.apply(
-        String, r.bytesToInt(r.getRemainingLength())
+        String, r.bytesToInt(r.getRemainingLength()),
       );
     }
     return ret;

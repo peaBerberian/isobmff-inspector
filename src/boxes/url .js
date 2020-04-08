@@ -10,7 +10,7 @@ export default {
 
     if (remaining) {
       ret.location = String.fromCharCode.apply(
-        String, r.bytesToInt(r.getRemainingLength())
+        String, r.bytesToInt(r.getRemainingLength()),
       );
     }
     return ret;
