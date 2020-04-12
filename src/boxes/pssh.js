@@ -47,12 +47,12 @@ export default {
 
       let i = ret.KID_count;
       while (i--) {
-        ret.KIDs.push(reader.bytesToASCII(16));
+        ret.KIDs.push([reader.bytesToHex(16)]);
       }
     }
 
     ret.data_length = reader.bytesToInt(4);
-    ret.data = reader.bytesToASCII(ret.data_length);
+    ret.data = reader.bytesToHex(ret.data_length);
     return ret;
   },
 };
