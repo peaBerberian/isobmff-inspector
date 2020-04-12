@@ -107,9 +107,17 @@ The inspector only parses the following ISOBMFF boxes for now:
   - mvhd
   - pdin
   - pssh
+  - saio
+  - saiz
   - sdtp
   - sidx
   - skip
+  - stbl
+  - stco
+  - stsc
+  - stsd
+  - stsz
+  - stts
   - styp
   - tfdt
   - tfhd
