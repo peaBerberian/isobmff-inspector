@@ -1,7 +1,7 @@
 # isobmff-inspector ############################################################
 
 The ISOBMFF-inspector is a simple module compatible with Node.js and JavaScript
-to facilitates ISOBMFF file parsing.
+to facilitate ISOBMFF file parsing.
 
 This is most of all useful for debugging purposes.
 
