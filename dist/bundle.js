@@ -2,7 +2,7 @@
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.inspectISOBMFF = factory());
-}(this, (function () { 'use strict';
+})(this, (function () { 'use strict';
 
   /**
    * Translate groups of 2 big-endian bytes to Integer (from 0 up to 65535).
@@ -1305,4 +1305,4 @@
 
   return parseBoxes;
 
-})));
+}));
