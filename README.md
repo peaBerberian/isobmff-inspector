@@ -89,20 +89,33 @@ as above.
 ## Parsed boxes ################################################################
 
 The inspector only parses the following ISOBMFF boxes for now:
+  - avc1
+  - avc3
+  - avcC
+  - co64
+  - ctts
   - dinf
   - dref
   - edts
+  - elst
+  - esds
   - free
   - ftyp
   - hdlr
+  - hev1
+  - hvc1
+  - hvcC
+  - ilst
   - mdat
   - mdhd
   - mdia
   - mehd
+  - meta
   - mfhd
   - minf
   - moof
   - moov
+  - mp4a
   - mvex
   - mvhd
   - pdin
@@ -112,10 +125,12 @@ The inspector only parses the following ISOBMFF boxes for now:
   - sdtp
   - sidx
   - skip
+  - smhd
   - stbl
   - stco
   - stsc
   - stsd
+  - stss
   - stsz
   - stts
   - styp
@@ -126,6 +141,7 @@ The inspector only parses the following ISOBMFF boxes for now:
   - trak
   - trex
   - trun
+  - udta
   - url
   - urn
   - vmhd

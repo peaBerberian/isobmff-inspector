@@ -30,6 +30,308 @@ var __inspectISOBMFFBundle = (() => {
     default: () => parseBoxes
   });
 
+  // src/boxes/helpers.js
+  function formatFixedPoint1616(value) {
+    return `${value >> 16}.${value & 65535}`;
+  }
+  function toSignedInt(value, bits) {
+    const maxUnsigned = 2 ** bits;
+    const signedBoundary = 2 ** (bits - 1);
+    return value >= signedBoundary ? value - maxUnsigned : value;
+  }
+  function parsePascalString(r, length) {
+    const stringLength = Math.min(r.bytesToInt(1), length - 1);
+    const value = stringLength > 0 ? r.bytesToASCII(stringLength) : "";
+    const paddingLength = length - 1 - stringLength;
+    if (paddingLength > 0) {
+      r.bytesToHex(paddingLength);
+    }
+    return value;
+  }
+  function parseVisualSampleEntry(r) {
+    const reserved = [];
+    for (let i = 0; i < 6; i++) {
+      reserved.push(r.bytesToInt(1));
+    }
+    const ret = {
+      reserved,
+      data_reference_index: r.bytesToInt(2),
+      pre_defined: r.bytesToInt(2),
+      reserved_1: r.bytesToInt(2),
+      pre_defined_1: [r.bytesToInt(4), r.bytesToInt(4), r.bytesToInt(4)],
+      width: r.bytesToInt(2),
+      height: r.bytesToInt(2),
+      horizresolution: formatFixedPoint1616(r.bytesToInt(4)),
+      vertresolution: formatFixedPoint1616(r.bytesToInt(4)),
+      reserved_2: r.bytesToInt(4),
+      frame_count: r.bytesToInt(2),
+      compressorname: parsePascalString(r, 32),
+      depth: r.bytesToInt(2),
+      pre_defined_2: r.bytesToInt(2)
+    };
+    return ret;
+  }
+  function parseAudioSampleEntry(r) {
+    const reserved = [];
+    for (let i = 0; i < 6; i++) {
+      reserved.push(r.bytesToInt(1));
+    }
+    const ret = {
+      reserved,
+      data_reference_index: r.bytesToInt(2),
+      version: r.bytesToInt(2),
+      revision_level: r.bytesToInt(2),
+      vendor: r.bytesToInt(4),
+      channelcount: r.bytesToInt(2),
+      samplesize: r.bytesToInt(2),
+      compression_id: r.bytesToInt(2),
+      packet_size: r.bytesToInt(2),
+      samplerate: formatFixedPoint1616(r.bytesToInt(4))
+    };
+    if (ret.version === 1) {
+      ret.version_1_fields = {
+        samples_per_packet: r.bytesToInt(4),
+        bytes_per_packet: r.bytesToInt(4),
+        bytes_per_frame: r.bytesToInt(4),
+        bytes_per_sample: r.bytesToInt(4)
+      };
+    } else if (ret.version === 2) {
+      ret.version_2_fields = {
+        struct_size: r.bytesToInt(4),
+        sample_rate: formatFixedPoint1616(r.bytesToInt(4)),
+        channel_count: r.bytesToInt(4),
+        reserved: r.bytesToInt(4),
+        bits_per_channel: r.bytesToInt(4),
+        format_specific_flags: r.bytesToInt(4),
+        bytes_per_audio_packet: r.bytesToInt(4),
+        LPCM_frames_per_audio_packet: r.bytesToInt(4)
+      };
+    }
+    return ret;
+  }
+  function parseDescriptorLength(r) {
+    let length = 0;
+    let size = 0;
+    while (size < 4) {
+      const currentByte = r.bytesToInt(1);
+      size += 1;
+      length = length << 7 | currentByte & 127;
+      if ((currentByte & 128) === 0) {
+        return {
+          length,
+          size
+        };
+      }
+    }
+    throw new Error("invalid descriptor length");
+  }
+  function parseNestedDescriptors(r, size) {
+    const descriptors = [];
+    let remaining = size;
+    while (remaining > 0) {
+      const before = r.getRemainingLength();
+      const descriptor = parseDescriptor(r);
+      const consumed = before - r.getRemainingLength();
+      remaining -= consumed;
+      descriptors.push(descriptor);
+    }
+    if (remaining !== 0) {
+      throw new Error("descriptor size mismatch");
+    }
+    return descriptors;
+  }
+  function parseDescriptorPayload(r, tag, size) {
+    if (tag === 3) {
+      const es_id = r.bytesToInt(2);
+      const flags = r.bytesToInt(1);
+      const ret = {
+        es_id,
+        stream_dependence_flag: !!(flags & 128),
+        URL_flag: !!(flags & 64),
+        OCRstream_flag: !!(flags & 32),
+        stream_priority: flags & 31
+      };
+      let consumed = 3;
+      if (ret.stream_dependence_flag) {
+        ret.depends_on_es_id = r.bytesToInt(2);
+        consumed += 2;
+      }
+      if (ret.URL_flag) {
+        const urlLength = r.bytesToInt(1);
+        ret.URL_length = urlLength;
+        ret.URL_string = urlLength > 0 ? r.bytesToASCII(urlLength) : "";
+        consumed += 1 + urlLength;
+      }
+      if (ret.OCRstream_flag) {
+        ret.ocr_es_id = r.bytesToInt(2);
+        consumed += 2;
+      }
+      if (size > consumed) {
+        ret.descriptors = parseNestedDescriptors(r, size - consumed);
+      }
+      return ret;
+    }
+    if (tag === 4) {
+      const objectTypeIndication = r.bytesToInt(1);
+      const streamByte = r.bytesToInt(1);
+      const ret = {
+        object_type_indication: objectTypeIndication,
+        stream_type: streamByte >> 2 & 63,
+        up_stream: !!(streamByte >> 1 & 1),
+        reserved: streamByte & 1,
+        buffer_size_db: r.bytesToInt(3),
+        max_bitrate: r.bytesToInt(4),
+        avg_bitrate: r.bytesToInt(4)
+      };
+      if (size > 13) {
+        ret.descriptors = parseNestedDescriptors(r, size - 13);
+      }
+      return ret;
+    }
+    if (tag === 5) {
+      return {
+        decoder_specific_info: size > 0 ? r.bytesToHex(size) : ""
+      };
+    }
+    if (tag === 6) {
+      return {
+        predefined: r.bytesToInt(1),
+        remaining_payload: size > 1 ? r.bytesToHex(size - 1) : ""
+      };
+    }
+    return {
+      data: size > 0 ? r.bytesToHex(size) : ""
+    };
+  }
+  function parseDescriptor(r) {
+    const tag = r.bytesToInt(1);
+    const { length, size } = parseDescriptorLength(r);
+    return {
+      tag,
+      size: length,
+      header_size: size + 1,
+      payload: parseDescriptorPayload(r, tag, length)
+    };
+  }
+
+  // src/boxes/avc1.js
+  var avc1_default = {
+    name: "AVC Sample Entry",
+    description: "",
+    container: true,
+    parser(r) {
+      return parseVisualSampleEntry(r);
+    }
+  };
+
+  // src/boxes/avc3.js
+  var avc3_default = {
+    name: "AVC3 Sample Entry",
+    description: "",
+    container: true,
+    parser(r) {
+      return parseVisualSampleEntry(r);
+    }
+  };
+
+  // src/boxes/avcC.js
+  var avcC_default = {
+    name: "AVC Decoder Configuration Record",
+    description: "",
+    parser(r) {
+      const configurationVersion = r.bytesToInt(1);
+      const AVCProfileIndication = r.bytesToInt(1);
+      const profileCompatibility = r.bytesToInt(1);
+      const AVCLevelIndication = r.bytesToInt(1);
+      const lengthSizeMinusOneByte = r.bytesToInt(1);
+      const numOfSequenceParameterSetsByte = r.bytesToInt(1);
+      const numOfSequenceParameterSets = numOfSequenceParameterSetsByte & 31;
+      const sequenceParameterSets = [];
+      for (let i = 0; i < numOfSequenceParameterSets; i++) {
+        const sequenceParameterSetLength = r.bytesToInt(2);
+        sequenceParameterSets.push({
+          length: sequenceParameterSetLength,
+          data: r.bytesToHex(sequenceParameterSetLength)
+        });
+      }
+      const numOfPictureParameterSets = r.bytesToInt(1);
+      const pictureParameterSets = [];
+      for (let i = 0; i < numOfPictureParameterSets; i++) {
+        const pictureParameterSetLength = r.bytesToInt(2);
+        pictureParameterSets.push({
+          length: pictureParameterSetLength,
+          data: r.bytesToHex(pictureParameterSetLength)
+        });
+      }
+      const ret = {
+        configurationVersion,
+        AVCProfileIndication,
+        profileCompatibility,
+        AVCLevelIndication,
+        lengthSizeMinusOne: lengthSizeMinusOneByte & 3,
+        numOfSequenceParameterSets,
+        sequenceParameterSets,
+        numOfPictureParameterSets,
+        pictureParameterSets
+      };
+      if (!r.isFinished()) {
+        ret.ext = r.bytesToHex(r.getRemainingLength());
+      }
+      return ret;
+    }
+  };
+
+  // src/boxes/co64.js
+  var co64_default = {
+    name: "Chunk Large Offset Box",
+    description: "",
+    parser(r) {
+      const version = r.bytesToInt(1);
+      if (version !== 0) {
+        throw new Error("invalid version");
+      }
+      const flags = r.bytesToInt(3);
+      const entry_count = r.bytesToInt(4);
+      const chunk_offsets = [];
+      for (let i = 0; i < entry_count; i++) {
+        chunk_offsets.push(r.bytesToInt(8));
+      }
+      return {
+        version,
+        flags,
+        entry_count,
+        chunk_offsets
+      };
+    }
+  };
+
+  // src/boxes/ctts.js
+  var ctts_default = {
+    name: "Composition Time to Sample Box",
+    description: "",
+    parser(r) {
+      const version = r.bytesToInt(1);
+      if (version > 1) {
+        throw new Error("invalid version");
+      }
+      const flags = r.bytesToInt(3);
+      const entry_count = r.bytesToInt(4);
+      const entries = [];
+      for (let i = 0; i < entry_count; i++) {
+        entries.push({
+          sample_count: r.bytesToInt(4),
+          sample_offset: version === 0 ? r.bytesToInt(4) : ~~r.bytesToInt(4)
+        });
+      }
+      return {
+        version,
+        flags,
+        entry_count,
+        entries
+      };
+    }
+  };
+
   // src/boxes/dinf.js
   var dinf_default = {
     name: "Data Information Box",
@@ -61,6 +363,57 @@ var __inspectISOBMFFBundle = (() => {
     name: "Edit Box",
     description: "Maps the presentation time\u2010line to the media time\u2010line as it is stored in the file.",
     container: true
+  };
+
+  // src/boxes/elst.js
+  var elst_default = {
+    name: "Edit List Box",
+    description: "",
+    parser(r) {
+      const version = r.bytesToInt(1);
+      if (version > 1) {
+        throw new Error("invalid version");
+      }
+      const flags = r.bytesToInt(3);
+      const entry_count = r.bytesToInt(4);
+      const entries = [];
+      for (let i = 0; i < entry_count; i++) {
+        entries.push({
+          segment_duration: r.bytesToInt(version === 0 ? 4 : 8),
+          media_time: version === 0 ? ~~r.bytesToInt(4) : r.bytesToInt(8),
+          media_rate_integer: r.bytesToInt(2),
+          media_rate_fraction: r.bytesToInt(2)
+        });
+      }
+      return {
+        version,
+        flags,
+        entry_count,
+        entries
+      };
+    }
+  };
+
+  // src/boxes/esds.js
+  var esds_default = {
+    name: "Elementary Stream Descriptor Box",
+    description: "",
+    parser(r) {
+      const version = r.bytesToInt(1);
+      if (version !== 0) {
+        throw new Error("invalid version");
+      }
+      const flags = r.bytesToInt(3);
+      const descriptors = [];
+      while (!r.isFinished()) {
+        descriptors.push(parseDescriptor(r));
+      }
+      return {
+        version,
+        flags,
+        descriptors
+      };
+    }
   };
 
   // src/boxes/free.js
@@ -124,6 +477,96 @@ var __inspectISOBMFFBundle = (() => {
       }
       return ret;
     }
+  };
+
+  // src/boxes/hev1.js
+  var hev1_default = {
+    name: "HEV1 Sample Entry",
+    description: "",
+    container: true,
+    parser(r) {
+      return parseVisualSampleEntry(r);
+    }
+  };
+
+  // src/boxes/hvc1.js
+  var hvc1_default = {
+    name: "HEVC Sample Entry",
+    description: "",
+    container: true,
+    parser(r) {
+      return parseVisualSampleEntry(r);
+    }
+  };
+
+  // src/boxes/hvcC.js
+  var hvcC_default = {
+    name: "HEVC Decoder Configuration Record",
+    description: "",
+    parser(r) {
+      const configurationVersion = r.bytesToInt(1);
+      const generalProfileByte = r.bytesToInt(1);
+      const generalCompatibilityFlagsUpper = r.bytesToInt(4);
+      const generalLevelIdc = r.bytesToInt(1);
+      const constraintUpper = r.bytesToInt(4);
+      const constraintLower = r.bytesToInt(2);
+      const minSpatialSegmentation = r.bytesToInt(2);
+      const parallelismType = r.bytesToInt(1);
+      const chromaFormat = r.bytesToInt(1);
+      const bitDepthLumaMinus8 = r.bytesToInt(1);
+      const bitDepthChromaMinus8 = r.bytesToInt(1);
+      const avgFrameRate = r.bytesToInt(2);
+      const miscByte = r.bytesToInt(1);
+      const numOfArrays = r.bytesToInt(1);
+      const arrays = [];
+      for (let i = 0; i < numOfArrays; i++) {
+        const arrayCompletenessByte = r.bytesToInt(1);
+        const numNalus = r.bytesToInt(2);
+        const nalus = [];
+        for (let j = 0; j < numNalus; j++) {
+          const nalUnitLength = r.bytesToInt(2);
+          nalus.push({
+            length: nalUnitLength,
+            data: r.bytesToHex(nalUnitLength)
+          });
+        }
+        arrays.push({
+          array_completeness: !!(arrayCompletenessByte >> 7 & 1),
+          reserved: !!(arrayCompletenessByte >> 6 & 1),
+          NAL_unit_type: arrayCompletenessByte & 63,
+          numNalus,
+          nalus
+        });
+      }
+      return {
+        configurationVersion,
+        general_profile_space: generalProfileByte >> 6 & 3,
+        general_tier_flag: !!(generalProfileByte >> 5 & 1),
+        general_profile_idc: generalProfileByte & 31,
+        general_profile_compatibility_flags: generalCompatibilityFlagsUpper,
+        general_constraint_indicator_flags: constraintUpper * 65536 + constraintLower,
+        general_level_idc: generalLevelIdc,
+        min_spatial_segmentation_idc: minSpatialSegmentation & 4095,
+        parallelismType: parallelismType & 3,
+        chromaFormat: chromaFormat & 3,
+        bitDepthLumaMinus8: bitDepthLumaMinus8 & 7,
+        bitDepthChromaMinus8: bitDepthChromaMinus8 & 7,
+        avgFrameRate,
+        constantFrameRate: miscByte >> 6 & 3,
+        numTemporalLayers: miscByte >> 3 & 7,
+        temporalIdNested: !!(miscByte >> 2 & 1),
+        lengthSizeMinusOne: miscByte & 3,
+        numOfArrays,
+        arrays
+      };
+    }
+  };
+
+  // src/boxes/ilst.js
+  var ilst_default = {
+    name: "Item List Box",
+    description: "",
+    container: true
   };
 
   // src/boxes/iods.js
@@ -210,6 +653,23 @@ var __inspectISOBMFFBundle = (() => {
     }
   };
 
+  // src/boxes/meta.js
+  var meta_default = {
+    name: "Metadata Box",
+    description: "",
+    container: true,
+    parser(r) {
+      const version = r.bytesToInt(1);
+      if (version !== 0) {
+        throw new Error("invalid version");
+      }
+      return {
+        version,
+        flags: r.bytesToInt(3)
+      };
+    }
+  };
+
   // src/boxes/mfhd.js
   var mfhd_default = {
     name: "Movie Fragment Header Box",
@@ -242,6 +702,16 @@ var __inspectISOBMFFBundle = (() => {
     name: "Movie Box",
     description: "The movie metadata",
     container: true
+  };
+
+  // src/boxes/mp4a.js
+  var mp4a_default = {
+    name: "MPEG-4 Audio Sample Entry",
+    description: "",
+    container: true,
+    parser(r) {
+      return parseAudioSampleEntry(r);
+    }
   };
 
   // src/boxes/mvex.js
@@ -587,6 +1057,24 @@ var __inspectISOBMFFBundle = (() => {
     description: "This box can be completely ignored."
   };
 
+  // src/boxes/smhd.js
+  var smhd_default = {
+    name: "Sound Media Header Box",
+    description: "",
+    parser(r) {
+      const version = r.bytesToInt(1);
+      if (version !== 0) {
+        throw new Error("invalid version");
+      }
+      return {
+        version,
+        flags: r.bytesToInt(3),
+        balance: toSignedInt(r.bytesToInt(2), 16) / 256,
+        reserved: r.bytesToInt(2)
+      };
+    }
+  };
+
   // src/boxes/stbl.js
   var stbl_default = {
     name: "Sample Table",
@@ -646,6 +1134,30 @@ var __inspectISOBMFFBundle = (() => {
       return ret;
     },
     container: true
+  };
+
+  // src/boxes/stss.js
+  var stss_default = {
+    name: "Sync Sample Box",
+    description: "",
+    parser(r) {
+      const version = r.bytesToInt(1);
+      if (version !== 0) {
+        throw new Error("invalid version");
+      }
+      const flags = r.bytesToInt(3);
+      const entry_count = r.bytesToInt(4);
+      const sample_numbers = [];
+      for (let i = 0; i < entry_count; i++) {
+        sample_numbers.push(r.bytesToInt(4));
+      }
+      return {
+        version,
+        flags,
+        entry_count,
+        sample_numbers
+      };
+    }
   };
 
   // src/boxes/stsz.js
@@ -874,6 +1386,13 @@ var __inspectISOBMFFBundle = (() => {
     }
   };
 
+  // src/boxes/udta.js
+  var udta_default = {
+    name: "User Data Box",
+    description: "",
+    container: true
+  };
+
   // src/boxes/url .js
   var url_default = {
     name: "Data Entry Url Box",
@@ -943,22 +1462,35 @@ var __inspectISOBMFFBundle = (() => {
 
   // src/boxes/index.js
   var boxes_default = {
+    avc1: avc1_default,
+    avc3: avc3_default,
+    avcC: avcC_default,
+    co64: co64_default,
+    ctts: ctts_default,
     dinf: dinf_default,
     dref: dref_default,
     edts: edts_default,
+    elst: elst_default,
+    esds: esds_default,
     free: free_default,
     ftyp: ftyp_default,
     hdlr: hdlr_default,
+    hev1: hev1_default,
+    hvc1: hvc1_default,
+    hvcC: hvcC_default,
     iods: iods_default,
+    ilst: ilst_default,
     leva: leva_default,
     mdat: mdat_default,
     mdhd: mdhd_default,
     mdia: mdia_default,
     mehd: mehd_default,
+    meta: meta_default,
     mfhd: mfhd_default,
     minf: minf_default,
     moof: moof_default,
     moov: moov_default,
+    mp4a: mp4a_default,
     mvex: mvex_default,
     mvhd: mvhd_default,
     pdin: pdin_default,
@@ -967,11 +1499,13 @@ var __inspectISOBMFFBundle = (() => {
     saiz: saiz_default,
     sdtp: sdtp_default,
     sidx: sidx_default,
+    smhd: smhd_default,
     skip: skip_default,
     stbl: stbl_default,
     stco: stco_default,
     stsc: stsc_default,
     stsd: stsd_default,
+    stss: stss_default,
     stsz: stsz_default,
     stts: stts_default,
     styp: styp_default,
@@ -982,6 +1516,7 @@ var __inspectISOBMFFBundle = (() => {
     trak: trak_default,
     trex: trex_default,
     trun: trun_default,
+    udta: udta_default,
     "url ": url_default,
     "urn ": urn_default,
     uuid: uuid_default,
