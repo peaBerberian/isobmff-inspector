@@ -108,10 +108,10 @@ export default {
 
     let creationTime, modificationTime, timescale, duration;
     if (version === 1) {
-      creationTime = reader.bytesToInt(8);
-      modificationTime = reader.bytesToInt(8);
+      creationTime = reader.bytesToUint64();
+      modificationTime = reader.bytesToUint64();
       timescale = reader.bytesToInt(4);
-      duration = reader.bytesToInt(8);
+      duration = reader.bytesToUint64();
     } else {
       creationTime = reader.bytesToInt(4);
       modificationTime = reader.bytesToInt(4);

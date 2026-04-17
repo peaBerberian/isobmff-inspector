@@ -1,3 +1,5 @@
+import { toSignedInt } from "./helpers.js";
+
 export default {
   name: "Edit List Box",
   description: "",
@@ -14,9 +16,9 @@ export default {
 
     for (let i = 0; i < entry_count; i++) {
       entries.push({
-        segment_duration: r.bytesToInt(version === 0 ? 4 : 8),
-        media_time: version === 0 ? ~~r.bytesToInt(4) : r.bytesToInt(8),
-        media_rate_integer: r.bytesToInt(2),
+        segment_duration: version === 0 ? r.bytesToInt(4) : r.bytesToUint64(),
+        media_time: version === 0 ? ~~r.bytesToInt(4) : r.bytesToInt64(),
+        media_rate_integer: toSignedInt(r.bytesToInt(2), 16),
         media_rate_fraction: r.bytesToInt(2),
       });
     }

@@ -29,7 +29,7 @@ export default {
     ret.track_ID = r.bytesToInt(4);
 
     if (hasBaseDataOffset) {
-      ret.base_data_offset = r.bytesToInt(8);
+      ret.base_data_offset = r.bytesToUint64();
     }
     if (hasSampleDescriptionIndex) {
       ret.sample_description_index = r.bytesToInt(4);

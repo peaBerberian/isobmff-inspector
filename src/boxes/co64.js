@@ -13,7 +13,7 @@ export default {
     const chunk_offsets = [];
 
     for (let i = 0; i < entry_count; i++) {
-      chunk_offsets.push(r.bytesToInt(8));
+      chunk_offsets.push(r.bytesToUint64());
     }
 
     return {

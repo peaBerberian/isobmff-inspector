@@ -6,10 +6,10 @@ export default {
   parser(r) {
     const version = r.bytesToInt(1);
     const flags = r.bytesToInt(3);
-    const creation_time = r.bytesToInt(version ? 8 : 4);
-    const modification_time = r.bytesToInt(version ? 8 : 4);
+    const creation_time = version ? r.bytesToUint64() : r.bytesToInt(4);
+    const modification_time = version ? r.bytesToUint64() : r.bytesToInt(4);
     const timescale = r.bytesToInt(4);
-    const duration = r.bytesToInt(version ? 8 : 4);
+    const duration = version ? r.bytesToUint64() : r.bytesToInt(4);
 
     const next2Bytes = r.bytesToInt(2);
     const pad = (next2Bytes >> 15) & 0x01;

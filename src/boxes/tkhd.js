@@ -7,11 +7,11 @@ export default {
     return {
       version,
       flags: r.bytesToInt(3),
-      creation_time: r.bytesToInt(version ? 8 : 4),
-      modification_time: r.bytesToInt(version ? 8 : 4),
+      creation_time: version ? r.bytesToUint64() : r.bytesToInt(4),
+      modification_time: version ? r.bytesToUint64() : r.bytesToInt(4),
       track_ID: r.bytesToInt(4),
       reserved1: r.bytesToInt(4),
-      duration: r.bytesToInt(version ? 8 : 4),
+      duration: version ? r.bytesToUint64() : r.bytesToInt(4),
       reserved2: [r.bytesToInt(4), r.bytesToInt(4)],
 
       // TODO template? signed?
