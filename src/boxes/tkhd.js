@@ -12,10 +12,7 @@ export default {
       track_ID: r.bytesToInt(4),
       reserved1: r.bytesToInt(4),
       duration: r.bytesToInt(version ? 8 : 4),
-      reserved2: [
-        r.bytesToInt(4),
-        r.bytesToInt(4),
-      ],
+      reserved2: [r.bytesToInt(4), r.bytesToInt(4)],
 
       // TODO template? signed?
       layer: r.bytesToInt(2),

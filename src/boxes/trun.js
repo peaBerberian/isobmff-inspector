@@ -49,8 +49,8 @@ export default {
         sample.sample_flags = r.bytesToInt(4);
       }
       if (hasSampleCompositionOffset) {
-        sample.sample_composition_time_offset = ret.version === 0 ?
-          r.bytesToInt(4) : ~~r.bytesToInt(4);
+        sample.sample_composition_time_offset =
+          ret.version === 0 ? r.bytesToInt(4) : ~~r.bytesToInt(4);
       }
       ret.samples.push(sample);
     }

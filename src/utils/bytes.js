@@ -5,10 +5,7 @@
  * @returns {Number}
  */
 function be2toi(bytes, off) {
-  return (
-    (bytes[0+off] << 8) +
-    (bytes[1+off])
-  );
+  return (bytes[0 + off] << 8) + bytes[1 + off];
 }
 
 /**
@@ -19,9 +16,7 @@ function be2toi(bytes, off) {
  */
 function be3toi(bytes, off) {
   return (
-    (bytes[0+off] * 0x0010000) +
-    (bytes[1+off] * 0x0000100) +
-    (bytes[2+off])
+    bytes[0 + off] * 0x0010000 + bytes[1 + off] * 0x0000100 + bytes[2 + off]
   );
 }
 
@@ -33,10 +28,10 @@ function be3toi(bytes, off) {
  */
 function be4toi(bytes, off) {
   return (
-    (bytes[0+off] * 0x1000000) +
-    (bytes[1+off] * 0x0010000) +
-    (bytes[2+off] * 0x0000100) +
-    (bytes[3+off])
+    bytes[0 + off] * 0x1000000 +
+    bytes[1 + off] * 0x0010000 +
+    bytes[2 + off] * 0x0000100 +
+    bytes[3 + off]
   );
 }
 
@@ -48,11 +43,11 @@ function be4toi(bytes, off) {
  */
 function be5toi(bytes, off) {
   return (
-    (bytes[0+off] * 0x100000000) +
-    (bytes[1+off] * 0x001000000) +
-    (bytes[2+off] * 0x000010000) +
-    (bytes[3+off] * 0x000000100) +
-    (bytes[4+off])
+    bytes[0 + off] * 0x100000000 +
+    bytes[1 + off] * 0x001000000 +
+    bytes[2 + off] * 0x000010000 +
+    bytes[3 + off] * 0x000000100 +
+    bytes[4 + off]
   );
 }
 
@@ -64,16 +59,15 @@ function be5toi(bytes, off) {
  */
 function be8toi(bytes, off) {
   return (
-    (
-      (bytes[0+off] * 0x1000000) +
-      (bytes[1+off] * 0x0010000) +
-      (bytes[2+off] * 0x0000100) +
-      (bytes[3+off])
-    ) * 0x100000000 +
-    (bytes[4+off] * 0x1000000) +
-    (bytes[5+off] * 0x0010000) +
-    (bytes[6+off] * 0x0000100) +
-    (bytes[7+off])
+    (bytes[0 + off] * 0x1000000 +
+      bytes[1 + off] * 0x0010000 +
+      bytes[2 + off] * 0x0000100 +
+      bytes[3 + off]) *
+      0x100000000 +
+    bytes[4 + off] * 0x1000000 +
+    bytes[5 + off] * 0x0010000 +
+    bytes[6 + off] * 0x0000100 +
+    bytes[7 + off]
   );
 }
 
@@ -86,7 +80,7 @@ function bytesToHex(uint8arr, off, nbBytes) {
   let hexStr = "";
   for (let i = 0; i < arr.length; i++) {
     let hex = (arr[i] & 0xff).toString(16);
-    hex = (hex.length === 1) ? "0" + hex : hex;
+    hex = hex.length === 1 ? `0${hex}` : hex;
     hexStr += hex;
   }
 
@@ -103,12 +97,4 @@ function betoa(uint8arr, off, nbBytes) {
   return String.fromCharCode.apply(String, arr);
 }
 
-export {
-  be2toi,
-  be3toi,
-  be4toi,
-  be5toi,
-  be8toi,
-  bytesToHex,
-  betoa,
-};
+export { be2toi, be3toi, be4toi, be5toi, be8toi, betoa, bytesToHex };

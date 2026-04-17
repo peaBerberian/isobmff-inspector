@@ -1,6 +1,6 @@
-import { be4toi, be8toi, betoa } from "./utils/bytes.js";
-import BufferReader from "./utils/buffer_reader.js";
 import definitions from "./boxes/index.js";
+import BufferReader from "./utils/buffer_reader.js";
+import { be4toi, be8toi, betoa } from "./utils/bytes.js";
 
 /**
  * Parse recursively ISOBMFF Uint8Array.
@@ -11,7 +11,7 @@ function recursiveParseBoxes(arr) {
   let i = 0;
   const returnedArray = [];
 
-  while ( i < arr.length) {
+  while (i < arr.length) {
     let currentOffset = i;
 
     let size = be4toi(arr, currentOffset);
@@ -36,9 +36,9 @@ function recursiveParseBoxes(arr) {
     if (name === "uuid") {
       const subtype = [];
       let j = 16;
-      while(j--) {
+      while (j--) {
         subtype.push(arr[currentOffset]);
-        currentOffset +=1;
+        currentOffset += 1;
       }
 
       atomObject.subtype = subtype;
@@ -48,14 +48,15 @@ function recursiveParseBoxes(arr) {
 
     if (definitions[name]) {
       const config = definitions[name];
-      const contentInfos = config.content ?
-        config.content.reduce((acc, el) => {
-          acc[el.key] = {
-            name: el.name || "",
-            description: el.description | "",
-          };
-          return acc;
-        }, {}) : { name: "", description: "" };
+      const contentInfos = config.content
+        ? config.content.reduce((acc, el) => {
+            acc[el.key] = {
+              name: el.name || "",
+              description: el.description | "",
+            };
+            return acc;
+          }, {})
+        : { name: "", description: "" };
 
       atomObject.name = config.name || "";
       atomObject.description = config.description || "";
@@ -77,8 +78,11 @@ function recursiveParseBoxes(arr) {
           const remaining = parserReader.getRemainingLength();
           contentForChildren = content.slice(content.length - remaining);
         } else if (!parserReader.isFinished()) {
-          console.warn("not everything has been parsed for box: " + name +
-            ". Missing", parserReader.getRemainingLength(), "bytes.");
+          console.warn(
+            `not everything has been parsed for box: ${name}. Missing`,
+            parserReader.getRemainingLength(),
+            "bytes.",
+          );
         }
 
         delete result.__data__;
@@ -89,9 +93,14 @@ function recursiveParseBoxes(arr) {
             infos.name = key;
           }
 
-          atomObject.values.push(Object.assign({
-            value: result[key],
-          }, infos));
+          atomObject.values.push(
+            Object.assign(
+              {
+                value: result[key],
+              },
+              infos,
+            ),
+          );
         });
       }
 
@@ -113,7 +122,7 @@ function recursiveParseBoxes(arr) {
  * @returns {Array.<Object>}
  */
 export default function parseBoxes(arr) {
-  if(arr instanceof Uint8Array) {
+  if (arr instanceof Uint8Array) {
     return recursiveParseBoxes(arr);
   }
   if (arr instanceof ArrayBuffer) {
@@ -122,6 +131,8 @@ export default function parseBoxes(arr) {
   if (arr.buffer instanceof ArrayBuffer) {
     return recursiveParseBoxes(new Uint8Array(arr.buffer));
   }
-  throw new Error("Unrecognized format. " +
-    "Please give an ArrayBuffer or TypedArray instead.");
+  throw new Error(
+    "Unrecognized format. " +
+      "Please give an ArrayBuffer or TypedArray instead.",
+  );
 }

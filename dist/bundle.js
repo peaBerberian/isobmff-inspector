@@ -30,158 +30,6 @@ var __inspectISOBMFFBundle = (() => {
     default: () => parseBoxes
   });
 
-  // src/utils/bytes.js
-  function be2toi(bytes, off) {
-    return (bytes[0 + off] << 8) + bytes[1 + off];
-  }
-  function be3toi(bytes, off) {
-    return bytes[0 + off] * 65536 + bytes[1 + off] * 256 + bytes[2 + off];
-  }
-  function be4toi(bytes, off) {
-    return bytes[0 + off] * 16777216 + bytes[1 + off] * 65536 + bytes[2 + off] * 256 + bytes[3 + off];
-  }
-  function be5toi(bytes, off) {
-    return bytes[0 + off] * 4294967296 + bytes[1 + off] * 16777216 + bytes[2 + off] * 65536 + bytes[3 + off] * 256 + bytes[4 + off];
-  }
-  function be8toi(bytes, off) {
-    return (bytes[0 + off] * 16777216 + bytes[1 + off] * 65536 + bytes[2 + off] * 256 + bytes[3 + off]) * 4294967296 + bytes[4 + off] * 16777216 + bytes[5 + off] * 65536 + bytes[6 + off] * 256 + bytes[7 + off];
-  }
-  function bytesToHex(uint8arr, off, nbBytes) {
-    if (!uint8arr) {
-      return "";
-    }
-    const arr = uint8arr.slice(off, nbBytes + off);
-    let hexStr = "";
-    for (let i = 0; i < arr.length; i++) {
-      let hex = (arr[i] & 255).toString(16);
-      hex = hex.length === 1 ? "0" + hex : hex;
-      hexStr += hex;
-    }
-    return hexStr.toUpperCase();
-  }
-  function betoa(uint8arr, off, nbBytes) {
-    if (!uint8arr) {
-      return "";
-    }
-    const arr = uint8arr.slice(off, nbBytes + off);
-    return String.fromCharCode.apply(String, arr);
-  }
-
-  // src/utils/buffer_reader.js
-  function createBufferReader(buffer) {
-    let currentOffset = 0;
-    return {
-      /**
-       * Returns the following byte, as a number between 0 and 255.
-       * @returns {number}
-       */
-      getNextByte() {
-        this.getNextBytes(1);
-      },
-      /**
-       * Returns the N next bytes, as an Uint8Array
-       * @param {number} nb
-       * @returns {Uint8Array}
-       */
-      getNextBytes(nb) {
-        if (this.getRemainingLength() < nb) {
-          return;
-        }
-        currentOffset += nb;
-        return buffer.slice(0, nb);
-      },
-      /**
-       * Returns the N next bytes, as a single number.
-       *
-       * /!\ only work for now for 1, 2, 3, 4, 5 or 8 bytes.
-       * TODO Define a more global solution.
-       *
-       * /!\ Depending on the size of the number, it may be larger than JS'
-       * limit.
-       *
-       * @param {number} nb
-       * @returns {number}
-       */
-      bytesToInt(nbBytes) {
-        if (this.getRemainingLength() < nbBytes) {
-          return;
-        }
-        let res;
-        switch (nbBytes) {
-          case 1:
-            res = buffer[currentOffset];
-            break;
-          case 2:
-            res = be2toi(buffer, currentOffset);
-            break;
-          case 3:
-            res = be3toi(buffer, currentOffset);
-            break;
-          case 4:
-            res = be4toi(buffer, currentOffset);
-            break;
-          case 5:
-            res = be5toi(buffer, currentOffset);
-            break;
-          case 8:
-            res = be8toi(buffer, currentOffset);
-            break;
-          default:
-            throw new Error("not implemented yet.");
-        }
-        currentOffset += nbBytes;
-        return res;
-      },
-      /**
-       * Returns the N next bytes into a string of Hexadecimal values.
-       * @param {number}
-       * @returns {string}
-       */
-      bytesToHex(nbBytes) {
-        if (this.getRemainingLength() < nbBytes) {
-          return;
-        }
-        const res = bytesToHex(buffer, currentOffset, nbBytes);
-        currentOffset += nbBytes;
-        return res;
-      },
-      /**
-       * Returns the N next bytes into a string.
-       * @param {number}
-       * @returns {string}
-       */
-      bytesToASCII(nbBytes) {
-        if (this.getRemainingLength() < nbBytes) {
-          return;
-        }
-        const res = betoa(buffer, currentOffset, nbBytes);
-        currentOffset += nbBytes;
-        return res;
-      },
-      /**
-       * Returns the total length of the buffer
-       * @returns {number}
-       */
-      getTotalLength() {
-        return buffer.length;
-      },
-      /**
-       * Returns the length of the buffer which is not yet parsed.
-       * @returns {number}
-       */
-      getRemainingLength() {
-        return Math.max(0, buffer.length - currentOffset);
-      },
-      /**
-       * Returns true if this buffer is entirely parsed.
-       * @returns {boolean}
-       */
-      isFinished() {
-        return buffer.length <= currentOffset;
-      }
-    };
-  }
-
   // src/boxes/dinf.js
   var dinf_default = {
     name: "Data Information Box",
@@ -267,11 +115,7 @@ var __inspectISOBMFFBundle = (() => {
         flags: r.bytesToInt(3),
         pre_defined: r.bytesToInt(4),
         handler_type: r.bytesToInt(4),
-        reserved: [
-          r.bytesToInt(4),
-          r.bytesToInt(4),
-          r.bytesToInt(4)
-        ]
+        reserved: [r.bytesToInt(4), r.bytesToInt(4), r.bytesToInt(4)]
       };
       let remaining = r.getRemainingLength();
       ret.name = "";
@@ -361,7 +205,7 @@ var __inspectISOBMFFBundle = (() => {
       return {
         version,
         flags,
-        "fragment_duration": fragmentDuration
+        fragment_duration: fragmentDuration
       };
     }
   };
@@ -495,19 +339,10 @@ var __inspectISOBMFFBundle = (() => {
         timescale = reader.bytesToInt(4);
         duration = reader.bytesToInt(4);
       }
-      const rate = [
-        reader.bytesToInt(2),
-        reader.bytesToInt(2)
-      ].join(".");
-      const volume = [
-        reader.bytesToInt(1),
-        reader.bytesToInt(1)
-      ].join(".");
+      const rate = [reader.bytesToInt(2), reader.bytesToInt(2)].join(".");
+      const volume = [reader.bytesToInt(1), reader.bytesToInt(1)].join(".");
       const reserved1 = reader.bytesToInt(2);
-      const reserved2 = [
-        reader.bytesToInt(4),
-        reader.bytesToInt(4)
-      ];
+      const reserved2 = [reader.bytesToInt(4), reader.bytesToInt(4)];
       const matrixArr = [];
       for (let i = 0; i < 9; i++) {
         matrixArr.push(reader.bytesToInt(4));
@@ -595,13 +430,13 @@ var __inspectISOBMFFBundle = (() => {
     "992C46E6C4374899B6A050FA91AD0E39": "SteelKnot",
     "9A04F07998404286AB92E65BE0885F95": "PlayReady",
     "9A27DD82FDE247258CBC4234AA06EC09": "Verimatrix VCAS",
-    "A68129D3575B4F1A9CBA3223846CF7C3": "VideoGuard Everywhere",
-    "ADB41C242DBF4A6D958B4457C0D27B95": "Nagra",
-    "B4413586C58CFFB094A5D4896C1AF6C3": "Viaccess-Orca",
-    "DCF4E3E362F158187BA60A6FE33FF3DD": "DigiCAP",
-    "E2719D58A985B3C9781AB030AF78D30E": "ClearKey",
-    "EDEF8BA979D64ACEA3C827DCD51D21ED": "Widevine",
-    "F239E769EFA348509C16A903C6932EFB": "PrimeTime"
+    A68129D3575B4F1A9CBA3223846CF7C3: "VideoGuard Everywhere",
+    ADB41C242DBF4A6D958B4457C0D27B95: "Nagra",
+    B4413586C58CFFB094A5D4896C1AF6C3: "Viaccess-Orca",
+    DCF4E3E362F158187BA60A6FE33FF3DD: "DigiCAP",
+    E2719D58A985B3C9781AB030AF78D30E: "ClearKey",
+    EDEF8BA979D64ACEA3C827DCD51D21ED: "Widevine",
+    F239E769EFA348509C16A903C6932EFB: "PrimeTime"
   };
   var pssh_default = {
     name: "Protection System Specific Header",
@@ -640,7 +475,7 @@ var __inspectISOBMFFBundle = (() => {
       const ret = {};
       ret.version = r.bytesToInt(1);
       ret.flags = r.bytesToInt(3);
-      if (ret.flags == 1) {
+      if (ret.flags === 1) {
         ret.aux_info_type = r.bytesToInt(4);
         ret.aux_info_type_parameter = r.bytesToInt(4);
       }
@@ -648,7 +483,7 @@ var __inspectISOBMFFBundle = (() => {
       ret.offset = [];
       let i = ret.entry_count;
       while (i--) {
-        ret.offset.push(r.bytesToInt(ret.version == 0 ? 4 : 8));
+        ret.offset.push(r.bytesToInt(ret.version === 0 ? 4 : 8));
       }
       return ret;
     }
@@ -662,13 +497,13 @@ var __inspectISOBMFFBundle = (() => {
       const ret = {};
       ret.version = r.bytesToInt(1);
       ret.flags = r.bytesToInt(3);
-      if (ret.flags == 1) {
+      if (ret.flags === 1) {
         ret.aux_info_type = r.bytesToInt(4);
         ret.aux_info_type_parameter = r.bytesToInt(4);
       }
       ret.default_sample_info_size = r.bytesToInt(1);
       ret.sample_count = r.bytesToInt(4);
-      if (ret.default_sample_info_size == 0) {
+      if (ret.default_sample_info_size === 0) {
         ret.sample_info_size = [];
         let i = ret.sample_count;
         while (i--) {
@@ -823,7 +658,7 @@ var __inspectISOBMFFBundle = (() => {
       ret.flags = r.bytesToInt(3);
       ret.sample_size = r.bytesToInt(4);
       ret.sample_count = r.bytesToInt(4);
-      if (ret.sample_size == 0) {
+      if (ret.sample_size === 0) {
         ret.entries = [];
         let i = ret.sample_count;
         while (i--) {
@@ -935,10 +770,7 @@ var __inspectISOBMFFBundle = (() => {
         track_ID: r.bytesToInt(4),
         reserved1: r.bytesToInt(4),
         duration: r.bytesToInt(version ? 8 : 4),
-        reserved2: [
-          r.bytesToInt(4),
-          r.bytesToInt(4)
-        ],
+        reserved2: [r.bytesToInt(4), r.bytesToInt(4)],
         // TODO template? signed?
         layer: r.bytesToInt(2),
         alternate_group: r.bytesToInt(2),
@@ -983,11 +815,11 @@ var __inspectISOBMFFBundle = (() => {
       return {
         version: reader.bytesToInt(1),
         flags: reader.bytesToInt(3),
-        "track_id": reader.bytesToInt(4),
-        "default_sample_description_index": reader.bytesToInt(4),
-        "default_sample_duration": reader.bytesToInt(4),
-        "default_sample_size": reader.bytesToInt(4),
-        "default_sample_flags": reader.bytesToInt(4)
+        track_id: reader.bytesToInt(4),
+        default_sample_description_index: reader.bytesToInt(4),
+        default_sample_duration: reader.bytesToInt(4),
+        default_sample_size: reader.bytesToInt(4),
+        default_sample_flags: reader.bytesToInt(4)
       };
     }
   };
@@ -1156,6 +988,158 @@ var __inspectISOBMFFBundle = (() => {
     vmhd: vmhd_default
   };
 
+  // src/utils/bytes.js
+  function be2toi(bytes, off) {
+    return (bytes[0 + off] << 8) + bytes[1 + off];
+  }
+  function be3toi(bytes, off) {
+    return bytes[0 + off] * 65536 + bytes[1 + off] * 256 + bytes[2 + off];
+  }
+  function be4toi(bytes, off) {
+    return bytes[0 + off] * 16777216 + bytes[1 + off] * 65536 + bytes[2 + off] * 256 + bytes[3 + off];
+  }
+  function be5toi(bytes, off) {
+    return bytes[0 + off] * 4294967296 + bytes[1 + off] * 16777216 + bytes[2 + off] * 65536 + bytes[3 + off] * 256 + bytes[4 + off];
+  }
+  function be8toi(bytes, off) {
+    return (bytes[0 + off] * 16777216 + bytes[1 + off] * 65536 + bytes[2 + off] * 256 + bytes[3 + off]) * 4294967296 + bytes[4 + off] * 16777216 + bytes[5 + off] * 65536 + bytes[6 + off] * 256 + bytes[7 + off];
+  }
+  function bytesToHex(uint8arr, off, nbBytes) {
+    if (!uint8arr) {
+      return "";
+    }
+    const arr = uint8arr.slice(off, nbBytes + off);
+    let hexStr = "";
+    for (let i = 0; i < arr.length; i++) {
+      let hex = (arr[i] & 255).toString(16);
+      hex = hex.length === 1 ? `0${hex}` : hex;
+      hexStr += hex;
+    }
+    return hexStr.toUpperCase();
+  }
+  function betoa(uint8arr, off, nbBytes) {
+    if (!uint8arr) {
+      return "";
+    }
+    const arr = uint8arr.slice(off, nbBytes + off);
+    return String.fromCharCode.apply(String, arr);
+  }
+
+  // src/utils/buffer_reader.js
+  function createBufferReader(buffer) {
+    let currentOffset = 0;
+    return {
+      /**
+       * Returns the following byte, as a number between 0 and 255.
+       * @returns {number}
+       */
+      getNextByte() {
+        this.getNextBytes(1);
+      },
+      /**
+       * Returns the N next bytes, as an Uint8Array
+       * @param {number} nb
+       * @returns {Uint8Array}
+       */
+      getNextBytes(nb) {
+        if (this.getRemainingLength() < nb) {
+          return;
+        }
+        currentOffset += nb;
+        return buffer.slice(0, nb);
+      },
+      /**
+       * Returns the N next bytes, as a single number.
+       *
+       * /!\ only work for now for 1, 2, 3, 4, 5 or 8 bytes.
+       * TODO Define a more global solution.
+       *
+       * /!\ Depending on the size of the number, it may be larger than JS'
+       * limit.
+       *
+       * @param {number} nb
+       * @returns {number}
+       */
+      bytesToInt(nbBytes) {
+        if (this.getRemainingLength() < nbBytes) {
+          return;
+        }
+        let res;
+        switch (nbBytes) {
+          case 1:
+            res = buffer[currentOffset];
+            break;
+          case 2:
+            res = be2toi(buffer, currentOffset);
+            break;
+          case 3:
+            res = be3toi(buffer, currentOffset);
+            break;
+          case 4:
+            res = be4toi(buffer, currentOffset);
+            break;
+          case 5:
+            res = be5toi(buffer, currentOffset);
+            break;
+          case 8:
+            res = be8toi(buffer, currentOffset);
+            break;
+          default:
+            throw new Error("not implemented yet.");
+        }
+        currentOffset += nbBytes;
+        return res;
+      },
+      /**
+       * Returns the N next bytes into a string of Hexadecimal values.
+       * @param {number}
+       * @returns {string}
+       */
+      bytesToHex(nbBytes) {
+        if (this.getRemainingLength() < nbBytes) {
+          return;
+        }
+        const res = bytesToHex(buffer, currentOffset, nbBytes);
+        currentOffset += nbBytes;
+        return res;
+      },
+      /**
+       * Returns the N next bytes into a string.
+       * @param {number}
+       * @returns {string}
+       */
+      bytesToASCII(nbBytes) {
+        if (this.getRemainingLength() < nbBytes) {
+          return;
+        }
+        const res = betoa(buffer, currentOffset, nbBytes);
+        currentOffset += nbBytes;
+        return res;
+      },
+      /**
+       * Returns the total length of the buffer
+       * @returns {number}
+       */
+      getTotalLength() {
+        return buffer.length;
+      },
+      /**
+       * Returns the length of the buffer which is not yet parsed.
+       * @returns {number}
+       */
+      getRemainingLength() {
+        return Math.max(0, buffer.length - currentOffset);
+      },
+      /**
+       * Returns true if this buffer is entirely parsed.
+       * @returns {boolean}
+       */
+      isFinished() {
+        return buffer.length <= currentOffset;
+      }
+    };
+  }
+
   // src/main.js
   function recursiveParseBoxes(arr) {
     let i = 0;
@@ -1213,7 +1197,11 @@ var __inspectISOBMFFBundle = (() => {
             const remaining = parserReader.getRemainingLength();
             contentForChildren = content.slice(content.length - remaining);
           } else if (!parserReader.isFinished()) {
-            console.warn("not everything has been parsed for box: " + name + ". Missing", parserReader.getRemainingLength(), "bytes.");
+            console.warn(
+              `not everything has been parsed for box: ${name}. Missing`,
+              parserReader.getRemainingLength(),
+              "bytes."
+            );
           }
           delete result.__data__;
           Object.keys(result).forEach((key) => {
@@ -1221,9 +1209,14 @@ var __inspectISOBMFFBundle = (() => {
             if (!infos.name) {
               infos.name = key;
             }
-            atomObject.values.push(Object.assign({
-              value: result[key]
-            }, infos));
+            atomObject.values.push(
+              Object.assign(
+                {
+                  value: result[key]
+                },
+                infos
+              )
+            );
           });
         }
         if (hasChildren) {
@@ -1245,7 +1238,9 @@ var __inspectISOBMFFBundle = (() => {
     if (arr.buffer instanceof ArrayBuffer) {
       return recursiveParseBoxes(new Uint8Array(arr.buffer));
     }
-    throw new Error("Unrecognized format. Please give an ArrayBuffer or TypedArray instead.");
+    throw new Error(
+      "Unrecognized format. Please give an ArrayBuffer or TypedArray instead."
+    );
   }
   return __toCommonJS(main_exports);
 })();

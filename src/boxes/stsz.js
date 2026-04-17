@@ -9,8 +9,7 @@ export default {
 
     ret.sample_size = r.bytesToInt(4);
     ret.sample_count = r.bytesToInt(4);
-    if (ret.sample_size == 0)
-    {
+    if (ret.sample_size === 0) {
       ret.entries = [];
       let i = ret.sample_count;
       while (i--) {

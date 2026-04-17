@@ -1,8 +1,9 @@
 export default {
   name: "Movie Header Box",
-  description: "This box defines overall information which is " +
-  "media‐independent, and relevant to the entire presentation " +
-  "considered as a whole.",
+  description:
+    "This box defines overall information which is " +
+    "media‐independent, and relevant to the entire presentation " +
+    "considered as a whole.",
   content: [
     {
       name: "version",
@@ -16,20 +17,23 @@ export default {
     },
     {
       name: "creation_time",
-      description: "An integer that declares the creation time of the " +
-       "presentation (in seconds since midnight, Jan. 1, 1904, in UTC time)",
+      description:
+        "An integer that declares the creation time of the " +
+        "presentation (in seconds since midnight, Jan. 1, 1904, in UTC time)",
       key: "creationTime",
     },
     {
       name: "modification_time",
-      description: "An integer that declares the most recent time the " +
-      "presentation was modified (in seconds since midnight, Jan. 1, 1904, " +
-      "in UTC time)",
+      description:
+        "An integer that declares the most recent time the " +
+        "presentation was modified (in seconds since midnight, Jan. 1, 1904, " +
+        "in UTC time)",
       key: "modificationTime",
     },
     {
       name: "timescale",
-      description: "An integer that specifies the time‐scale for the entire " +
+      description:
+        "An integer that specifies the time‐scale for the entire " +
         "presentation; this is the number of time units that pass in one second. " +
         "For example, a t me coordinate system that measures time in sixtieths " +
         "of a second has a time scale of 60.",
@@ -37,7 +41,8 @@ export default {
     },
     {
       name: "duration",
-      description: "An integer that declares length of the presentation (in the " +
+      description:
+        "An integer that declares length of the presentation (in the " +
         "indicated timescale). This property is derived from the presentation’s " +
         "tracks: the value of this field corresponds to the duration of the " +
         "longest track in the presentation. If the durat ion cannot be " +
@@ -46,13 +51,15 @@ export default {
     },
     {
       name: "rate",
-      description: "A fixed point 16.16 number that indicates the preferred " +
+      description:
+        "A fixed point 16.16 number that indicates the preferred " +
         "rate to play the presentation; 1.0 (0x00010000) is normal forward playback ",
       key: "rate",
     },
     {
       name: "volume",
-      description: "A fixed point 8.8 number that indicates the preferred playback " +
+      description:
+        "A fixed point 8.8 number that indicates the preferred playback " +
         "volume. 1.0 (0x0100) is full volume.",
       key: "volume",
     },
@@ -68,7 +75,8 @@ export default {
     },
     {
       name: "matrix",
-      description: "Provides a transformation matrix for the video; (u,v,w) are " +
+      description:
+        "Provides a transformation matrix for the video; (u,v,w) are " +
         " restricted here to (0,0,1), hex values (0,0,0x40000000).",
       key: "matrix",
     },
@@ -79,7 +87,8 @@ export default {
     },
     {
       name: "next_track_ID",
-      description: "A non‐zero integer that indicates a value to use for the " +
+      description:
+        "A non‐zero integer that indicates a value to use for the " +
         "track ID of the next track to be added to this presentation. " +
         "Zero is not a valid track ID value. The value of next_track_ID shall " +
         "be larger than the largest track‐ID in use. If this valu e is equal to " +
@@ -110,21 +119,12 @@ export default {
       duration = reader.bytesToInt(4);
     }
 
-    const rate = [
-      reader.bytesToInt(2),
-      reader.bytesToInt(2),
-    ].join(".");
+    const rate = [reader.bytesToInt(2), reader.bytesToInt(2)].join(".");
 
-    const volume = [
-      reader.bytesToInt(1),
-      reader.bytesToInt(1),
-    ].join(".");
+    const volume = [reader.bytesToInt(1), reader.bytesToInt(1)].join(".");
 
     const reserved1 = reader.bytesToInt(2);
-    const reserved2 = [
-      reader.bytesToInt(4),
-      reader.bytesToInt(4),
-    ];
+    const reserved2 = [reader.bytesToInt(4), reader.bytesToInt(4)];
 
     const matrixArr = [];
     for (let i = 0; i < 9; i++) {

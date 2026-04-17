@@ -1,6 +1,7 @@
 export default {
   name: "Movie Fragment Header Box",
-  description: "This box contains just a sequence number (usually starting at 1), as a safety check.",
+  description:
+    "This box contains just a sequence number (usually starting at 1), as a safety check.",
 
   parser(r) {
     return {

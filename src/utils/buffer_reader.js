@@ -5,7 +5,6 @@ import {
   be5toi,
   be8toi,
   betoa,
-
   bytesToHex,
 } from "./bytes.js";
 
@@ -37,7 +36,7 @@ export default function createBufferReader(buffer) {
      */
     getNextBytes(nb) {
       if (this.getRemainingLength() < nb) {
-        return ;
+        return;
       }
       currentOffset += nb;
       return buffer.slice(0, nb);
@@ -57,30 +56,30 @@ export default function createBufferReader(buffer) {
      */
     bytesToInt(nbBytes) {
       if (this.getRemainingLength() < nbBytes) {
-        return ;
+        return;
       }
       let res;
-      switch(nbBytes) {
-      case 1:
-        res = buffer[currentOffset];
-        break;
-      case 2:
-        res = be2toi(buffer, currentOffset);
-        break;
-      case 3:
-        res = be3toi(buffer, currentOffset);
-        break;
-      case 4:
-        res = be4toi(buffer, currentOffset);
-        break;
-      case 5:
-        res = be5toi(buffer, currentOffset);
-        break;
-      case 8:
-        res = be8toi(buffer, currentOffset);
-        break;
-      default:
-        throw new Error("not implemented yet.");
+      switch (nbBytes) {
+        case 1:
+          res = buffer[currentOffset];
+          break;
+        case 2:
+          res = be2toi(buffer, currentOffset);
+          break;
+        case 3:
+          res = be3toi(buffer, currentOffset);
+          break;
+        case 4:
+          res = be4toi(buffer, currentOffset);
+          break;
+        case 5:
+          res = be5toi(buffer, currentOffset);
+          break;
+        case 8:
+          res = be8toi(buffer, currentOffset);
+          break;
+        default:
+          throw new Error("not implemented yet.");
       }
 
       currentOffset += nbBytes;
@@ -94,7 +93,7 @@ export default function createBufferReader(buffer) {
      */
     bytesToHex(nbBytes) {
       if (this.getRemainingLength() < nbBytes) {
-        return ;
+        return;
       }
       const res = bytesToHex(buffer, currentOffset, nbBytes);
       currentOffset += nbBytes;
@@ -108,7 +107,7 @@ export default function createBufferReader(buffer) {
      */
     bytesToASCII(nbBytes) {
       if (this.getRemainingLength() < nbBytes) {
-        return ;
+        return;
       }
       const res = betoa(buffer, currentOffset, nbBytes);
 

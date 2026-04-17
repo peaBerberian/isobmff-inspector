@@ -4,11 +4,15 @@
   "description": "Simple ISOBMFF parser, compatible with JavaScript and Node.JS",
   "main": "dist/bundle.js",
   "scripts": {
-    "build": "node scripts/build.mjs"
+    "build": "node scripts/build.mjs",
+    "format": "biome format --write .",
+    "lint": "biome lint .",
+    "check": "biome check ."
   },
   "author": "peaberberian",
   "license": "MIT",
   "devDependencies": {
+    "@biomejs/biome": "2.4.12",
     "esbuild": "^0.28.0"
   },
   "repository": {

@@ -9,7 +9,8 @@ export default {
     },
     {
       key: "minor_version",
-      description: "informative integer for the minor version of the major brand",
+      description:
+        "informative integer for the minor version of the major brand",
     },
     {
       key: "compatible_brands",
@@ -23,7 +24,7 @@ export default {
     const minor_version = reader.bytesToInt(4);
 
     const compatArr = [];
-    for (let i = 8; i < len; i+=4) {
+    for (let i = 8; i < len; i += 4) {
       compatArr.push(reader.bytesToASCII(4));
     }
 

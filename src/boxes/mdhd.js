@@ -1,6 +1,7 @@
 export default {
   name: "Media Header Box",
-  description: "The media header declares overall information that is " +
+  description:
+    "The media header declares overall information that is " +
     "media‐independent, and relevant to characteristics of the media in a track.",
   parser(r) {
     const version = r.bytesToInt(1);
@@ -11,11 +12,11 @@ export default {
     const duration = r.bytesToInt(version ? 8 : 4);
 
     const next2Bytes = r.bytesToInt(2);
-    const pad = next2Bytes >> 15 & 0x01;
+    const pad = (next2Bytes >> 15) & 0x01;
     const language = [
-      String.fromCharCode((next2Bytes >> 10 & 0x1F) + 0x60),
-      String.fromCharCode((next2Bytes >> 5  & 0x1F) + 0x60),
-      String.fromCharCode((next2Bytes       & 0x1F) + 0x60),
+      String.fromCharCode(((next2Bytes >> 10) & 0x1f) + 0x60),
+      String.fromCharCode(((next2Bytes >> 5) & 0x1f) + 0x60),
+      String.fromCharCode((next2Bytes & 0x1f) + 0x60),
     ].join("");
     const predifined = r.bytesToInt(2);
     return {
