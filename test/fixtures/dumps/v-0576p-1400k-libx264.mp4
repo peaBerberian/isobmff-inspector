@@ -1,0 +1,289 @@
+[ftyp] size=8+20
+  major_brand = dash
+  minor_version = 0
+  compatible_brand = iso6
+  compatible_brand = mp41
+  compatible_brand = avc1
+[moov] size=8+772
+  [mvhd] size=12+96
+    timescale = 12800
+    duration = 768000
+    duration(ms) = 60000
+  [meta] size=12+123
+    [hdlr] size=12+20
+      handler_type = ID32
+      handler_name = 
+    [ID32] size=8+83
+  [mvex] size=8+48
+    [mehd] size=12+4
+      duration = 768000
+    [trex] size=12+20
+      track id = 1
+      default sample description index = 1
+      default sample duration = 512
+      default sample size = 0
+      default sample flags = 0
+  [trak] size=8+465
+    [tkhd] size=12+80, flags=3
+      enabled = 1
+      id = 1
+      duration = 768000
+      width = 768.000000
+      height = 576.000000
+    [mdia] size=8+365
+      [mdhd] size=12+20
+        timescale = 12800
+        duration = 768000
+        duration(ms) = 60000
+        language = und
+      [hdlr] size=12+33
+        handler_type = vide
+        handler_name = VideoHandler
+      [minf] size=8+280
+        [dinf] size=8+28
+          [dref] size=12+16
+            [url ] size=12+0, flags=1
+              location = [local to file]
+        [stbl] size=8+216
+          [stsd] size=12+136
+            entry_count = 1
+            [avc1] size=8+124
+              data_reference_index = 1
+              width = 768
+              height = 576
+              compressor = AVC Coding
+              [avcC] size=8+38
+                Configuration Version = 1
+                Profile = Main
+                Profile Compatibility = 40
+                Level = 31
+                NALU Length Size = 4
+                Sequence Parameter = [67 4d 40 1f d9 00 c0 12 6c 04 40 00 00 03 00 40 00 00 0c 83 c6 0c 92]
+                Picture Parameter = [68 eb cc b2]
+          [stts] size=12+4
+            entry_count = 0
+          [stsc] size=12+4
+            entry_count = 0
+          [stsz] size=12+8
+            sample_size = 0
+            sample_count = 0
+          [stco] size=12+4
+            entry_count = 0
+        [vmhd] size=12+8, flags=1
+          graphics_mode = 0
+          op_color = 0000,0000,0000
+[sidx] size=12+200
+  reference_ID = 1
+  timescale = 12800
+  earliest_presentation_time = 0
+  first_offset = 0
+[moof] size=8+884
+  [mfhd] size=12+4
+    sequence number = 1
+  [traf] size=8+860
+    [tfhd] size=12+12, flags=2000a
+      track ID = 1
+      sample description index = 1
+      default sample duration = 512
+    [tfdt] size=12+4
+      base media decode time = 0
+    [trun] size=12+808, flags=601
+      sample count = 100
+      data offset = 900
+[mdat] size=8+1909428
+[moof] size=8+884
+  [mfhd] size=12+4
+    sequence number = 2
+  [traf] size=8+860
+    [tfhd] size=12+12, flags=2000a
+      track ID = 1
+      sample description index = 1
+      default sample duration = 512
+    [tfdt] size=12+4
+      base media decode time = 51200
+    [trun] size=12+808, flags=601
+      sample count = 100
+      data offset = 900
+[mdat] size=8+420748
+[moof] size=8+884
+  [mfhd] size=12+4
+    sequence number = 3
+  [traf] size=8+860
+    [tfhd] size=12+12, flags=2000a
+      track ID = 1
+      sample description index = 1
+      default sample duration = 512
+    [tfdt] size=12+4
+      base media decode time = 102400
+    [trun] size=12+808, flags=601
+      sample count = 100
+      data offset = 900
+[mdat] size=8+553730
+[moof] size=8+884
+  [mfhd] size=12+4
+    sequence number = 4
+  [traf] size=8+860
+    [tfhd] size=12+12, flags=2000a
+      track ID = 1
+      sample description index = 1
+      default sample duration = 512
+    [tfdt] size=12+4
+      base media decode time = 153600
+    [trun] size=12+808, flags=601
+      sample count = 100
+      data offset = 900
+[mdat] size=8+529761
+[moof] size=8+884
+  [mfhd] size=12+4
+    sequence number = 5
+  [traf] size=8+860
+    [tfhd] size=12+12, flags=2000a
+      track ID = 1
+      sample description index = 1
+      default sample duration = 512
+    [tfdt] size=12+4
+      base media decode time = 204800
+    [trun] size=12+808, flags=601
+      sample count = 100
+      data offset = 900
+[mdat] size=8+370208
+[moof] size=8+884
+  [mfhd] size=12+4
+    sequence number = 6
+  [traf] size=8+860
+    [tfhd] size=12+12, flags=2000a
+      track ID = 1
+      sample description index = 1
+      default sample duration = 512
+    [tfdt] size=12+4
+      base media decode time = 256000
+    [trun] size=12+808, flags=601
+      sample count = 100
+      data offset = 900
+[mdat] size=8+512450
+[moof] size=8+884
+  [mfhd] size=12+4
+    sequence number = 7
+  [traf] size=8+860
+    [tfhd] size=12+12, flags=2000a
+      track ID = 1
+      sample description index = 1
+      default sample duration = 512
+    [tfdt] size=12+4
+      base media decode time = 307200
+    [trun] size=12+808, flags=601
+      sample count = 100
+      data offset = 900
+[mdat] size=8+832196
+[moof] size=8+884
+  [mfhd] size=12+4
+    sequence number = 8
+  [traf] size=8+860
+    [tfhd] size=12+12, flags=2000a
+      track ID = 1
+      sample description index = 1
+      default sample duration = 512
+    [tfdt] size=12+4
+      base media decode time = 358400
+    [trun] size=12+808, flags=601
+      sample count = 100
+      data offset = 900
+[mdat] size=8+585860
+[moof] size=8+884
+  [mfhd] size=12+4
+    sequence number = 9
+  [traf] size=8+860
+    [tfhd] size=12+12, flags=2000a
+      track ID = 1
+      sample description index = 1
+      default sample duration = 512
+    [tfdt] size=12+4
+      base media decode time = 409600
+    [trun] size=12+808, flags=601
+      sample count = 100
+      data offset = 900
+[mdat] size=8+799113
+[moof] size=8+884
+  [mfhd] size=12+4
+    sequence number = 10
+  [traf] size=8+860
+    [tfhd] size=12+12, flags=2000a
+      track ID = 1
+      sample description index = 1
+      default sample duration = 512
+    [tfdt] size=12+4
+      base media decode time = 460800
+    [trun] size=12+808, flags=601
+      sample count = 100
+      data offset = 900
+[mdat] size=8+920696
+[moof] size=8+884
+  [mfhd] size=12+4
+    sequence number = 11
+  [traf] size=8+860
+    [tfhd] size=12+12, flags=2000a
+      track ID = 1
+      sample description index = 1
+      default sample duration = 512
+    [tfdt] size=12+4
+      base media decode time = 512000
+    [trun] size=12+808, flags=601
+      sample count = 100
+      data offset = 900
+[mdat] size=8+603745
+[moof] size=8+884
+  [mfhd] size=12+4
+    sequence number = 12
+  [traf] size=8+860
+    [tfhd] size=12+12, flags=2000a
+      track ID = 1
+      sample description index = 1
+      default sample duration = 512
+    [tfdt] size=12+4
+      base media decode time = 563200
+    [trun] size=12+808, flags=601
+      sample count = 100
+      data offset = 900
+[mdat] size=8+469437
+[moof] size=8+884
+  [mfhd] size=12+4
+    sequence number = 13
+  [traf] size=8+860
+    [tfhd] size=12+12, flags=2000a
+      track ID = 1
+      sample description index = 1
+      default sample duration = 512
+    [tfdt] size=12+4
+      base media decode time = 614400
+    [trun] size=12+808, flags=601
+      sample count = 100
+      data offset = 900
+[mdat] size=8+611818
+[moof] size=8+884
+  [mfhd] size=12+4
+    sequence number = 14
+  [traf] size=8+860
+    [tfhd] size=12+12, flags=2000a
+      track ID = 1
+      sample description index = 1
+      default sample duration = 512
+    [tfdt] size=12+4
+      base media decode time = 665600
+    [trun] size=12+808, flags=601
+      sample count = 100
+      data offset = 900
+[mdat] size=8+716519
+[moof] size=8+884
+  [mfhd] size=12+4
+    sequence number = 15
+  [traf] size=8+860
+    [tfhd] size=12+12, flags=2000a
+      track ID = 1
+      sample description index = 1
+      default sample duration = 512
+    [tfdt] size=12+4
+      base media decode time = 716800
+    [trun] size=12+808, flags=601
+      sample count = 100
+      data offset = 900
+[mdat] size=8+712041

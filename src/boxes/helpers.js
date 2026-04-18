@@ -1,5 +1,5 @@
 function formatFixedPoint1616(value) {
-  return `${value >> 16}.${value & 0xffff}`;
+  return `${value >>> 16}.${value & 0xffff}`;
 }
 
 function toSignedInt(value, bits) {

@@ -1,0 +1,13 @@
+[moof] size=8+205
+  [mfhd] size=12+4
+    sequence number = 38
+  [traf] size=8+181
+    [tfhd] size=12+8, flags=8
+      track ID = 2
+      default sample duration = 400000
+    [trun] size=12+112, flags=205
+      sample count = 25
+      data offset = 221
+      first sample flags = 2000000
+    [sdtp] size=8+29
+[mdat] size=8+3368

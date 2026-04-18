@@ -11,6 +11,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "prepack": "npm run build",
+    "test": "node --test",
     "format": "biome format --write .",
     "lint": "biome lint .",
     "check": "biome check ."
