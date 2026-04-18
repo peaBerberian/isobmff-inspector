@@ -52,7 +52,7 @@ function recursiveParseBoxes(arr) {
         ? config.content.reduce((acc, el) => {
             acc[el.key] = {
               name: el.name || "",
-              description: el.description | "",
+              description: el.description || "",
             };
             return acc;
           }, {})
