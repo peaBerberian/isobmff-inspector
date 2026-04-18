@@ -5,6 +5,7 @@ export default {
 
   parser(r) {
     const colour_type = r.bytesToASCII(4);
+    /** @type Partial<Record<string, unknown>> */
     const ret = { colour_type };
 
     if (colour_type === "nclx" || colour_type === "nclc") {

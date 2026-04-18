@@ -5,6 +5,7 @@ export default {
     "Identifies the handler type for the track or metadata it belongs to.",
 
   parser(r) {
+    /** @type Partial<Record<string, unknown>> */
     const ret = {
       version: r.bytesToInt(1),
       flags: r.bytesToInt(3),

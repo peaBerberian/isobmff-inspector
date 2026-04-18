@@ -4,6 +4,7 @@ export default {
   description: "",
 
   parser(r) {
+    /** @type Partial<Record<string, unknown>> */
     const ret = {};
 
     ret.version = r.bytesToInt(1);

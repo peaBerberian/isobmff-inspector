@@ -4,14 +4,19 @@ export default {
   description: "",
 
   parser(r) {
+    /** @type Partial<Record<string, unknown>> */
     const ret = {};
     ret.version = r.bytesToInt(1);
     ret.flags = r.bytesToInt(3);
-    ret.entry_count = r.bytesToInt(4);
-    ret.chunk_offsets = [];
-    let i = ret.entry_count;
+    const entry_count = r.bytesToInt(4);
+    ret.entry_count = entry_count;
+
+    /** @type {Array.<number>} */
+    const chunk_offsets = [];
+    ret.chunk_offsets = chunk_offsets;
+    let i = entry_count;
     while (i--) {
-      ret.chunk_offsets.push(r.bytesToInt(4));
+      chunk_offsets.push(r.bytesToInt(4));
     }
     return ret;
   },

@@ -32,6 +32,7 @@ export default {
       });
     }
 
+    /** @type Partial<Record<string, unknown>> */
     const ret = {
       configurationVersion,
       AVCProfileIndication,

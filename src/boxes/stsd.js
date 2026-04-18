@@ -4,6 +4,7 @@ export default {
   description: "Information about the coding type used",
 
   parser(r) {
+    /** @type Partial<Record<string, unknown>> */
     const ret = {};
     ret.version = r.bytesToInt(1);
     ret.flags = r.bytesToInt(3);

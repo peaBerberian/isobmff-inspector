@@ -1,13 +1,27 @@
+/**
+ * @param {number} value
+ * @returns {string}
+ */
 function formatFixedPoint1616(value) {
   return `${value >>> 16}.${value & 0xffff}`;
 }
 
+/**
+ * @param {number} value
+ * @param {number} bits
+ * @returns {number}
+ */
 function toSignedInt(value, bits) {
   const maxUnsigned = 2 ** bits;
   const signedBoundary = 2 ** (bits - 1);
   return value >= signedBoundary ? value - maxUnsigned : value;
 }
 
+/**
+ * @param {import("../types").BufferReader} r
+ * @param {number} length
+ * @returns {string}
+ */
 function parsePascalString(r, length) {
   const stringLength = Math.min(r.bytesToInt(1), length - 1);
   const value = stringLength > 0 ? r.bytesToASCII(stringLength) : "";
@@ -18,6 +32,11 @@ function parsePascalString(r, length) {
   return value;
 }
 
+/**
+ * TODO: type output
+ * @param {import("../types").BufferReader} r
+ * @returns {Partial<Record<string, unknown>>}
+ */
 function parseVisualSampleEntry(r) {
   const reserved = [];
   for (let i = 0; i < 6; i++) {
@@ -44,12 +63,18 @@ function parseVisualSampleEntry(r) {
   return ret;
 }
 
+/**
+ * TODO: type output
+ * @param {import("../types").BufferReader} r
+ * @returns {Partial<Record<string, unknown>>}
+ */
 function parseAudioSampleEntry(r) {
   const reserved = [];
   for (let i = 0; i < 6; i++) {
     reserved.push(r.bytesToInt(1));
   }
 
+  /** @type {Partial<Record<string, unknown>>} */
   const ret = {
     reserved,
     data_reference_index: r.bytesToInt(2),
@@ -86,6 +111,10 @@ function parseAudioSampleEntry(r) {
   return ret;
 }
 
+/**
+ * @param {import("../types").BufferReader} r
+ * @returns {{ length: number; size: number }}
+ */
 function parseDescriptorLength(r) {
   let length = 0;
   let size = 0;
@@ -105,6 +134,11 @@ function parseDescriptorLength(r) {
   throw new Error("invalid descriptor length");
 }
 
+/**
+ * @param {import("../types").BufferReader} r
+ * @param {number} size
+ * @returns {Array.<unknown>}
+ */
 function parseNestedDescriptors(r, size) {
   const descriptors = [];
   let remaining = size;
@@ -124,10 +158,17 @@ function parseNestedDescriptors(r, size) {
   return descriptors;
 }
 
+/**
+ * @param {import("../types").BufferReader} r
+ * @param {number} tag
+ * @param {number} size
+ * @returns {unknown}
+ */
 function parseDescriptorPayload(r, tag, size) {
   if (tag === 0x03) {
     const es_id = r.bytesToInt(2);
     const flags = r.bytesToInt(1);
+    /** @type {Partial<Record<string, unknown>>} */
     const ret = {
       es_id,
       stream_dependence_flag: !!(flags & 0x80),
@@ -160,6 +201,7 @@ function parseDescriptorPayload(r, tag, size) {
   if (tag === 0x04) {
     const objectTypeIndication = r.bytesToInt(1);
     const streamByte = r.bytesToInt(1);
+    /** @type {Partial<Record<string, unknown>>} */
     const ret = {
       object_type_indication: objectTypeIndication,
       stream_type: (streamByte >> 2) & 0x3f,
@@ -194,6 +236,10 @@ function parseDescriptorPayload(r, tag, size) {
   };
 }
 
+/**
+ * @param {import("../types").BufferReader} r
+ * @returns {unknown}
+ */
 function parseDescriptor(r) {
   const tag = r.bytesToInt(1);
   const { length, size } = parseDescriptorLength(r);

@@ -10,6 +10,7 @@ export default {
     }
 
     const flags = r.bytesToInt(3);
+    /** @type Partial<Record<string, unknown>> */
     const ret = {
       version,
       flags,

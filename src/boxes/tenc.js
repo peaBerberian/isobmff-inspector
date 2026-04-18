@@ -10,6 +10,7 @@ export default {
     }
 
     const flags = r.bytesToInt(3);
+    /** @type Partial<Record<string, unknown>> */
     const ret = {
       version,
       flags,
@@ -29,8 +30,9 @@ export default {
     ret.default_KID = r.bytesToHex(16);
 
     if (ret.default_Per_Sample_IV_Size === 0 && !r.isFinished()) {
-      ret.default_constant_IV_size = r.bytesToInt(1);
-      ret.default_constant_IV = r.bytesToHex(ret.default_constant_IV_size);
+      const default_constant_IV_size = r.bytesToInt(1);
+      ret.default_constant_IV_size = default_constant_IV_size;
+      ret.default_constant_IV = r.bytesToHex(default_constant_IV_size);
     }
 
     return ret;

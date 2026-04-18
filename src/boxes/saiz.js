@@ -4,6 +4,7 @@ export default {
   description: "",
 
   parser(r) {
+    /** @type Partial<Record<string, unknown>> */
     const ret = {};
     ret.version = r.bytesToInt(1);
     ret.flags = r.bytesToInt(3);
@@ -14,13 +15,16 @@ export default {
     }
 
     ret.default_sample_info_size = r.bytesToInt(1);
-    ret.sample_count = r.bytesToInt(4);
+    const sample_count = r.bytesToInt(4);
+    ret.sample_count = sample_count;
 
     if (ret.default_sample_info_size === 0) {
-      ret.sample_info_size = [];
-      let i = ret.sample_count;
+      /** @type {Array.<number>} */
+      const sample_info_size = [];
+      ret.sample_info_size = sample_info_size;
+      let i = sample_count;
       while (i--) {
-        ret.sample_info_size.push(r.bytesToInt(1));
+        sample_info_size.push(r.bytesToInt(1));
       }
     }
 

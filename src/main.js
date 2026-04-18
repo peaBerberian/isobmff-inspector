@@ -28,6 +28,7 @@ function recursiveParseBoxes(arr) {
     const name = betoa(arr, currentOffset, 4);
     currentOffset += 4;
 
+    /** @type {import("./types.js").ParsedBox} */
     const atomObject = {
       alias: name,
       size,

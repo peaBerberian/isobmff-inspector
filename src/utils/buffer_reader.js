@@ -20,6 +20,10 @@ import {
 export default function createBufferReader(buffer) {
   let currentOffset = 0;
 
+  /**
+   * @param {string} hex
+   * @returns {BigInt}
+   */
   function hexToBigInt(hex) {
     return BigInt(`0x${hex}`);
   }
@@ -39,7 +43,7 @@ export default function createBufferReader(buffer) {
      */
     bytesToInt(nbBytes) {
       if (this.getRemainingLength() < nbBytes) {
-        return;
+        return NaN; // TODO: log error?
       }
       let res;
       switch (nbBytes) {
@@ -76,7 +80,7 @@ export default function createBufferReader(buffer) {
      */
     bytesToHex(nbBytes) {
       if (this.getRemainingLength() < nbBytes) {
-        return;
+        return ""; // TODO: Log error?
       }
       const res = bytesToHex(buffer, currentOffset, nbBytes);
       currentOffset += nbBytes;
@@ -89,7 +93,7 @@ export default function createBufferReader(buffer) {
      */
     bytesToUint64BigInt() {
       if (this.getRemainingLength() < 8) {
-        return;
+        return BigInt(0); // TODO: Error / log?
       }
       const hex = bytesToHex(buffer, currentOffset, 8);
       currentOffset += 8;
@@ -102,7 +106,7 @@ export default function createBufferReader(buffer) {
      */
     bytesToInt64BigInt() {
       if (this.getRemainingLength() < 8) {
-        return;
+        return BigInt(0); // TODO: Error / log?
       }
       const hex = bytesToHex(buffer, currentOffset, 8);
       currentOffset += 8;
@@ -116,7 +120,7 @@ export default function createBufferReader(buffer) {
      */
     bytesToASCII(nbBytes) {
       if (this.getRemainingLength() < nbBytes) {
-        return;
+        return ""; // TODO: Error / log?
       }
       const res = betoa(buffer, currentOffset, nbBytes);
 

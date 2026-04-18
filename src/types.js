@@ -27,7 +27,7 @@
  * @property {string=} description
  * @property {BoxContentEntry[]=} content
  * @property {boolean=} container
- * @property {(reader: BufferReader) => unknown=} parser
+ * @property {(reader: BufferReader) => Partial<Record<string, unknown>>=} parser
  */
 
 /**

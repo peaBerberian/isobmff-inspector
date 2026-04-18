@@ -4,6 +4,7 @@ export default {
   description: "",
 
   parser(r) {
+    /** @type Partial<Record<string, unknown>> */
     const ret = {};
     ret.version = r.bytesToInt(1);
     ret.flags = r.bytesToInt(3);
@@ -13,12 +14,15 @@ export default {
       ret.aux_info_type_parameter = r.bytesToInt(4);
     }
 
-    ret.entry_count = r.bytesToInt(4);
+    const entry_count = r.bytesToInt(4);
+    ret.entry_count = entry_count;
 
-    ret.offset = [];
-    let i = ret.entry_count;
+    /** @type {Array.<number>} */
+    const offset = [];
+    ret.offset = offset;
+    let i = entry_count;
     while (i--) {
-      ret.offset.push(r.bytesToInt(ret.version === 0 ? 4 : 8));
+      offset.push(r.bytesToInt(ret.version === 0 ? 4 : 8));
     }
 
     return ret;

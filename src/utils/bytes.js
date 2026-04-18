@@ -71,6 +71,12 @@ function be8toi(bytes, off) {
   );
 }
 
+/**
+ * @param {Uint8Array} uint8arr
+ * @param {number} off
+ * @param {number} nbBytes
+ * @returns {string}
+ */
 function bytesToHex(uint8arr, off, nbBytes) {
   if (!uint8arr) {
     return "";
@@ -88,6 +94,12 @@ function bytesToHex(uint8arr, off, nbBytes) {
 }
 
 // XXX TODO test that
+/**
+ * @param {Uint8Array} uint8arr
+ * @param {number} off
+ * @param {number} nbBytes
+ * @returns {string}
+ */
 function betoa(uint8arr, off, nbBytes) {
   if (!uint8arr) {
     return "";

@@ -1,3 +1,7 @@
+/**
+ * @param {number} code
+ * @returns {string}
+ */
 function decodeIso639Language(code) {
   return String.fromCharCode(
     ((code >> 10) & 0x1f) + 0x60,

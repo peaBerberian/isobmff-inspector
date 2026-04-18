@@ -1,3 +1,4 @@
+/** @type Partial<Record<string, string>> */
 const SYSTEM_IDS = {
   "1077EFECC0B24D02ACE33C1E52E2FB4B": "cenc",
   "1F83E1E86EE94F0DBA2F5EC4E3ED1A66": "SecureMedia",
@@ -27,33 +28,40 @@ export default {
   name: "Protection System Specific Header",
   description: "",
   parser(reader) {
+    /** @type Partial<Record<string, unknown>> */
     const ret = {};
-    ret.version = reader.bytesToInt(1);
-    if (ret.version > 1) {
+    const version = reader.bytesToInt(1);
+    ret.version = version;
+    if (version > 1) {
       throw new Error("invalid version");
     }
 
     ret.flags = reader.bytesToInt(3);
-    ret.systemID = reader.bytesToHex(16);
+    const systemID = reader.bytesToHex(16);
+    ret.systemID = systemID;
 
-    const systemIDName = SYSTEM_IDS[ret.systemID];
+    const systemIDName = SYSTEM_IDS[systemID];
     if (systemIDName) {
       ret.systemID += ` (${systemIDName})`;
     }
 
     if (ret.version === 1) {
-      ret.KID_count = reader.bytesToInt(4);
+      const KID_count = reader.bytesToInt(4);
+      ret.KID_count = KID_count;
 
-      ret.KIDs = [];
+      /** @type {Array<[string]>} */
+      const KIDs = [];
+      ret.KIDs = KIDs;
 
-      let i = ret.KID_count;
+      let i = KID_count;
       while (i--) {
-        ret.KIDs.push([reader.bytesToHex(16)]);
+        KIDs.push([reader.bytesToHex(16)]);
       }
     }
 
-    ret.data_length = reader.bytesToInt(4);
-    ret.data = reader.bytesToHex(ret.data_length);
+    const data_length = reader.bytesToInt(4);
+    ret.data_length = data_length;
+    ret.data = reader.bytesToHex(data_length);
     return ret;
   },
 };

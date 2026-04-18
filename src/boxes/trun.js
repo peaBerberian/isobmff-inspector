@@ -1,8 +1,17 @@
+/**
+ * @typedef {object} TrunSample
+ * @property {number} [sample_duration]
+ * @property {number} [sample_size]
+ * @property {number} [sample_flags]
+ * @property {number} [sample_composition_time_offset]
+ */
+
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Track Fragment Run Box",
 
   parser(r) {
+    /** @type Partial<Record<string, unknown>> */
     const ret = {};
     ret.version = r.bytesToInt(1);
 
@@ -24,7 +33,8 @@ export default {
       "sample-composition-time-offset-present": !!hasSampleCompositionOffset,
     };
 
-    ret.sample_count = r.bytesToInt(4);
+    const sample_count = r.bytesToInt(4);
+    ret.sample_count = sample_count;
 
     // two's complement
     if (hasDataOffset) {
@@ -35,9 +45,12 @@ export default {
       ret.first_sample_flags = r.bytesToInt(4);
     }
 
-    let i = ret.sample_count;
-    ret.samples = [];
+    let i = sample_count;
+    /** @type {Array.<TrunSample>} */
+    const samples = [];
+    ret.samples = samples;
     while (i--) {
+      /** @type {TrunSample} */
       const sample = {};
 
       if (hasSampleDuration) {
@@ -53,7 +66,7 @@ export default {
         sample.sample_composition_time_offset =
           ret.version === 0 ? r.bytesToInt(4) : ~~r.bytesToInt(4);
       }
-      ret.samples.push(sample);
+      samples.push(sample);
     }
 
     return ret;
