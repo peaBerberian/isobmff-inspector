@@ -1,9 +1,7 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Media Header Box",
-  description:
-    "The media header declares overall information that is " +
-    "media‐independent, and relevant to characteristics of the media in a track.",
+  description: "Timing and language metadata for one track's media.",
   parser(r) {
     const version = r.bytesToInt(1);
     const flags = r.bytesToInt(3);

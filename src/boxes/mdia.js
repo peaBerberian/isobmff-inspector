@@ -1,6 +1,7 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Track Media Structure",
-  description: "declare information about the media data within a track.",
+  description:
+    "Container for the media description and sample tables of a track.",
   container: true,
 };

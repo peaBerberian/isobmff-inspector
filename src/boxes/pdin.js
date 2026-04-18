@@ -21,10 +21,7 @@ export default {
     {
       name: "initial_delay",
       description:
-        "Suggested delay to use when playing the file, such " +
-        "that if download continues at the given rate, all data within " +
-        "the file will arrive in time for its use and playback should " +
-        "not need to stall.",
+        "Suggested startup delay for playback at the stated download rate.",
       key: "delay",
     },
   ],

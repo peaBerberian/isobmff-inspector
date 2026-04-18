@@ -2,8 +2,7 @@
 export default {
   name: "Handler Reference Box",
   description:
-    "This box within a Media Box declares media type of the track, " +
-    "and thus the process by which the media‐data in the track is presented",
+    "Identifies the handler type for the track or metadata it belongs to.",
 
   parser(r) {
     const ret = {

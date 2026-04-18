@@ -1,7 +1,6 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Media Information Box",
-  description:
-    "This box contains all the objects that declare characteristic information of the media in the track.",
+  description: "Container for media-specific header boxes and data references.",
   container: true,
 };
