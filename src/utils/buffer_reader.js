@@ -22,10 +22,28 @@ export default function createBufferReader(buffer) {
 
   /**
    * @param {string} hex
-   * @returns {BigInt}
+   * @returns {bigint}
    */
   function hexToBigInt(hex) {
     return BigInt(`0x${hex}`);
+  }
+
+  /**
+   * @param {number} nbBytes
+   * @returns {void}
+   */
+  function ensureAvailable(nbBytes) {
+    if (!Number.isInteger(nbBytes) || nbBytes < 0) {
+      throw new Error(`Cannot read an invalid byte length: ${nbBytes}.`);
+    }
+
+    const remaining = buffer.length - currentOffset;
+    if (remaining < nbBytes) {
+      throw new Error(
+        `Cannot read ${nbBytes} byte(s) at offset ${currentOffset}: ` +
+          `only ${Math.max(0, remaining)} byte(s) remaining.`,
+      );
+    }
   }
 
   return {
@@ -42,9 +60,7 @@ export default function createBufferReader(buffer) {
      * @returns {number}
      */
     bytesToInt(nbBytes) {
-      if (this.getRemainingLength() < nbBytes) {
-        return NaN; // TODO: log error?
-      }
+      ensureAvailable(nbBytes);
       let res;
       switch (nbBytes) {
         case 1:
@@ -79,9 +95,7 @@ export default function createBufferReader(buffer) {
      * @returns {string}
      */
     bytesToHex(nbBytes) {
-      if (this.getRemainingLength() < nbBytes) {
-        return ""; // TODO: Log error?
-      }
+      ensureAvailable(nbBytes);
       const res = bytesToHex(buffer, currentOffset, nbBytes);
       currentOffset += nbBytes;
       return res;
@@ -92,9 +106,7 @@ export default function createBufferReader(buffer) {
      * @returns {bigint}
      */
     bytesToUint64BigInt() {
-      if (this.getRemainingLength() < 8) {
-        return BigInt(0); // TODO: Error / log?
-      }
+      ensureAvailable(8);
       const hex = bytesToHex(buffer, currentOffset, 8);
       currentOffset += 8;
       return hexToBigInt(hex);
@@ -105,9 +117,7 @@ export default function createBufferReader(buffer) {
      * @returns {bigint}
      */
     bytesToInt64BigInt() {
-      if (this.getRemainingLength() < 8) {
-        return BigInt(0); // TODO: Error / log?
-      }
+      ensureAvailable(8);
       const hex = bytesToHex(buffer, currentOffset, 8);
       currentOffset += 8;
       return BigInt.asIntN(64, hexToBigInt(hex));
@@ -119,9 +129,7 @@ export default function createBufferReader(buffer) {
      * @returns {string}
      */
     bytesToASCII(nbBytes) {
-      if (this.getRemainingLength() < nbBytes) {
-        return ""; // TODO: Error / log?
-      }
+      ensureAvailable(nbBytes);
       const res = betoa(buffer, currentOffset, nbBytes);
 
       currentOffset += nbBytes;

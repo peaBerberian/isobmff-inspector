@@ -14,11 +14,27 @@ function recursiveParseBoxes(arr) {
 
   while (i < arr.length) {
     let currentOffset = i;
+    if (arr.length - currentOffset < 8) {
+      console.warn(
+        "impossible to parse box header. Missing",
+        8 - (arr.length - currentOffset),
+        "bytes.",
+      );
+      break;
+    }
 
     let size = be4toi(arr, currentOffset);
     currentOffset += 4;
 
     if (size === 1) {
+      if (arr.length - currentOffset < 12) {
+        console.warn(
+          "impossible to parse large box header. Missing",
+          12 - (arr.length - currentOffset),
+          "bytes.",
+        );
+        break;
+      }
       size = be8toi(arr, currentOffset);
       currentOffset += 8;
     } else if (size === 0) {
@@ -27,6 +43,11 @@ function recursiveParseBoxes(arr) {
 
     const name = betoa(arr, currentOffset, 4);
     currentOffset += 4;
+
+    if (size < currentOffset - i) {
+      console.warn(`impossible to parse "${name}" box. Invalid size:`, size);
+      break;
+    }
 
     /** @type {import("./types.js").ParsedBox} */
     const atomObject = {
@@ -65,7 +86,7 @@ function recursiveParseBoxes(arr) {
             },
             {},
           )
-        : { name: "", description: "" };
+        : /** @type {Record<string, { name: string, description: string }>} */ ({});
 
       atomObject.name = config.name || "";
       atomObject.description = config.description || "";
