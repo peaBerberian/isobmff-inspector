@@ -50,6 +50,12 @@ structure:
         name: "compatible_brands",
         value: "iso6, msdh", // here brands are separated by a comma
       }
+    ],
+    errors: [ // only set when the inspector detected parsing issues
+      {
+        severity: "unrecoverable",
+        message: "Truncated box: declared 24 byte(s), only 20 available."
+      }
     ]
   },
   {
@@ -80,6 +86,21 @@ structure:
   // ...
 ]
 ```
+
+When possible, the inspector keeps parsing after an error to return as much
+information as it can. Parsing issues are reported on the corresponding box
+through an optional ``errors`` array instead of being logged to the console.
+
+Each error entry has:
+
+- ``severity``: either ``"recoverable"`` or ``"unrecoverable"``
+- ``message``: a human-readable description of the issue
+
+``"unrecoverable"`` means the inspector could not reliably parse part of the
+file, for example because a box is truncated, has an invalid size, or a field
+could not be read. ``"recoverable"`` means parsing could continue, but the
+parsed result may be incomplete or suspicious, for example when a known box
+parser left unread bytes.
 
 Note: You can also add to your page or your console the script defined in
 ``dist/bundle.js``.

@@ -3,6 +3,27 @@ import BufferReader from "./utils/buffer_reader.js";
 import { be4toi, be8toi, betoa } from "./utils/bytes.js";
 
 /**
+ * @param {unknown} error
+ * @returns {string}
+ */
+function formatErrorMessage(error) {
+  return error instanceof Error ? error.message : String(error);
+}
+
+/**
+ * @param {import("./types.js").ParsedBox} box
+ * @param {"recoverable" | "unrecoverable"} severity
+ * @param {string} message
+ * @returns {void}
+ */
+function addBoxError(box, severity, message) {
+  if (!box.errors) {
+    box.errors = [];
+  }
+  box.errors.push({ severity, message });
+}
+
+/**
  * Parse recursively ISOBMFF Uint8Array.
  * @param {Uint8Array} arr
  * @returns {import("./types.js").ParsedBox[]}
@@ -15,38 +36,49 @@ function recursiveParseBoxes(arr) {
   while (i < arr.length) {
     let currentOffset = i;
     if (arr.length - currentOffset < 8) {
-      console.warn(
-        "impossible to parse box header. Missing",
-        8 - (arr.length - currentOffset),
-        "bytes.",
-      );
+      returnedArray.push({
+        alias: "",
+        size: arr.length - currentOffset,
+        values: [],
+        errors: [
+          {
+            severity: "unrecoverable",
+            message: `Cannot parse box header: missing ${
+              8 - (arr.length - currentOffset)
+            } byte(s).`,
+          },
+        ],
+      });
       break;
     }
 
     let size = be4toi(arr, currentOffset);
     currentOffset += 4;
 
+    const name = betoa(arr, currentOffset, 4);
+    currentOffset += 4;
+
     if (size === 1) {
-      if (arr.length - currentOffset < 12) {
-        console.warn(
-          "impossible to parse large box header. Missing",
-          12 - (arr.length - currentOffset),
-          "bytes.",
-        );
+      if (arr.length - currentOffset < 8) {
+        returnedArray.push({
+          alias: name,
+          size: arr.length - i,
+          values: [],
+          errors: [
+            {
+              severity: "unrecoverable",
+              message: `Cannot parse large box header: missing ${
+                8 - (arr.length - currentOffset)
+              } byte(s).`,
+            },
+          ],
+        });
         break;
       }
       size = be8toi(arr, currentOffset);
       currentOffset += 8;
     } else if (size === 0) {
       size = arr.length - i;
-    }
-
-    const name = betoa(arr, currentOffset, 4);
-    currentOffset += 4;
-
-    if (size < currentOffset - i) {
-      console.warn(`impossible to parse "${name}" box. Invalid size:`, size);
-      break;
     }
 
     /** @type {import("./types.js").ParsedBox} */
@@ -56,10 +88,28 @@ function recursiveParseBoxes(arr) {
       values: [],
     };
 
+    if (size < currentOffset - i) {
+      addBoxError(
+        atomObject,
+        "unrecoverable",
+        `Invalid box size ${size}: smaller than its ${currentOffset - i} byte header.`,
+      );
+      returnedArray.push(atomObject);
+      break;
+    }
+
+    if (size > arr.length - i) {
+      addBoxError(
+        atomObject,
+        "unrecoverable",
+        `Truncated box: declared ${size} byte(s), only ${arr.length - i} available.`,
+      );
+    }
+
     if (name === "uuid") {
       const subtype = [];
       let j = 16;
-      while (j--) {
+      while (j-- && currentOffset < arr.length) {
         subtype.push(arr[currentOffset]);
         currentOffset += 1;
       }
@@ -105,17 +155,17 @@ function recursiveParseBoxes(arr) {
             config.parser(parserReader)
           );
         } catch (e) {
-          console.warn(`impossible to parse "${name}" box.`, e);
+          addBoxError(atomObject, "unrecoverable", formatErrorMessage(e));
         }
 
         if (hasChildren) {
           const remaining = parserReader.getRemainingLength();
           contentForChildren = content.slice(content.length - remaining);
         } else if (!parserReader.isFinished()) {
-          console.warn(
-            `not everything has been parsed for box: ${name}. Missing`,
-            parserReader.getRemainingLength(),
-            "bytes.",
+          addBoxError(
+            atomObject,
+            "recoverable",
+            `Parser left ${parserReader.getRemainingLength()} byte(s) unread.`,
           );
         }
 

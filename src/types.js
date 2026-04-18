@@ -42,6 +42,12 @@
  */
 
 /**
+ * @typedef {object} ParsedBoxError
+ * @property {"recoverable" | "unrecoverable"} severity
+ * @property {string} message
+ */
+
+/**
  * @typedef {object} ParsedBox
  * @property {string} alias
  * @property {number} size
@@ -50,6 +56,7 @@
  * @property {string=} name
  * @property {string=} description
  * @property {ParsedBox[]=} children
+ * @property {ParsedBoxError[]=} errors
  */
 
 export {};

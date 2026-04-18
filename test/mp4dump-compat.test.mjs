@@ -8,6 +8,34 @@ import parseBoxes from "../src/main.js";
 const SUPPORTED_ALIASES = new Set(Object.keys(definitions));
 const MP4_DIR = new URL("./fixtures/mp4s/", import.meta.url);
 
+test("parse errors are returned on boxes without console warnings", () => {
+  const warn = console.warn;
+  let warnCount = 0;
+  console.warn = () => {
+    warnCount++;
+  };
+
+  try {
+    const parsed = parseBoxes(
+      new Uint8Array([
+        0x00, 0x00, 0x00, 0x10, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x36,
+      ]),
+    );
+
+    assert.equal(warnCount, 0);
+    assert.equal(parsed.length, 1);
+    assert.equal(parsed[0].alias, "ftyp");
+    assert.deepEqual(
+      parsed[0].errors?.map((error) => error.severity),
+      ["unrecoverable", "unrecoverable"],
+    );
+    assert.match(parsed[0].errors?.[0].message ?? "", /Truncated box/);
+    assert.match(parsed[0].errors?.[1].message ?? "", /Cannot read 4 byte/);
+  } finally {
+    console.warn = warn;
+  }
+});
+
 function parseDump(text) {
   const root = [];
   const stack = [];
