@@ -86,6 +86,16 @@ Note: You can also add to your page or your console the script defined in
 You will then have an ``inspectISOBMFF`` function defined which has the same API
 as above.
 
+## Integer types ###############################################################
+
+Parsed integer values follow a fixed rule:
+
+- 8-bit to 32-bit integers are returned as JavaScript ``number`` values
+- 64-bit integers are returned as JavaScript ``bigint`` values
+
+This means 64-bit ISOBMFF fields are always exact and never depend on the
+parsed value's magnitude.
+
 ## Parsed boxes ################################################################
 
 The inspector only parses the following ISOBMFF boxes for now:

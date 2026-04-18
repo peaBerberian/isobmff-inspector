@@ -20,56 +20,8 @@ import {
 export default function createBufferReader(buffer) {
   let currentOffset = 0;
 
-  function hexToDecimalString(hex) {
-    const digits = [0];
-
-    for (let i = 0; i < hex.length; i++) {
-      let carry = Number.parseInt(hex[i], 16);
-
-      for (let j = 0; j < digits.length; j++) {
-        const value = digits[j] * 16 + carry;
-        digits[j] = value % 10;
-        carry = Math.floor(value / 10);
-      }
-
-      while (carry > 0) {
-        digits.push(carry % 10);
-        carry = Math.floor(carry / 10);
-      }
-    }
-
-    return digits.reverse().join("");
-  }
-
-  function twosComplementHexToAbsHex(hex) {
-    let carry = 1;
-    let ret = "";
-
-    for (let i = hex.length - 1; i >= 0; i--) {
-      let value = 15 - Number.parseInt(hex[i], 16) + carry;
-      if (value >= 16) {
-        value -= 16;
-        carry = 1;
-      } else {
-        carry = 0;
-      }
-      ret = value.toString(16) + ret;
-    }
-
-    const normalized = ret.replace(/^0+/, "");
-    return normalized === "" ? "0" : normalized;
-  }
-
-  function parseHex64ToSafeNumber(hex) {
-    const paddedHex = hex.padStart(16, "0");
-    const high = Number.parseInt(paddedHex.slice(0, 8), 16);
-    const low = Number.parseInt(paddedHex.slice(8), 16);
-
-    if (high > 0x1fffff) {
-      return;
-    }
-
-    return high * 0x100000000 + low;
+  function hexToBigInt(hex) {
+    return BigInt(`0x${hex}`);
   }
 
   return {
@@ -132,81 +84,29 @@ export default function createBufferReader(buffer) {
     },
 
     /**
-     * Returns the next 8 bytes as an exact unsigned 64-bit decimal string.
-     * @returns {string}
+     * Returns the next 8 bytes as an exact unsigned 64-bit bigint.
+     * @returns {bigint}
      */
-    bytesToUint64String() {
+    bytesToUint64BigInt() {
       if (this.getRemainingLength() < 8) {
         return;
       }
       const hex = bytesToHex(buffer, currentOffset, 8);
       currentOffset += 8;
-      return hexToDecimalString(hex);
+      return hexToBigInt(hex);
     },
 
     /**
-     * Returns the next 8 bytes as an exact signed 64-bit decimal string.
-     * @returns {string}
+     * Returns the next 8 bytes as an exact signed 64-bit bigint.
+     * @returns {bigint}
      */
-    bytesToInt64String() {
+    bytesToInt64BigInt() {
       if (this.getRemainingLength() < 8) {
         return;
       }
       const hex = bytesToHex(buffer, currentOffset, 8);
       currentOffset += 8;
-
-      const firstNibble = Number.parseInt(hex[0], 16);
-      if (firstNibble < 8) {
-        return hexToDecimalString(hex);
-      }
-
-      const absoluteHex = twosComplementHexToAbsHex(hex);
-      return `-${hexToDecimalString(absoluteHex)}`;
-    },
-
-    /**
-     * Returns the next 8 bytes as either a safe JS number or an exact
-     * unsigned 64-bit decimal string.
-     * @returns {number|string}
-     */
-    bytesToUint64() {
-      if (this.getRemainingLength() < 8) {
-        return;
-      }
-      const hex = bytesToHex(buffer, currentOffset, 8);
-      currentOffset += 8;
-
-      const numericValue = parseHex64ToSafeNumber(hex);
-      return numericValue !== undefined
-        ? numericValue
-        : hexToDecimalString(hex);
-    },
-
-    /**
-     * Returns the next 8 bytes as either a safe JS number or an exact
-     * signed 64-bit decimal string.
-     * @returns {number|string}
-     */
-    bytesToInt64() {
-      if (this.getRemainingLength() < 8) {
-        return;
-      }
-      const hex = bytesToHex(buffer, currentOffset, 8);
-      currentOffset += 8;
-
-      const firstNibble = Number.parseInt(hex[0], 16);
-      if (firstNibble < 8) {
-        const numericValue = parseHex64ToSafeNumber(hex);
-        return numericValue !== undefined
-          ? numericValue
-          : hexToDecimalString(hex);
-      }
-
-      const absoluteHex = twosComplementHexToAbsHex(hex);
-      const numericValue = parseHex64ToSafeNumber(absoluteHex);
-      return numericValue !== undefined
-        ? -numericValue
-        : `-${hexToDecimalString(absoluteHex)}`;
+      return BigInt.asIntN(64, hexToBigInt(hex));
     },
 
     /**

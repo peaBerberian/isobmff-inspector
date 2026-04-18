@@ -16,8 +16,9 @@ export default {
 
     for (let i = 0; i < entry_count; i++) {
       entries.push({
-        segment_duration: version === 0 ? r.bytesToInt(4) : r.bytesToUint64(),
-        media_time: version === 0 ? ~~r.bytesToInt(4) : r.bytesToInt64(),
+        segment_duration:
+          version === 0 ? r.bytesToInt(4) : r.bytesToUint64BigInt(),
+        media_time: version === 0 ? ~~r.bytesToInt(4) : r.bytesToInt64BigInt(),
         media_rate_integer: toSignedInt(r.bytesToInt(2), 16),
         media_rate_fraction: r.bytesToInt(2),
       });

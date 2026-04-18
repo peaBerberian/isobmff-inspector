@@ -14,7 +14,7 @@ export default {
     const flags = reader.bytesToInt(3);
 
     const fragmentDuration =
-      version === 1 ? reader.bytesToUint64() : reader.bytesToInt(4);
+      version === 1 ? reader.bytesToUint64BigInt() : reader.bytesToInt(4);
 
     return {
       version,

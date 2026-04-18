@@ -107,6 +107,13 @@ function dumpInteger(raw) {
   return /^[0-9]+$/.test(raw) ? Number(raw) : Number.parseInt(raw, 16);
 }
 
+function dumpBigInt(raw) {
+  if (raw === undefined) {
+    return undefined;
+  }
+  return /^-?[0-9]+$/.test(raw) ? BigInt(raw) : BigInt(`0x${raw}`);
+}
+
 function dumpFloat(raw) {
   return Number.parseFloat(raw);
 }
@@ -169,14 +176,18 @@ const FIELD_CHECKS = {
     );
     assert.equal(
       actualNode.values.duration,
-      dumpInteger(dumpScalar(dumpNode, "duration")),
+      actualNode.values.version === 1
+        ? dumpBigInt(dumpScalar(dumpNode, "duration"))
+        : dumpInteger(dumpScalar(dumpNode, "duration")),
     );
   },
 
   mehd(dumpNode, actualNode) {
     assert.equal(
       actualNode.values.fragment_duration,
-      dumpInteger(dumpScalar(dumpNode, "duration")),
+      actualNode.values.version === 1
+        ? dumpBigInt(dumpScalar(dumpNode, "duration"))
+        : dumpInteger(dumpScalar(dumpNode, "duration")),
     );
   },
 
@@ -211,7 +222,9 @@ const FIELD_CHECKS = {
     );
     assert.equal(
       actualNode.values.duration,
-      dumpInteger(dumpScalar(dumpNode, "duration")),
+      actualNode.values.version === 1
+        ? dumpBigInt(dumpScalar(dumpNode, "duration"))
+        : dumpInteger(dumpScalar(dumpNode, "duration")),
     );
     assert.equal(
       fixedPoint1616FromArray(actualNode.values.width),
@@ -232,11 +245,15 @@ const FIELD_CHECKS = {
     assert.equal(entries.length, actualNode.values.entry_count);
     assert.deepEqual(
       entries.map((entry) => entry.segment_duration),
-      dumpList(dumpNode, "entry/segment duration").map(dumpInteger),
+      dumpList(dumpNode, "entry/segment duration").map(
+        actualNode.values.version === 1 ? dumpBigInt : dumpInteger,
+      ),
     );
     assert.deepEqual(
       entries.map((entry) => entry.media_time),
-      dumpList(dumpNode, "entry/media time").map(dumpInteger),
+      dumpList(dumpNode, "entry/media time").map(
+        actualNode.values.version === 1 ? dumpBigInt : dumpInteger,
+      ),
     );
     assert.deepEqual(
       entries.map((entry) => entry.media_rate_integer),
@@ -251,7 +268,9 @@ const FIELD_CHECKS = {
     );
     assert.equal(
       actualNode.values.duration,
-      dumpInteger(dumpScalar(dumpNode, "duration")),
+      actualNode.values.version === 1
+        ? dumpBigInt(dumpScalar(dumpNode, "duration"))
+        : dumpInteger(dumpScalar(dumpNode, "duration")),
     );
     assert.equal(actualNode.values.language, dumpScalar(dumpNode, "language"));
   },
@@ -503,7 +522,9 @@ const FIELD_CHECKS = {
   tfdt(dumpNode, actualNode) {
     assert.equal(
       actualNode.values.baseMediaDecodeTime,
-      dumpInteger(dumpScalar(dumpNode, "base media decode time")),
+      actualNode.values.version === 1
+        ? dumpBigInt(dumpScalar(dumpNode, "base media decode time"))
+        : dumpInteger(dumpScalar(dumpNode, "base media decode time")),
     );
   },
 

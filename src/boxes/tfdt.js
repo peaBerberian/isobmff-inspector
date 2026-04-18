@@ -8,7 +8,7 @@ export default {
     return {
       version,
       flags: r.bytesToInt(3),
-      baseMediaDecodeTime: version ? r.bytesToUint64() : r.bytesToInt(4),
+      baseMediaDecodeTime: version ? r.bytesToUint64BigInt() : r.bytesToInt(4),
     };
   },
 };
