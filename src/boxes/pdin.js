@@ -1,3 +1,4 @@
+/** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Progressive Download Information Box",
   description: "",

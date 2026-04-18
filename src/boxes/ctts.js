@@ -1,3 +1,4 @@
+/** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Composition Time to Sample Box",
   description: "",

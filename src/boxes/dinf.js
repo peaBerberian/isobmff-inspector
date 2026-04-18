@@ -1,3 +1,4 @@
+/** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Data Information Box",
   description:

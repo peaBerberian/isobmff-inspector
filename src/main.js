@@ -5,10 +5,11 @@ import { be4toi, be8toi, betoa } from "./utils/bytes.js";
 /**
  * Parse recursively ISOBMFF Uint8Array.
  * @param {Uint8Array} arr
- * @returns {Array.<Object>}
+ * @returns {import("./types.js").ParsedBox[]}
  */
 function recursiveParseBoxes(arr) {
   let i = 0;
+  /** @type {import("./types.js").ParsedBox[]} */
   const returnedArray = [];
 
   while (i < arr.length) {
@@ -49,13 +50,20 @@ function recursiveParseBoxes(arr) {
     if (definitions[name]) {
       const config = definitions[name];
       const contentInfos = config.content
-        ? config.content.reduce((acc, el) => {
-            acc[el.key] = {
-              name: el.name || "",
-              description: el.description || "",
-            };
-            return acc;
-          }, {})
+        ? config.content.reduce(
+            /**
+             * @param {Record<string, { name: string, description: string }>} acc
+             * @param {import("./types.js").BoxContentEntry} el
+             */
+            (acc, el) => {
+              acc[el.key] = {
+                name: el.name || "",
+                description: el.description || "",
+              };
+              return acc;
+            },
+            {},
+          )
         : { name: "", description: "" };
 
       atomObject.name = config.name || "";
@@ -63,13 +71,17 @@ function recursiveParseBoxes(arr) {
       const hasChildren = !!config.container;
 
       const content = arr.slice(currentOffset, size + i);
+      /** @type {Uint8Array | undefined} */
       let contentForChildren;
 
       if (typeof config.parser === "function") {
         const parserReader = BufferReader(content);
+        /** @type {import("./types.js").BoxParserFields} */
         let result = {};
         try {
-          result = config.parser(parserReader);
+          result = /** @type {import("./types.js").BoxParserFields} */ (
+            config.parser(parserReader)
+          );
         } catch (e) {
           console.warn(`impossible to parse "${name}" box.`, e);
         }
@@ -118,8 +130,8 @@ function recursiveParseBoxes(arr) {
 /**
  * Parse ISOBMFF file and translate it into a more useful array containing
  * "atom objects".
- * @param {ArrayBuffer|Uint8Array} arr
- * @returns {Array.<Object>}
+ * @param {ArrayBuffer | ArrayBufferView} arr
+ * @returns {import("./types.js").ParsedBox[]}
  */
 export default function parseBoxes(arr) {
   if (arr instanceof Uint8Array) {
@@ -128,7 +140,7 @@ export default function parseBoxes(arr) {
   if (arr instanceof ArrayBuffer) {
     return recursiveParseBoxes(new Uint8Array(arr));
   }
-  if (arr.buffer instanceof ArrayBuffer) {
+  if (ArrayBuffer.isView(arr)) {
     return recursiveParseBoxes(new Uint8Array(arr.buffer));
   }
   throw new Error(

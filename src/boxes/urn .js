@@ -1,3 +1,4 @@
+/** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Data Entry Url Box",
   description:
@@ -12,10 +13,7 @@ export default {
     // TODO Check NULL-terminated stream for name+location
     // might also check flags for that
     if (remaining) {
-      ret.name = String.fromCharCode.apply(
-        String,
-        r.bytesToInt(r.getRemainingLength()),
-      );
+      ret.name = r.bytesToASCII(remaining);
     }
     return ret;
   },

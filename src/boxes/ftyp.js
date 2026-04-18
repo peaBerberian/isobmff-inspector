@@ -1,3 +1,4 @@
+/** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "File Type Box",
   description: "File type and compatibility",

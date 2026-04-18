@@ -1,3 +1,4 @@
+/** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "AVC Decoder Configuration Record",
   description: "",

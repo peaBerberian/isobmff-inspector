@@ -69,6 +69,7 @@ import urn_ from "./urn .js";
 import uuid from "./uuid.js";
 import vmhd from "./vmhd.js";
 
+/** @type {import("../types.js").BoxDefinitionsMap} */
 export default {
   ID32,
   avc1,

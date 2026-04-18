@@ -15,7 +15,7 @@ import {
  * call, allowing to easily parse contiguous bytes in box parsers.
  *
  * @param {Uint8Array} buffer
- * @returns {Object}
+ * @returns {import("../types.js").BufferReader}
  */
 export default function createBufferReader(buffer) {
   let currentOffset = 0;
@@ -34,7 +34,7 @@ export default function createBufferReader(buffer) {
      * /!\ Depending on the size of the number, it may be larger than JS'
      * limit.
      *
-     * @param {number} nb
+     * @param {number} nbBytes
      * @returns {number}
      */
     bytesToInt(nbBytes) {
@@ -71,7 +71,7 @@ export default function createBufferReader(buffer) {
 
     /**
      * Returns the N next bytes into a string of Hexadecimal values.
-     * @param {number}
+     * @param {number} nbBytes
      * @returns {string}
      */
     bytesToHex(nbBytes) {
@@ -111,7 +111,7 @@ export default function createBufferReader(buffer) {
 
     /**
      * Returns the N next bytes into a string.
-     * @param {number}
+     * @param {number} nbBytes
      * @returns {string}
      */
     bytesToASCII(nbBytes) {

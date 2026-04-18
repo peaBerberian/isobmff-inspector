@@ -1,5 +1,6 @@
 import { toSignedInt } from "./helpers.js";
 
+/** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Edit List Box",
   description: "",

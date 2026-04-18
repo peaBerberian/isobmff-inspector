@@ -1,3 +1,4 @@
+/** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Handler Reference Box",
   description:
@@ -13,10 +14,9 @@ export default {
       reserved: [r.bytesToInt(4), r.bytesToInt(4), r.bytesToInt(4)],
     };
 
-    let remaining = r.getRemainingLength();
-    ret.name = "";
-    while (remaining--) {
-      ret.name += String.fromCharCode(parseInt(r.bytesToInt(1), 10));
+    const remaining = r.getRemainingLength();
+    if (remaining > 0) {
+      ret.name = r.bytesToASCII(remaining);
     }
 
     return ret;

@@ -1,3 +1,4 @@
+/** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Data Entry Url Box",
   description:
@@ -10,10 +11,7 @@ export default {
     const remaining = r.getRemainingLength();
 
     if (remaining) {
-      ret.location = String.fromCharCode.apply(
-        String,
-        r.bytesToInt(r.getRemainingLength()),
-      );
+      ret.location = r.bytesToASCII(remaining);
     }
     return ret;
   },

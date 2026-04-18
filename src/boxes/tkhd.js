@@ -1,3 +1,4 @@
+/** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Track Header Box",
   description: "Characteristics of a single track.",

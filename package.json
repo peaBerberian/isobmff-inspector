@@ -10,17 +10,19 @@
   ],
   "scripts": {
     "build": "node scripts/build.mjs",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "check": "npm run lint && npm run typecheck && npm run test",
     "prepack": "npm run build",
     "test": "node --test",
-    "format": "biome format --write .",
-    "lint": "biome lint .",
-    "check": "biome check ."
+    "typecheck": "tsc -p tsconfig.json"
   },
   "author": "peaberberian",
   "license": "MIT",
   "devDependencies": {
     "@biomejs/biome": "2.4.12",
-    "esbuild": "^0.28.0"
+    "esbuild": "^0.28.0",
+    "typescript": "^5.9.2"
   },
   "repository": {
     "type": "git",

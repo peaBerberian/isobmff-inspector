@@ -6,6 +6,7 @@ function decodeIso639Language(code) {
   );
 }
 
+/** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "ID3 Metadata Box",
   description: "",

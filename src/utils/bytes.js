@@ -1,8 +1,8 @@
 /**
  * Translate groups of 2 big-endian bytes to Integer (from 0 up to 65535).
- * @param {TypedArray} bytes
- * @param {Number} off - The offset (from the start of the given array)
- * @returns {Number}
+ * @param {ArrayLike<number>} bytes
+ * @param {number} off - The offset (from the start of the given array)
+ * @returns {number}
  */
 function be2toi(bytes, off) {
   return (bytes[0 + off] << 8) + bytes[1 + off];
@@ -10,9 +10,9 @@ function be2toi(bytes, off) {
 
 /**
  * Translate groups of 3 big-endian bytes to Integer.
- * @param {TypedArray} bytes
- * @param {Number} off - The offset (from the start of the given array)
- * @returns {Number}
+ * @param {ArrayLike<number>} bytes
+ * @param {number} off - The offset (from the start of the given array)
+ * @returns {number}
  */
 function be3toi(bytes, off) {
   return (
@@ -22,9 +22,9 @@ function be3toi(bytes, off) {
 
 /**
  * Translate groups of 4 big-endian bytes to Integer.
- * @param {TypedArray} bytes
- * @param {Number} off - The offset (from the start of the given array)
- * @returns {Number}
+ * @param {ArrayLike<number>} bytes
+ * @param {number} off - The offset (from the start of the given array)
+ * @returns {number}
  */
 function be4toi(bytes, off) {
   return (
@@ -37,9 +37,9 @@ function be4toi(bytes, off) {
 
 /**
  * Translate groups of 4 big-endian bytes to Integer.
- * @param {TypedArray} bytes
- * @param {Number} off - The offset (from the start of the given array)
- * @returns {Number}
+ * @param {ArrayLike<number>} bytes
+ * @param {number} off - The offset (from the start of the given array)
+ * @returns {number}
  */
 function be5toi(bytes, off) {
   return (
@@ -53,9 +53,9 @@ function be5toi(bytes, off) {
 
 /**
  * Translate groups of 8 big-endian bytes to Integer.
- * @param {TypedArray} bytes
- * @param {Number} off - The offset (from the start of the given array)
- * @returns {Number}
+ * @param {ArrayLike<number>} bytes
+ * @param {number} off - The offset (from the start of the given array)
+ * @returns {number}
  */
 function be8toi(bytes, off) {
   return (
@@ -94,7 +94,7 @@ function betoa(uint8arr, off, nbBytes) {
   }
 
   const arr = uint8arr.slice(off, nbBytes + off);
-  return String.fromCharCode.apply(String, arr);
+  return String.fromCharCode(...arr);
 }
 
 export { be2toi, be3toi, be4toi, be5toi, be8toi, betoa, bytesToHex };

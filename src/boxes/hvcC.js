@@ -1,3 +1,4 @@
+/** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "HEVC Decoder Configuration Record",
   description: "",
