@@ -1,8 +1,11 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { mkdir, rm, writeFile } from "node:fs/promises";
+import { promisify } from "node:util";
 import { build } from "esbuild";
 
 const bundleGlobal = "__inspectISOBMFFBundle";
 const outputFile = "dist/bundle.js";
+const execFileAsync = promisify(execFile);
 
 const result = await build({
   bundle: true,
@@ -29,5 +32,19 @@ const umdBundle =
   "  return (bundleValue && bundleValue.default) || bundleValue;\n" +
   "});\n";
 
+await rm("dist", { recursive: true, force: true });
 await mkdir("dist", { recursive: true });
 await writeFile(outputFile, umdBundle);
+await execFileAsync("tsc", [
+  "-p",
+  "tsconfig.json",
+  "--noEmit",
+  "false",
+  "--declaration",
+  "--declarationMap",
+  "--emitDeclarationOnly",
+  "--outDir",
+  "dist",
+  "--rootDir",
+  "src",
+]);
