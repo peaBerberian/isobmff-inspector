@@ -53,7 +53,7 @@ structure:
     ],
     errors: [ // only set when the inspector detected parsing issues
       {
-        severity: "unrecoverable",
+        recoverable: false,
         message: "Truncated box: declared 24 byte(s), only 20 available."
       }
     ]
@@ -93,12 +93,13 @@ through an optional ``errors`` array instead of being logged to the console.
 
 Each error entry has:
 
-- ``severity``: either ``"recoverable"`` or ``"unrecoverable"``
+- ``recoverable``: whether the inspector could recover from this issue while
+  parsing the box
 - ``message``: a human-readable description of the issue
 
-``"unrecoverable"`` means the inspector could not reliably parse part of the
+``recoverable: false`` means the inspector could not reliably parse part of the
 file, for example because a box is truncated, has an invalid size, or a field
-could not be read. ``"recoverable"`` means parsing could continue, but the
+could not be read. ``recoverable: true`` means parsing could continue, but the
 parsed result may be incomplete or suspicious, for example when a known box
 parser left unread bytes.
 

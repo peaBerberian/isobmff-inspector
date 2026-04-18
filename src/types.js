@@ -43,7 +43,7 @@
 
 /**
  * @typedef {object} ParsedBoxError
- * @property {"recoverable" | "unrecoverable"} severity
+ * @property {boolean} recoverable
  * @property {string} message
  */
 

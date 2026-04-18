@@ -12,15 +12,15 @@ function formatErrorMessage(error) {
 
 /**
  * @param {import("./types.js").ParsedBox} box
- * @param {"recoverable" | "unrecoverable"} severity
+ * @param {boolean} recoverable
  * @param {string} message
  * @returns {void}
  */
-function addBoxError(box, severity, message) {
+function addBoxError(box, recoverable, message) {
   if (!box.errors) {
     box.errors = [];
   }
-  box.errors.push({ severity, message });
+  box.errors.push({ recoverable, message });
 }
 
 /**
@@ -42,7 +42,7 @@ function recursiveParseBoxes(arr) {
         values: [],
         errors: [
           {
-            severity: "unrecoverable",
+            recoverable: false,
             message: `Cannot parse box header: missing ${
               8 - (arr.length - currentOffset)
             } byte(s).`,
@@ -66,7 +66,7 @@ function recursiveParseBoxes(arr) {
           values: [],
           errors: [
             {
-              severity: "unrecoverable",
+              recoverable: false,
               message: `Cannot parse large box header: missing ${
                 8 - (arr.length - currentOffset)
               } byte(s).`,
@@ -91,7 +91,7 @@ function recursiveParseBoxes(arr) {
     if (size < currentOffset - i) {
       addBoxError(
         atomObject,
-        "unrecoverable",
+        false,
         `Invalid box size ${size}: smaller than its ${currentOffset - i} byte header.`,
       );
       returnedArray.push(atomObject);
@@ -101,7 +101,7 @@ function recursiveParseBoxes(arr) {
     if (size > arr.length - i) {
       addBoxError(
         atomObject,
-        "unrecoverable",
+        false,
         `Truncated box: declared ${size} byte(s), only ${arr.length - i} available.`,
       );
     }
@@ -155,7 +155,7 @@ function recursiveParseBoxes(arr) {
             config.parser(parserReader)
           );
         } catch (e) {
-          addBoxError(atomObject, "unrecoverable", formatErrorMessage(e));
+          addBoxError(atomObject, false, formatErrorMessage(e));
         }
 
         if (hasChildren) {
@@ -164,7 +164,7 @@ function recursiveParseBoxes(arr) {
         } else if (!parserReader.isFinished()) {
           addBoxError(
             atomObject,
-            "recoverable",
+            true,
             `Parser left ${parserReader.getRemainingLength()} byte(s) unread.`,
           );
         }

@@ -26,8 +26,8 @@ test("parse errors are returned on boxes without console warnings", () => {
     assert.equal(parsed.length, 1);
     assert.equal(parsed[0].alias, "ftyp");
     assert.deepEqual(
-      parsed[0].errors?.map((error) => error.severity),
-      ["unrecoverable", "unrecoverable"],
+      parsed[0].errors?.map((error) => error.recoverable),
+      [false, false],
     );
     assert.match(parsed[0].errors?.[0].message ?? "", /Truncated box/);
     assert.match(parsed[0].errors?.[1].message ?? "", /Cannot read 4 byte/);
