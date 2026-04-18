@@ -92,20 +92,27 @@ The inspector only parses the following ISOBMFF boxes for now:
   - avc1
   - avc3
   - avcC
+  - btrt
   - co64
+  - colr
   - ctts
   - dinf
   - dref
   - edts
   - elst
+  - encv
   - esds
   - free
+  - frma
   - ftyp
   - hdlr
   - hev1
   - hvc1
   - hvcC
+  - ID32
   - ilst
+  - iods
+  - leva
   - mdat
   - mdhd
   - mdia
@@ -118,12 +125,16 @@ The inspector only parses the following ISOBMFF boxes for now:
   - mp4a
   - mvex
   - mvhd
+  - pasp
   - pdin
   - pssh
   - saio
   - saiz
+  - schi
+  - schm
   - sdtp
   - sidx
+  - sinf
   - skip
   - smhd
   - stbl
@@ -134,16 +145,19 @@ The inspector only parses the following ISOBMFF boxes for now:
   - stsz
   - stts
   - styp
+  - tenc
   - tfdt
   - tfhd
   - tkhd
   - traf
   - trak
+  - trep
   - trex
   - trun
   - udta
-  - url
-  - urn
+  - url 
+  - urn 
+  - uuid
   - vmhd
 
 I plan to support each one of them but UUIDs (I may add support for some of them

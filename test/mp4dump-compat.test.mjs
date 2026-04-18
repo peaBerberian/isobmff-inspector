@@ -84,6 +84,7 @@ function normalizeActual(nodes) {
     .filter((node) => SUPPORTED_ALIASES.has(node.alias))
     .map((node) => ({
       alias: node.alias,
+      size: node.size,
       values: Object.fromEntries(
         node.values.map((value) => [value.name, value.value]),
       ),
@@ -115,6 +116,19 @@ function dumpHex(raw) {
     return undefined;
   }
   return Number.parseInt(raw, 16);
+}
+
+function dumpBoxSize(raw) {
+  if (raw === undefined) {
+    return undefined;
+  }
+
+  const parts = raw.split("+").map((part) => Number.parseInt(part, 10));
+  if (parts.some(Number.isNaN)) {
+    return undefined;
+  }
+
+  return parts.reduce((acc, part) => acc + part, 0);
 }
 
 function fixedPoint1616FromArray(value) {
@@ -294,6 +308,10 @@ const FIELD_CHECKS = {
     }
   },
 
+  encv(dumpNode, actualNode) {
+    FIELD_CHECKS.avc1(dumpNode, actualNode);
+  },
+
   avcC(dumpNode, actualNode) {
     assert.equal(
       actualNode.values.configurationVersion,
@@ -329,6 +347,39 @@ const FIELD_CHECKS = {
     assert.equal(
       Number(actualNode.values.samplerate),
       dumpFloat(dumpScalar(dumpNode, "sample_rate")),
+    );
+  },
+
+  frma(dumpNode, actualNode) {
+    assert.equal(
+      actualNode.values.original_format,
+      dumpScalar(dumpNode, "original_format"),
+    );
+  },
+
+  schm(dumpNode, actualNode) {
+    assert.equal(
+      actualNode.values.scheme_type,
+      dumpScalar(dumpNode, "scheme_type"),
+    );
+    assert.equal(
+      actualNode.values.scheme_version,
+      dumpInteger(dumpScalar(dumpNode, "scheme_version")),
+    );
+  },
+
+  tenc(dumpNode, actualNode) {
+    assert.equal(
+      actualNode.values.default_isProtected,
+      dumpInteger(dumpScalar(dumpNode, "default_isProtected")),
+    );
+    assert.equal(
+      actualNode.values.default_Per_Sample_IV_Size,
+      dumpInteger(dumpScalar(dumpNode, "default_Per_Sample_IV_Size")),
+    );
+    assert.equal(
+      actualNode.values.default_KID,
+      normalizeHexDump(dumpScalar(dumpNode, "default_KID")),
     );
   },
 
@@ -500,6 +551,11 @@ function compareNodes(expectedNodes, actualNodes, pathLabel) {
     const expectedNode = expectedNodes[i];
     const actualNode = actualNodes[i];
     const nextPath = `${pathLabel}/${expectedNode.alias}[${i}]`;
+    assert.equal(
+      actualNode.size,
+      dumpBoxSize(expectedNode.attrs.size),
+      `${nextPath}: supported box size mismatch`,
+    );
     const fieldCheck = FIELD_CHECKS[expectedNode.alias];
     if (fieldCheck) {
       fieldCheck(expectedNode, actualNode);
