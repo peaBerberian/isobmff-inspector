@@ -74,27 +74,6 @@ export default function createBufferReader(buffer) {
 
   return {
     /**
-     * Returns the following byte, as a number between 0 and 255.
-     * @returns {number}
-     */
-    getNextByte() {
-      this.getNextBytes(1);
-    },
-
-    /**
-     * Returns the N next bytes, as an Uint8Array
-     * @param {number} nb
-     * @returns {Uint8Array}
-     */
-    getNextBytes(nb) {
-      if (this.getRemainingLength() < nb) {
-        return;
-      }
-      currentOffset += nb;
-      return buffer.slice(0, nb);
-    },
-
-    /**
      * Returns the N next bytes, as a single number.
      *
      * /!\ only work for now for 1, 2, 3, 4, 5 or 8 bytes.
