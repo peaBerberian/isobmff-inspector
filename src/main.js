@@ -3,6 +3,7 @@ import {
   parseBoxContent,
   shouldReadContent,
 } from "./box_content_parser.js";
+import parseBoxEventsFromInput from "./box_event_parser.js";
 import ProgressiveByteReader from "./progressive_byte_reader.js";
 import {
   asyncByteIterable,
@@ -128,6 +129,15 @@ function recursiveParseBoxes(arr) {
   }
 
   return returnedArray;
+}
+
+/**
+ * Progressively parse ISOBMFF data and yield metadata events as boxes are found.
+ * @param {import("./types.js").ISOBMFFInput} input
+ * @returns {AsyncGenerator<import("./types.js").ParsedBoxParseEvent, void, void>}
+ */
+export async function* parseBoxEvents(input) {
+  yield* parseBoxEventsFromInput(input, recursiveParseBoxes);
 }
 
 /**

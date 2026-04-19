@@ -61,6 +61,40 @@
  */
 
 /**
+ * Emitted as soon as a box header has been parsed.
+ *
+ * @typedef {object} ParsedBoxStartEvent
+ * @property {"box-start"} type
+ * @property {string[]} path
+ * @property {string} alias
+ * @property {number} size
+ * @property {number[]=} subtype
+ */
+
+/**
+ * Emitted when a non-container box has been parsed, or when parsing cannot
+ * continue after a malformed partial box.
+ *
+ * @typedef {object} ParsedBoxEvent
+ * @property {"box"} type
+ * @property {string[]} path
+ * @property {ParsedBox} box
+ */
+
+/**
+ * Emitted when a container box and all of its parsed children are complete.
+ *
+ * @typedef {object} ParsedBoxEndEvent
+ * @property {"box-end"} type
+ * @property {string[]} path
+ * @property {ParsedBox} box
+ */
+
+/**
+ * @typedef {ParsedBoxStartEvent | ParsedBoxEvent | ParsedBoxEndEvent} ParsedBoxParseEvent
+ */
+
+/**
  * @typedef {ArrayBuffer | ArrayBufferView} ISOBMFFByteChunk
  */
 

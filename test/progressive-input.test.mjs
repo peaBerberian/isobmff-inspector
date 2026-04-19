@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 
-import parseBoxes, { parseBoxesProgressively } from "../src/main.js";
+import parseBoxes, {
+  parseBoxEvents,
+  parseBoxesProgressively,
+} from "../src/main.js";
 
 const SAMPLE_MP4 = new URL("./fixtures/mp4s/init.mp4", import.meta.url);
 
@@ -88,4 +91,51 @@ test("progressive parser skips unparsed payload boxes before later boxes", async
   );
   assert.equal(parsed[1].name, "Media Data Box");
   assert.equal(parsed[1].values.length, 0);
+});
+
+test("event parser progressively emits nested box metadata", async () => {
+  const bytes = new Uint8Array([
+    0x00, 0x00, 0x00, 0x10, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x36,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x6d, 0x6f, 0x6f, 0x76,
+    0x00, 0x00, 0x00, 0x08, 0x66, 0x72, 0x65, 0x65, 0x00, 0x00, 0x00, 0x14,
+    0x6d, 0x64, 0x61, 0x74, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa, 0xaa,
+    0xaa, 0xaa, 0xaa, 0xaa,
+  ]);
+
+  const events = [];
+  for await (const event of parseBoxEvents(chunkBytes(bytes, 3))) {
+    events.push(event);
+  }
+
+  assert.deepEqual(
+    events.map((event) => [event.type, event.path.join("/")]),
+    [
+      ["box-start", "ftyp"],
+      ["box", "ftyp"],
+      ["box-start", "moov"],
+      ["box-start", "moov/free"],
+      ["box", "moov/free"],
+      ["box-end", "moov"],
+      ["box-start", "mdat"],
+      ["box", "mdat"],
+    ],
+  );
+
+  const moovEnd = events.find(
+    (event) => event.type === "box-end" && event.path.join("/") === "moov",
+  );
+  assert.equal(moovEnd?.box.children?.[0]?.alias, "free");
+});
+
+test("event parser emits the same event types for buffer inputs", async () => {
+  const bytes = fs.readFileSync(SAMPLE_MP4);
+  const events = [];
+
+  for await (const event of parseBoxEvents(bytes)) {
+    events.push(event.type);
+  }
+
+  assert.equal(events[0], "box-start");
+  assert(events.includes("box"));
+  assert(events.includes("box-end"));
 });

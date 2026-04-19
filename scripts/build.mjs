@@ -29,7 +29,15 @@ const umdBundle =
   bundle +
   "\n" +
   `  const bundleValue = ${bundleGlobal};\n` +
-  "  return (bundleValue && bundleValue.default) || bundleValue;\n" +
+  "  const defaultValue = (bundleValue && bundleValue.default) || bundleValue;\n" +
+  '  if (bundleValue && defaultValue && (typeof defaultValue === "function" || typeof defaultValue === "object")) {\n' +
+  "    Object.keys(bundleValue).forEach(function (key) {\n" +
+  '      if (key !== "default") {\n' +
+  "        defaultValue[key] = bundleValue[key];\n" +
+  "      }\n" +
+  "    });\n" +
+  "  }\n" +
+  "  return defaultValue;\n" +
   "});\n";
 
 await rm("dist", { recursive: true, force: true });

@@ -55,6 +55,25 @@ The inspector only buffers the bytes it needs to parse a box. Boxes without a
 parser or children, including `mdat`, are skipped progressively when their size
 is known, so large media payloads do not have to be kept in memory.
 
+If you want parsed metadata as it becomes available, use the event iterator:
+```js
+import { parseBoxEvents } from "isobmff-inspector";
+
+for await (const event of parseBoxEvents(response)) {
+  if (event.type === "box-start") {
+    console.log("box started", event.path.join("/"), event.size);
+  } else if (event.type === "box") {
+    console.log("box parsed", event.path.join("/"), event.box);
+  } else if (event.type === "box-end") {
+    console.log("container parsed", event.path.join("/"), event.box);
+  }
+}
+```
+
+`box-start` is emitted as soon as the box header is parsed. `box` is emitted for
+parsed non-container boxes, and `box-end` is emitted when a container box and
+its parsed children are complete.
+
 In the previous example, ``parsed`` will have something like the following
 structure:
 ```js

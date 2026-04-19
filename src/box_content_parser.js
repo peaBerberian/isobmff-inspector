@@ -32,6 +32,24 @@ export function shouldReadContent(name) {
 }
 
 /**
+ * @param {string} name
+ * @returns {boolean}
+ */
+export function hasContentParser(name) {
+  const config = definitions[name];
+  return !!config?.parser;
+}
+
+/**
+ * @param {string} name
+ * @returns {boolean}
+ */
+export function isContainerBox(name) {
+  const config = definitions[name];
+  return !!config?.container;
+}
+
+/**
  * @param {import("./types.js").ParsedBox} atomObject
  * @param {Uint8Array} content
  * @param {(content: Uint8Array) => import("./types.js").ParsedBox[]} parseChildren
