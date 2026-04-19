@@ -1,7 +1,7 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Colour Information Box",
-  description: "",
+  description: "Signals the colour representation used by visual samples.",
 
   parser(r) {
     const colour_type = r.bytesToASCII(4);

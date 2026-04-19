@@ -1,7 +1,7 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Metadata Box",
-  description: "",
+  description: "Container for metadata boxes and their handler.",
   container: true,
 
   parser(r) {

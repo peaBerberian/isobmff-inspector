@@ -33,12 +33,23 @@ Examples to avoid:
 
 ## Current State
 
-As of 2026-04-18, the repository appears to follow this rule set after shortening and paraphrasing a small number of descriptions that were too close to specification-style wording.
+As of 2026-04-19, the repository appears to follow this rule set after shortening and paraphrasing descriptions that were missing or too close to specification-style wording.
 
 The current `src/boxes` descriptions are mostly:
 
-- empty
 - short factual labels
 - original paraphrases
 
 This note is about reducing copyright risk for repository text. It is not legal advice.
+
+## Description Sources
+
+The brief top-level descriptions in `src/boxes` are checked against public references rather than copied from ISO text. Main sources:
+
+- MP4 Registration Authority box, codec, and ID3v2 references: https://mp4ra.org/
+- Bento4 parser source: https://github.com/axiomatic-systems/Bento4/tree/master/Source/C%2B%2B/Core
+- FFmpeg MOV/ISOBMFF parser source: https://github.com/FFmpeg/FFmpeg/tree/master/libavformat
+- FFmpeg/libav public notes for `avc1`/`avc3` and `hvc1`/`hev1` parameter-set placement.
+- mp4parser BitRateBox docs for the public `btrt` field meaning.
+
+These sources are used to verify factual meaning only. The committed descriptions are original, short paraphrases and should not be treated as quotations from the references.

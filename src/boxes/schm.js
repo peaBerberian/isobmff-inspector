@@ -1,7 +1,8 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Scheme Type Box",
-  description: "",
+  description:
+    "Identifies the protection or restriction scheme and its version.",
 
   parser(r) {
     const version = r.bytesToInt(1);

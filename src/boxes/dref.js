@@ -1,7 +1,7 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Data Reference Box",
-  description: "",
+  description: "Lists references that locate the media data used by the track.",
   container: true,
 
   parser(reader) {

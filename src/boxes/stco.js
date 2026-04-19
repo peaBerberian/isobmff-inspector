@@ -1,7 +1,7 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Chunk Offset",
-  description: "",
+  description: "Maps each media chunk to its 32-bit byte offset in the file.",
 
   parser(r) {
     /** @type Partial<Record<string, unknown>> */

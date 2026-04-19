@@ -13,7 +13,7 @@ function decodeIso639Language(code) {
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "ID3 Metadata Box",
-  description: "",
+  description: "Carries ID3 metadata with a language code and raw ID3 payload.",
 
   parser(r) {
     const version = r.bytesToInt(1);

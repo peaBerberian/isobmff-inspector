@@ -1,7 +1,8 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Track Extension Properties Box",
-  description: "",
+  description:
+    "Carries extra properties associated with a movie-fragment track.",
   container: true,
 
   parser(r) {

@@ -1,7 +1,8 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Progressive Download Information Box",
-  description: "",
+  description:
+    "Provides rate and startup-delay hints for progressive download playback.",
   content: [
     {
       name: "version",

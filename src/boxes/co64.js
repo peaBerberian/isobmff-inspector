@@ -1,7 +1,7 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Chunk Large Offset Box",
-  description: "",
+  description: "Maps each media chunk to its 64-bit byte offset in the file.",
 
   parser(r) {
     const version = r.bytesToInt(1);

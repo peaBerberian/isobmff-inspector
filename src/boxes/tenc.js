@@ -1,7 +1,8 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Track Encryption Box",
-  description: "",
+  description:
+    "Defines default encryption parameters for samples in a protected track.",
 
   parser(r) {
     const version = r.bytesToInt(1);

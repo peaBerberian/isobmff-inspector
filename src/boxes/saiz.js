@@ -1,7 +1,8 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Sample Auxiliary Information Sizes",
-  description: "",
+  description:
+    "Gives per-sample sizes for auxiliary information such as encryption data.",
 
   parser(r) {
     /** @type Partial<Record<string, unknown>> */

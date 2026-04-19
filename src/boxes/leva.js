@@ -1,6 +1,8 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Level Assignment Box",
+  description:
+    "Assigns media data to levels for partial presentation selection.",
 
   // TODO
   parser(reader) {

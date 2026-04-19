@@ -1,7 +1,8 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Pixel Aspect Ratio Box",
-  description: "",
+  description:
+    "Specifies the horizontal and vertical spacing that define pixel aspect ratio.",
 
   parser(r) {
     return {

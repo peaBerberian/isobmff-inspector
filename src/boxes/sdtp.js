@@ -1,7 +1,7 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Independent and Disposable Samples Box",
-  description: "",
+  description: "Records dependency flags for samples in decoding order.",
 
   parser(r) {
     /** @type Partial<Record<string, unknown>> */

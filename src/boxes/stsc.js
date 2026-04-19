@@ -8,7 +8,8 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Sample To Chunk",
-  description: "",
+  description:
+    "Maps chunks to the number and description index of their samples.",
 
   parser(r) {
     /** @type Partial<Record<string, unknown>> */

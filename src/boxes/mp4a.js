@@ -3,7 +3,8 @@ import { parseAudioSampleEntry } from "./helpers.js";
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "MPEG-4 Audio Sample Entry",
-  description: "",
+  description:
+    "Describes MPEG-4 audio samples and their decoder configuration.",
   container: true,
 
   parser(r) {

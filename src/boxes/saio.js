@@ -1,7 +1,8 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Sample Auxiliary Information Offsets",
-  description: "",
+  description:
+    "Gives file offsets for auxiliary sample information such as encryption data.",
 
   parser(r) {
     /** @type Partial<Record<string, unknown>> */

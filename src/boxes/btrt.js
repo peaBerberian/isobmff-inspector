@@ -1,7 +1,7 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Bit Rate Box",
-  description: "",
+  description: "Provides buffer size and bitrate limits for a sample entry.",
 
   parser(r) {
     return {

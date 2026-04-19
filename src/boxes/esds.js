@@ -3,7 +3,8 @@ import { parseDescriptor } from "./helpers.js";
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Elementary Stream Descriptor Box",
-  description: "",
+  description:
+    "Carries MPEG-4 elementary stream descriptors for a sample entry.",
 
   parser(r) {
     const version = r.bytesToInt(1);

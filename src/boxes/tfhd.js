@@ -1,7 +1,8 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Track Fragment Header Box",
-  description: "",
+  description:
+    "Sets track-wide defaults and addressing for samples in a fragment.",
 
   parser(r) {
     /** @type Partial<Record<string, unknown>> */

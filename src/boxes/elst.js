@@ -3,7 +3,7 @@ import { toSignedInt } from "./helpers.js";
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Edit List Box",
-  description: "",
+  description: "Defines timeline edits that map movie time to media time.",
 
   parser(r) {
     const version = r.bytesToInt(1);

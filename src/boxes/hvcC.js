@@ -1,7 +1,8 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "HEVC Decoder Configuration Record",
-  description: "",
+  description:
+    "Stores HEVC decoder configuration, including profile data and NAL arrays.",
 
   parser(r) {
     const configurationVersion = r.bytesToInt(1);

@@ -26,7 +26,8 @@ const SYSTEM_IDS = {
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Protection System Specific Header",
-  description: "",
+  description:
+    "Carries DRM system identifiers and system-specific protection data.",
   parser(reader) {
     /** @type Partial<Record<string, unknown>> */
     const ret = {};

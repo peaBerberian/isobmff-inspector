@@ -3,7 +3,7 @@ import { toSignedInt } from "./helpers.js";
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Sound Media Header Box",
-  description: "",
+  description: "Stores audio presentation information for a sound track.",
 
   parser(r) {
     const version = r.bytesToInt(1);

@@ -7,7 +7,7 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Decoding Time to Sample",
-  description: "",
+  description: "Maps consecutive samples to their decoding-time deltas.",
 
   parser(r) {
     /** @type Partial<Record<string, unknown>> */

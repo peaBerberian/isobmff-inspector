@@ -1,7 +1,8 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Composition Time to Sample Box",
-  description: "",
+  description:
+    "Maps samples to composition-time offsets for presentation order.",
 
   parser(r) {
     const version = r.bytesToInt(1);

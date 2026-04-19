@@ -9,6 +9,8 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Track Fragment Run Box",
+  description:
+    "Lists sample records and optional per-sample data for a track fragment.",
 
   parser(r) {
     /** @type Partial<Record<string, unknown>> */

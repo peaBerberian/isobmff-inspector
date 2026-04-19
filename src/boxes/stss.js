@@ -1,7 +1,7 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Sync Sample Box",
-  description: "",
+  description: "Lists samples that can be used as random access points.",
 
   parser(r) {
     const version = r.bytesToInt(1);

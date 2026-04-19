@@ -1,7 +1,8 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "AVC Decoder Configuration Record",
-  description: "",
+  description:
+    "Stores AVC decoder configuration, including profile data and parameter sets.",
 
   parser(r) {
     const configurationVersion = r.bytesToInt(1);

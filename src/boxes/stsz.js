@@ -1,7 +1,7 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Sample Size",
-  description: "",
+  description: "Stores the default sample size or a table of per-sample sizes.",
 
   parser(r) {
     /** @type Partial<Record<string, unknown>> */

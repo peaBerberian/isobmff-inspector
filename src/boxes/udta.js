@@ -1,6 +1,7 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "User Data Box",
-  description: "",
+  description:
+    "Container for user-defined metadata associated with the presentation.",
   container: true,
 };

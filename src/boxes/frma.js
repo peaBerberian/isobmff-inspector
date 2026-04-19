@@ -1,7 +1,7 @@
 /** @type {import("../types.js").BoxDefinition} */
 export default {
   name: "Original Format Box",
-  description: "",
+  description: "Identifies the coding format before protection was applied.",
 
   parser(r) {
     return {
