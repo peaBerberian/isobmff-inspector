@@ -103,11 +103,6 @@ could not be read. ``recoverable: true`` means parsing could continue, but the
 parsed result may be incomplete or suspicious, for example when a known box
 parser left unread bytes.
 
-Note: You can also add to your page or your console the script defined in
-``dist/bundle.js``.
-You will then have an ``inspectISOBMFF`` function defined which has the same API
-as above.
-
 ## Integer types ###############################################################
 
 Parsed integer values follow a fixed rule:
