@@ -11,6 +11,7 @@
 
 ### Features
 
+- It's now possible to give a `File`, `Blob`, `Response`, `ReadableStream`, `Iterable`/`AsyncIterable` and most other kinds of "progressive" data inputs to the main API in which case it will return a `Promise` and parse those efficiently (not keeping the full data in-memory)
 - Add parser for the following boxes: `btrt`, `colr`, `encv`, `frma`, `ID32`, `iods`, `leva`, `pasp`, `schi`, `schm`, `sinf`, `tenc`, `trep` and `uuid`
 - Add optional `errors` property to parsed box objects to signal for recoverable or unrecoverable errors that happened when parsing them
 - Add typings (not of boxes themselves for now)

@@ -60,4 +60,36 @@
  * @property {ParsedBoxError[]=} errors
  */
 
+/**
+ * @typedef {ArrayBuffer | ArrayBufferView} ISOBMFFByteChunk
+ */
+
+/**
+ * Progressive byte sources supported by the public entry point.
+ *
+ * This intentionally mirrors usual browser and Node.js APIs:
+ * - Blob/File inputs expose stream() and arrayBuffer()
+ * - fetch Request/Response objects expose body and arrayBuffer()
+ * - Node.js readable streams are AsyncIterable byte chunks
+ *
+ * @typedef {object} ISOBMFFBlobLike
+ * @property {() => ReadableStream<ISOBMFFByteChunk>=} stream
+ * @property {() => Promise<ArrayBuffer>=} arrayBuffer
+ */
+
+/**
+ * @typedef {object} ISOBMFFBodyLike
+ * @property {ReadableStream<ISOBMFFByteChunk> | AsyncIterable<ISOBMFFByteChunk> | Iterable<ISOBMFFByteChunk> | null=} body
+ * @property {() => ReadableStream<ISOBMFFByteChunk>=} stream
+ * @property {() => Promise<ArrayBuffer>=} arrayBuffer
+ */
+
+/**
+ * @typedef {ReadableStream<ISOBMFFByteChunk> | AsyncIterable<ISOBMFFByteChunk> | Iterable<ISOBMFFByteChunk> | ISOBMFFBlobLike | ISOBMFFBodyLike} ISOBMFFProgressiveInput
+ */
+
+/**
+ * @typedef {ISOBMFFByteChunk | ISOBMFFProgressiveInput} ISOBMFFInput
+ */
+
 export {};

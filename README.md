@@ -29,6 +29,32 @@ const parsed = inspectISOBMFF(MY_ISOBMFF_FILE);
 console.log(parsed);
 ```
 
+The same entry point can also progressively parse usual byte sources:
+```js
+import inspectISOBMFF from "isobmff-inspector";
+
+// Browser File/Blob, for example from an <input type="file">
+const parsedFile = await inspectISOBMFF(fileInput.files[0]);
+
+// Fetch Response or Request objects
+const response = await fetch("https://example.com/video.mp4");
+const parsedResponse = await inspectISOBMFF(response);
+
+// Web ReadableStream<Uint8Array> or Node.js readable streams
+const parsedStream = await inspectISOBMFF(readableStream);
+
+// AsyncIterable/Iterable byte chunks
+const parsedChunks = await inspectISOBMFF(asyncByteIterable);
+```
+
+`ArrayBuffer` and TypedArray inputs are still parsed synchronously and directly
+return the parsed boxes array. Progressive inputs return a `Promise` resolving
+to that same parsed boxes array.
+
+The inspector only buffers the bytes it needs to parse a box. Boxes without a
+parser or children, including `mdat`, are skipped progressively when their size
+is known, so large media payloads do not have to be kept in memory.
+
 In the previous example, ``parsed`` will have something like the following
 structure:
 ```js
