@@ -40,6 +40,34 @@ test("default entry point progressively parses body-like inputs", async () => {
   assert.deepEqual(normalize(actual), normalize(expected));
 });
 
+test("default entry point progressively parses arrayBuffer-like inputs", async () => {
+  const bytes = fs.readFileSync(SAMPLE_MP4);
+  const expected = parseBoxes(bytes);
+  const actual = await parseBoxes({
+    async arrayBuffer() {
+      return bytes.buffer.slice(
+        bytes.byteOffset,
+        bytes.byteOffset + bytes.byteLength,
+      );
+    },
+  });
+
+  assert.deepEqual(normalize(actual), normalize(expected));
+});
+
+test("progressive parser accepts sync byte iterables", async () => {
+  const bytes = fs.readFileSync(SAMPLE_MP4);
+  const expected = parseBoxes(bytes);
+  const chunks = [
+    bytes.subarray(0, 11),
+    bytes.subarray(11, 67),
+    bytes.subarray(67),
+  ];
+  const actual = await parseBoxesProgressively(chunks);
+
+  assert.deepEqual(normalize(actual), normalize(expected));
+});
+
 test("progressive parser skips unparsed payload boxes before later boxes", async () => {
   const bytes = new Uint8Array([
     0x00, 0x00, 0x00, 0x10, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x36,

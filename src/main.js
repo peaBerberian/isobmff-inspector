@@ -1,151 +1,20 @@
-import definitions from "./boxes/index.js";
-import BufferReader from "./utils/buffer_reader.js";
+import {
+  addBoxError,
+  parseBoxContent,
+  shouldReadContent,
+} from "./box_content_parser.js";
+import ProgressiveByteReader from "./progressive_byte_reader.js";
+import {
+  asyncByteIterable,
+  bufferSourceToUint8Array,
+  getProgressiveSource,
+  isBufferSource,
+} from "./progressive_source.js";
 import { be4toi, be8toi, betoa } from "./utils/bytes.js";
 
 const MIN_BOX_HEADER_SIZE = 8;
 const LARGE_BOX_SIZE_BYTES = 8;
 const UUID_SUBTYPE_BYTES = 16;
-
-/**
- * @param {unknown} error
- * @returns {string}
- */
-function formatErrorMessage(error) {
-  return error instanceof Error ? error.message : String(error);
-}
-
-/**
- * @param {import("./types.js").ParsedBox} box
- * @param {boolean} recoverable
- * @param {string} message
- * @returns {void}
- */
-function addBoxError(box, recoverable, message) {
-  if (!box.errors) {
-    box.errors = [];
-  }
-  box.errors.push({ recoverable, message });
-}
-
-/**
- * @param {import("./types.js").ParsedBox} atomObject
- * @param {Uint8Array} content
- * @returns {void}
- */
-function parseBoxContent(atomObject, content) {
-  const config = definitions[atomObject.alias];
-  if (!config) {
-    return;
-  }
-
-  const contentInfos = config.content
-    ? config.content.reduce(
-        /**
-         * @param {Record<string, { name: string, description: string }>} acc
-         * @param {import("./types.js").BoxContentEntry} el
-         */
-        (acc, el) => {
-          acc[el.key] = {
-            name: el.name || "",
-            description: el.description || "",
-          };
-          return acc;
-        },
-        {},
-      )
-    : /** @type {Record<string, { name: string, description: string }>} */ ({});
-
-  atomObject.name = config.name || "";
-  atomObject.description = config.description || "";
-  const hasChildren = !!config.container;
-  /** @type {Uint8Array | undefined} */
-  let contentForChildren;
-
-  if (typeof config.parser === "function") {
-    const parserReader = BufferReader(content);
-    /** @type {import("./types.js").BoxParserFields} */
-    let result = {};
-    try {
-      result = /** @type {import("./types.js").BoxParserFields} */ (
-        config.parser(parserReader)
-      );
-    } catch (e) {
-      addBoxError(atomObject, false, formatErrorMessage(e));
-    }
-
-    if (hasChildren) {
-      const remaining = parserReader.getRemainingLength();
-      contentForChildren = content.slice(content.length - remaining);
-    } else if (!parserReader.isFinished()) {
-      addBoxError(
-        atomObject,
-        true,
-        `Parser left ${parserReader.getRemainingLength()} byte(s) unread.`,
-      );
-    }
-
-    delete result.__data__;
-    Object.keys(result).forEach((key) => {
-      const infos = contentInfos[key] || {};
-
-      if (!infos.name) {
-        infos.name = key;
-      }
-
-      atomObject.values.push(
-        Object.assign(
-          {
-            value: result[key],
-          },
-          infos,
-        ),
-      );
-    });
-  }
-
-  if (hasChildren) {
-    atomObject.children = recursiveParseBoxes(contentForChildren || content);
-  }
-}
-
-/**
- * @param {string} name
- * @returns {boolean}
- */
-function shouldReadContent(name) {
-  const config = definitions[name];
-  return !!(config && (config.parser || config.container));
-}
-
-/**
- * @param {ArrayBufferView} view
- * @returns {Uint8Array}
- */
-function viewToUint8Array(view) {
-  return new Uint8Array(view.buffer, view.byteOffset, view.byteLength);
-}
-
-/**
- * @param {unknown} value
- * @returns {value is ArrayBuffer | ArrayBufferView}
- */
-function isBufferSource(value) {
-  return value instanceof ArrayBuffer || ArrayBuffer.isView(value);
-}
-
-/**
- * @param {ArrayBuffer | ArrayBufferView} arr
- * @returns {Uint8Array}
- */
-function bufferSourceToUint8Array(arr) {
-  if (arr instanceof Uint8Array) {
-    return arr;
-  }
-  if (arr instanceof ArrayBuffer) {
-    return new Uint8Array(arr);
-  }
-  return viewToUint8Array(arr);
-}
 
 /**
  * Parse recursively ISOBMFF Uint8Array.
@@ -253,275 +122,12 @@ function recursiveParseBoxes(arr) {
       shouldReadContent(name)
         ? arr.slice(currentOffset, size + boxStartOffset)
         : new Uint8Array(0),
+      recursiveParseBoxes,
     );
     i += size;
   }
 
   return returnedArray;
-}
-
-class ProgressiveByteReader {
-  /**
-   * @param {AsyncIterator<Uint8Array>} iterator
-   */
-  constructor(iterator) {
-    this._iterator = iterator;
-    /** @type {Uint8Array[]} */
-    this._buffers = [];
-    this._bufferedLength = 0;
-    this._done = false;
-  }
-
-  /**
-   * @param {number} nbBytes
-   * @returns {Promise<void>}
-   */
-  async ensure(nbBytes) {
-    while (!this._done && this._bufferedLength < nbBytes) {
-      const next = await this._iterator.next();
-      if (next.done) {
-        this._done = true;
-        break;
-      }
-
-      if (next.value.length > 0) {
-        this._buffers.push(next.value);
-        this._bufferedLength += next.value.length;
-      }
-    }
-  }
-
-  /**
-   * @returns {number}
-   */
-  getBufferedLength() {
-    return this._bufferedLength;
-  }
-
-  /**
-   * @returns {boolean}
-   */
-  isDone() {
-    return this._done && this._bufferedLength === 0;
-  }
-
-  /**
-   * @param {number} nbBytes
-   * @returns {Uint8Array}
-   */
-  takeAvailable(nbBytes) {
-    const size = Math.min(nbBytes, this._bufferedLength);
-    const result = new Uint8Array(size);
-    let resultOffset = 0;
-
-    while (resultOffset < size) {
-      const buffer = this._buffers[0];
-      const copiedLength = Math.min(buffer.length, size - resultOffset);
-      result.set(buffer.subarray(0, copiedLength), resultOffset);
-      resultOffset += copiedLength;
-
-      if (copiedLength === buffer.length) {
-        this._buffers.shift();
-      } else {
-        this._buffers[0] = buffer.subarray(copiedLength);
-      }
-      this._bufferedLength -= copiedLength;
-    }
-
-    return result;
-  }
-
-  /**
-   * @param {number} nbBytes
-   * @returns {Promise<Uint8Array>}
-   */
-  async read(nbBytes) {
-    await this.ensure(nbBytes);
-    return this.takeAvailable(nbBytes);
-  }
-
-  /**
-   * @param {number} nbBytes
-   * @returns {Promise<number>}
-   */
-  async skip(nbBytes) {
-    let remaining = nbBytes;
-    let skipped = 0;
-
-    while (remaining > 0) {
-      await this.ensure(1);
-      if (this._bufferedLength === 0) {
-        break;
-      }
-
-      const skippedThisRound = Math.min(remaining, this._bufferedLength);
-      this.takeAvailable(skippedThisRound);
-      remaining -= skippedThisRound;
-      skipped += skippedThisRound;
-    }
-
-    return skipped;
-  }
-
-  /**
-   * @returns {Promise<number>}
-   */
-  async skipUntilEnd() {
-    let skipped = 0;
-
-    while (true) {
-      await this.ensure(1);
-      if (this._bufferedLength === 0) {
-        break;
-      }
-      const skippedThisRound = this._bufferedLength;
-      this.takeAvailable(skippedThisRound);
-      skipped += skippedThisRound;
-    }
-
-    return skipped;
-  }
-
-  /**
-   * @returns {Promise<Uint8Array>}
-   */
-  async readUntilEnd() {
-    /** @type {Uint8Array[]} */
-    const chunks = [];
-    let totalLength = 0;
-
-    while (true) {
-      await this.ensure(1);
-      if (this._bufferedLength === 0) {
-        break;
-      }
-      const chunk = this.takeAvailable(this._bufferedLength);
-      chunks.push(chunk);
-      totalLength += chunk.length;
-    }
-
-    const result = new Uint8Array(totalLength);
-    let offset = 0;
-    for (const chunk of chunks) {
-      result.set(chunk, offset);
-      offset += chunk.length;
-    }
-
-    return result;
-  }
-}
-
-/**
- * @param {unknown} input
- * @returns {AsyncIterable<Uint8Array> | undefined}
- */
-function getProgressiveSource(input) {
-  if (input === null || input === undefined) {
-    return undefined;
-  }
-
-  if (typeof input === "object" && "body" in input) {
-    const body = /** @type {{ body?: unknown }} */ (input).body;
-    if (body !== null && body !== undefined) {
-      return getProgressiveSource(body);
-    }
-  }
-
-  if (
-    typeof ReadableStream !== "undefined" &&
-    input instanceof ReadableStream
-  ) {
-    return {
-      async *[Symbol.asyncIterator]() {
-        const reader = input.getReader();
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-              break;
-            }
-            yield byteChunkToUint8Array(value);
-          }
-        } finally {
-          reader.releaseLock();
-        }
-      },
-    };
-  }
-
-  if (
-    typeof input === "object" &&
-    Symbol.asyncIterator in input &&
-    typeof input[Symbol.asyncIterator] === "function"
-  ) {
-    return asyncByteIterable(/** @type {AsyncIterable<unknown>} */ (input));
-  }
-
-  if (
-    typeof input === "object" &&
-    Symbol.iterator in input &&
-    typeof input[Symbol.iterator] === "function"
-  ) {
-    return asyncByteIterable(/** @type {Iterable<unknown>} */ (input));
-  }
-
-  if (
-    typeof input === "object" &&
-    "stream" in input &&
-    typeof input.stream === "function"
-  ) {
-    return getProgressiveSource(input.stream());
-  }
-
-  if (
-    typeof input === "object" &&
-    "arrayBuffer" in input &&
-    typeof input.arrayBuffer === "function"
-  ) {
-    const arrayBuffer =
-      /** @type {{ arrayBuffer: () => Promise<ArrayBuffer> }} */ (input)
-        .arrayBuffer;
-    return asyncByteIterable({
-      async *[Symbol.asyncIterator]() {
-        yield await arrayBuffer.call(input);
-      },
-    });
-  }
-
-  return undefined;
-}
-
-/**
- * @param {unknown} chunk
- * @returns {Uint8Array}
- */
-function byteChunkToUint8Array(chunk) {
-  if (chunk instanceof Uint8Array) {
-    return chunk;
-  }
-  if (chunk instanceof ArrayBuffer) {
-    return new Uint8Array(chunk);
-  }
-  if (ArrayBuffer.isView(chunk)) {
-    return viewToUint8Array(chunk);
-  }
-  throw new Error(
-    "Progressive ISOBMFF inputs must yield ArrayBuffer or TypedArray chunks.",
-  );
-}
-
-/**
- * @param {AsyncIterable<unknown> | Iterable<unknown>} iterable
- * @returns {AsyncIterable<Uint8Array>}
- */
-function asyncByteIterable(iterable) {
-  return {
-    async *[Symbol.asyncIterator]() {
-      for await (const chunk of iterable) {
-        yield byteChunkToUint8Array(chunk);
-      }
-    },
-  };
 }
 
 /**
@@ -616,11 +222,11 @@ export async function parseBoxesProgressively(source) {
       if (shouldReadContent(name)) {
         const content = await reader.readUntilEnd();
         atomObject.size = headerSize + content.length;
-        parseBoxContent(atomObject, content);
+        parseBoxContent(atomObject, content, recursiveParseBoxes);
       } else {
         const skippedContentSize = await reader.skipUntilEnd();
         atomObject.size = headerSize + skippedContentSize;
-        parseBoxContent(atomObject, new Uint8Array(0));
+        parseBoxContent(atomObject, new Uint8Array(0), recursiveParseBoxes);
       }
       break;
     }
@@ -637,7 +243,7 @@ export async function parseBoxesProgressively(source) {
           } available.`,
         );
       }
-      parseBoxContent(atomObject, content);
+      parseBoxContent(atomObject, content, recursiveParseBoxes);
       if (content.length < contentSize) {
         break;
       }
@@ -653,7 +259,7 @@ export async function parseBoxesProgressively(source) {
         );
         break;
       }
-      parseBoxContent(atomObject, new Uint8Array(0));
+      parseBoxContent(atomObject, new Uint8Array(0), recursiveParseBoxes);
     }
   }
 
