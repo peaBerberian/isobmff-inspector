@@ -22,16 +22,17 @@
  */
 
 /**
+ * @template {{ [k: string]: unknown }} T
  * @typedef {object} BoxDefinition
  * @property {string=} name
  * @property {string=} description
  * @property {BoxContentEntry[]=} content
  * @property {boolean=} container
- * @property {(reader: BufferReader) => Partial<Record<string, unknown>>=} parser
+ * @property {(reader: BufferReader) => T=} parser
  */
 
 /**
- * @typedef {Record<string, BoxDefinition>} BoxDefinitionsMap
+ * @typedef {Record<string, BoxDefinition<{ [k: string]: unknown }>>} BoxDefinitionsMap
  */
 
 /**

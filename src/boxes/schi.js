@@ -1,4 +1,4 @@
-/** @type {import("../types.js").BoxDefinition} */
+/** @type {import("../types.js").BoxDefinition<never>} */
 export default {
   name: "Scheme Information Box",
   description:

@@ -1,4 +1,11 @@
-/** @type {import("../types.js").BoxDefinition} */
+/**
+ * @typedef {Object} MovieHeaderBoxContent
+ * @property {number} version
+ * @property {number} flags
+ * @property {number|bigint} fragment_duration
+ */
+
+/** @type {import("../types.js").BoxDefinition<MovieHeaderBoxContent>} */
 export default {
   name: "Movie Extends Header Box",
   description:

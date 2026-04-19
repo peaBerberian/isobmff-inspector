@@ -1,4 +1,11 @@
-/** @type {import("../types.js").BoxDefinition} */
+/**
+ * @typedef {Object} FileTypeBoxContent
+ * @property {string} major_brand
+ * @property {number} minor_version
+ * @property {string} compatible_brands
+ */
+
+/** @type {import("../types.js").BoxDefinition<FileTypeBoxContent>} */
 export default {
   name: "File Type Box",
   description: "File type and compatibility",

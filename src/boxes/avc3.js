@@ -1,6 +1,6 @@
 import { parseVisualSampleEntry } from "./helpers.js";
 
-/** @type {import("../types.js").BoxDefinition} */
+/** @type {import("../types.js").BoxDefinition<import("./helpers.js").VisualSampleEntry>} */
 export default {
   name: "AVC3 Sample Entry",
   description:

@@ -1,4 +1,11 @@
-/** @type {import("../types.js").BoxDefinition} */
+/**
+ * @typedef {Object} MovieFragmentHeaderBoxContent
+ * @property {number} version
+ * @property {number} flags
+ * @property {number} sequence_number
+ */
+
+/** @type {import("../types.js").BoxDefinition<MovieFragmentHeaderBoxContent>} */
 export default {
   name: "Movie Fragment Header Box",
   description:

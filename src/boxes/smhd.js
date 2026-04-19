@@ -1,6 +1,14 @@
 import { toSignedInt } from "./helpers.js";
 
-/** @type {import("../types.js").BoxDefinition} */
+/**
+ * @typedef {Object} SoundMediaHeaderBoxContent
+ * @property {number} version
+ * @property {number} flags
+ * @property {number} balance
+ * @property {number} reserved
+ */
+
+/** @type {import("../types.js").BoxDefinition<SoundMediaHeaderBoxContent>} */
 export default {
   name: "Sound Media Header Box",
   description: "Stores audio presentation information for a sound track.",

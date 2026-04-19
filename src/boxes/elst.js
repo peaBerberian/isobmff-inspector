@@ -1,6 +1,22 @@
 import { toSignedInt } from "./helpers.js";
 
-/** @type {import("../types.js").BoxDefinition} */
+/**
+ * @typedef {Object} EditListBoxContent
+ * @property {number} version
+ * @property {number} flags
+ * @property {number} entry_count
+ * @property {Array<EditListBoxEntry>} entries
+ */
+
+/**
+ * @typedef {Object} EditListBoxEntry
+ * @property {number|bigint} segment_duration
+ * @property {number|bigint} media_time
+ * @property {number} media_rate_integer
+ * @property {number} media_rate_fraction
+ */
+
+/** @type {import("../types.js").BoxDefinition<EditListBoxContent>} */
 export default {
   name: "Edit List Box",
   description: "Defines timeline edits that map movie time to media time.",
@@ -13,6 +29,7 @@ export default {
 
     const flags = r.bytesToInt(3);
     const entry_count = r.bytesToInt(4);
+    /** @type Array<EditListBoxEntry> */
     const entries = [];
 
     for (let i = 0; i < entry_count; i++) {

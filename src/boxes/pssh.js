@@ -23,7 +23,7 @@ const SYSTEM_IDS = {
   F239E769EFA348509C16A903C6932EFB: "PrimeTime",
 };
 
-/** @type {import("../types.js").BoxDefinition} */
+/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
 export default {
   name: "Protection System Specific Header",
   description:

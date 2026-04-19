@@ -1,4 +1,11 @@
-/** @type {import("../types.js").BoxDefinition} */
+/**
+ * @typedef {Object} TrackFragmentDecodeTimeBoxContent
+ * @property {number} version
+ * @property {number} flags
+ * @property {number|bigint} baseMediaDecodeTime
+ */
+
+/** @type {import("../types.js").BoxDefinition<TrackFragmentDecodeTimeBoxContent>} */
 export default {
   name: "Track Fragment Decode Time",
   description:

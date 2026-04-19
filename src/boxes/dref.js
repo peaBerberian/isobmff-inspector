@@ -1,4 +1,11 @@
-/** @type {import("../types.js").BoxDefinition} */
+/**
+ * @typedef {Object} DataReferenceBoxContent
+ * @property {number} version
+ * @property {number} flags
+ * @property {number} entry_count
+ */
+
+/** @type {import("../types.js").BoxDefinition<DataReferenceBoxContent>} */
 export default {
   name: "Data Reference Box",
   description: "Lists references that locate the media data used by the track.",
@@ -13,9 +20,7 @@ export default {
     if (flags !== 0) {
       throw new Error("invalid flags");
     }
-
     const entry_count = reader.bytesToInt(4);
-
     return { version, flags, entry_count };
   },
 };

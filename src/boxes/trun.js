@@ -6,7 +6,7 @@
  * @property {number} [sample_composition_time_offset]
  */
 
-/** @type {import("../types.js").BoxDefinition} */
+/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
 export default {
   name: "Track Fragment Run Box",
   description:

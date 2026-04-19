@@ -1,4 +1,15 @@
-/** @type {import("../types.js").BoxDefinition} */
+/**
+ * @typedef {Object} TrackExtendsBoxContent
+ * @property {number} version
+ * @property {number} flags
+ * @property {number} track_id
+ * @property {number} default_sample_description_index
+ * @property {number} default_sample_duration
+ * @property {number} default_sample_size
+ * @property {number} default_sample_flags
+ */
+
+/** @type {import("../types.js").BoxDefinition<TrackExtendsBoxContent>} */
 export default {
   name: "Track Extends Box",
   description:

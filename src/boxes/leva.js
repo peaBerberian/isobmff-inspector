@@ -1,4 +1,4 @@
-/** @type {import("../types.js").BoxDefinition} */
+/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
 export default {
   name: "Level Assignment Box",
   description:

@@ -1,4 +1,11 @@
-/** @type {import("../types.js").BoxDefinition} */
+/**
+ * @typedef {Object} TrackExtensionPropertiesBoxContent
+ * @property {number} version
+ * @property {number} flags
+ * @property {number} track_id
+ */
+
+/** @type {import("../types.js").BoxDefinition<TrackExtensionPropertiesBoxContent>} */
 export default {
   name: "Track Extension Properties Box",
   description:

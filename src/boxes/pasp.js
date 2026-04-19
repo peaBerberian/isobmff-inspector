@@ -1,4 +1,10 @@
-/** @type {import("../types.js").BoxDefinition} */
+/**
+ * @typedef {Object} PixelAspectRatioBoxContent
+ * @property {number} hSpacing
+ * @property {number} vSpacing
+ */
+
+/** @type {import("../types.js").BoxDefinition<PixelAspectRatioBoxContent>} */
 export default {
   name: "Pixel Aspect Ratio Box",
   description:

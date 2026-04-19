@@ -1,4 +1,4 @@
-/** @type {import("../types.js").BoxDefinition} */
+/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
 export default {
   name: "Sample Size",
   description: "Stores the default sample size or a table of per-sample sizes.",

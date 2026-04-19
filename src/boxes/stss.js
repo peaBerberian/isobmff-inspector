@@ -1,4 +1,12 @@
-/** @type {import("../types.js").BoxDefinition} */
+/**
+ * @typedef {Object} SyncSampleBoxContent
+ * @property {number} version
+ * @property {number} flags
+ * @property {number} entry_count
+ * @property {Array<number>} sample_numbers
+ */
+
+/** @type {import("../types.js").BoxDefinition<SyncSampleBoxContent>} */
 export default {
   name: "Sync Sample Box",
   description: "Lists samples that can be used as random access points.",

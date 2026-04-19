@@ -1,4 +1,12 @@
-/** @type {import("../types.js").BoxDefinition} */
+/**
+ * @typedef {Object} ProgressiveDownloadInformationBoxContent
+ * @property {number} version
+ * @property {number} flags
+ * @property {number} rate
+ * @property {number} delay
+ */
+
+/** @type {import("../types.js").BoxDefinition<ProgressiveDownloadInformationBoxContent>} */
 export default {
   name: "Progressive Download Information Box",
   description:

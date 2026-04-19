@@ -297,8 +297,16 @@ function parseDescriptorPayload(r, tag, size) {
 }
 
 /**
+ * @typedef {Object} Descriptor
+ * @property {number} tag
+ * @property {number} size
+ * @property {number} header_size
+ * @property {any} payload
+ */
+
+/**
  * @param {import("../types").BufferReader} r
- * @returns {unknown}
+ * @returns {Descriptor}
  */
 function parseDescriptor(r) {
   const tag = r.bytesToInt(1);

@@ -1,4 +1,4 @@
-/** @type {import("../types.js").BoxDefinition} */
+/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
 export default {
   name: "Chunk Large Offset Box",
   description: "Maps each media chunk to its 64-bit byte offset in the file.",

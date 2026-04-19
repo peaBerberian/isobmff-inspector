@@ -1,6 +1,13 @@
 import { parseDescriptor } from "./helpers.js";
 
-/** @type {import("../types.js").BoxDefinition} */
+/**
+ * @typedef {Object} ElementStreamDescriptorBoxContent
+ * @property {number} version
+ * @property {number} flags
+ * @property {Array<import("./helpers.js").Descriptor>} descriptors
+ */
+
+/** @type {import("../types.js").BoxDefinition<ElementStreamDescriptorBoxContent>} */
 export default {
   name: "Elementary Stream Descriptor Box",
   description:
