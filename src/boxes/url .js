@@ -1,19 +1,20 @@
-/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
+/**
+ * @typedef {Object} DataEntryUrlBoxContent
+ * @property {number} version
+ * @property {number} flags
+ * @property {string} location
+ */
+
+/** @type {import("../types.js").BoxDefinition<DataEntryUrlBoxContent>} */
 export default {
   name: "Data Entry Url Box",
   description:
     "declare the location(s) of the media data used within the presentation.",
   parser(r) {
-    /** @type Partial<Record<string, unknown>> */
-    const ret = {};
-    ret.version = r.bytesToInt(1);
-    ret.flags = r.bytesToInt(3);
-
-    const remaining = r.getRemainingLength();
-
-    if (remaining) {
-      ret.location = r.bytesToASCII(remaining);
-    }
-    return ret;
+    return {
+      version: r.bytesToInt(1),
+      flags: r.bytesToInt(3),
+      location: r.bytesToASCII(r.getRemainingLength()),
+    };
   },
 };
