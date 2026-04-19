@@ -13,3 +13,4 @@
 - Add parser for the following boxes: `btrt`, `colr`, `encv`, `frma`, `ID32`, `iods`, `leva`, `pasp`, `schi`, `schm`, `sinf`, `tenc`, `trep` and `uuid`
 - Add optional `errors` property to parsed box objects for major and minor error that arised when parsing them
 - Add typings (not of boxes themselves for now)
+- Add textual description to all boxes
