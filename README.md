@@ -45,7 +45,7 @@ If you want parsed metadata as it becomes available, use the event iterator:
 import { parseEvents } from "isobmff-inspector";
 
 for await (const event of parseEvents(response)) {
-  if (event.event === "box") {
+  if (event.event === "box-complete") {
     console.log("box parsed", event.path.join("/"), event.box);
   }
 }
@@ -104,7 +104,7 @@ are available.
 
 ```js
 for await (const event of parseEvents(input)) {
-  // event.event is "box-start", "box", or "box-end"
+  // event.event is "box-start" or "box-complete"
 }
 ```
 
@@ -124,16 +124,8 @@ Events:
 
 ```js
 {
-  event: "box",
+  event: "box-complete",
   path: ["ftyp"],
-  box: ParsedBox
-}
-```
-
-```js
-{
-  event: "box-end",
-  path: ["moov"],
   box: ParsedBox
 }
 ```
@@ -167,10 +159,10 @@ The parsed result is an array of boxes, in the order they are encountered.
 }
 ```
 
-`name`, `description`, `children`, and `issues` are optional. `children` is only
-present for parsed container boxes. `issues` is only present when the parser
-detected a problem. `uuid` is only present on `uuid` boxes and contains the
-user-defined box UUID as an uppercase hexadecimal string.
+`name`, `description`, and `children` are optional. `children` is only present
+for parsed container boxes. `issues` is always present and is empty when the
+parser detected no problem. `uuid` is only present on `uuid` boxes and contains
+the user-defined box UUID as an uppercase hexadecimal string.
 
 `sizeField` indicates how the box declared its size: `"size"` for the normal
 32-bit size field, `"largeSize"` for a 64-bit large-size field, or
@@ -201,7 +193,7 @@ structure:
         value: "iso6, msdh", // here brands are separated by a comma
       }
     ],
-    issues: [ // only set when the inspector detected parsing issues
+    issues: [ // issues detected while parsing this box
       {
         severity: "error",
         message: "Truncated box: declared 24 byte(s), only 20 available."
@@ -239,7 +231,7 @@ structure:
 
 When possible, the inspector keeps parsing after an error to return as much
 information as it can. Parsing issues are reported on the corresponding box
-through an optional ``issues`` array instead of being logged to the console.
+through an ``issues`` array.
 
 Each issue entry has:
 
@@ -261,6 +253,9 @@ Parsed integer values follow a fixed rule:
 
 This means 64-bit ISOBMFF fields are always exact and never depend on the
 parsed value's magnitude.
+
+Though this also means that applications will have to check for `bigint` when
+handling numeric values, as those are mostly incompatible with `number` values.
 
 ## Parsed boxes ################################################################
 

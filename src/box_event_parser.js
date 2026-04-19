@@ -38,9 +38,9 @@ async function* emitParsedBoxEvents(boxes, parentPath) {
     };
     if (box.children) {
       yield* emitParsedBoxEvents(box.children, path);
-      yield { event: "box-end", path, box };
+      yield { event: "box-complete", path, box };
     } else {
-      yield { event: "box", path, box };
+      yield { event: "box-complete", path, box };
     }
   }
 }
@@ -98,7 +98,7 @@ async function* parseBoxEventsFromReader(
           },
         ],
       };
-      yield { event: "box", path: parentPath.concat(""), box };
+      yield { event: "box-complete", path: parentPath.concat(""), box };
       onParsedBox?.(box);
       break;
     }
@@ -138,7 +138,7 @@ async function* parseBoxEventsFromReader(
             },
           ],
         };
-        yield { event: "box", path, box };
+        yield { event: "box-complete", path, box };
         onParsedBox?.(box);
         break;
       }
@@ -168,6 +168,7 @@ async function* parseBoxEventsFromReader(
       headerSize,
       sizeField,
       values: [],
+      issues: [],
     };
     if (uuid !== undefined) {
       box.uuid = uuid;
@@ -190,7 +191,7 @@ async function* parseBoxEventsFromReader(
         "error",
         `Invalid box size ${size}: smaller than its ${headerSize} byte header.`,
       );
-      yield { event: "box", path, box };
+      yield { event: "box-complete", path, box };
       onParsedBox?.(box);
       break;
     }
@@ -240,7 +241,7 @@ async function* parseBoxEventsFromReader(
         () => children,
         boxOffset + headerSize,
       );
-      yield { event: "box-end", path, box };
+      yield { event: "box-complete", path, box };
       onParsedBox?.(box);
       if (contentSize !== undefined && childConsumedLength < contentSize) {
         break;
@@ -269,9 +270,9 @@ async function* parseBoxEventsFromReader(
       parseBoxContent(box, content, parseBuffer, boxOffset + headerSize);
       if (box.children) {
         yield* emitParsedBoxEvents(box.children, path);
-        yield { event: "box-end", path, box };
+        yield { event: "box-complete", path, box };
       } else {
-        yield { event: "box", path, box };
+        yield { event: "box-complete", path, box };
       }
       onParsedBox?.(box);
 
@@ -303,7 +304,7 @@ async function* parseBoxEventsFromReader(
       parseBuffer,
       boxOffset + headerSize,
     );
-    yield { event: "box", path, box };
+    yield { event: "box-complete", path, box };
     onParsedBox?.(box);
 
     if (contentSize !== undefined && skippedContentSize < contentSize) {

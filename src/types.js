@@ -60,7 +60,7 @@
  * @property {string=} name
  * @property {string=} description
  * @property {ParsedBox[]=} children
- * @property {ParsedBoxIssue[]=} issues
+ * @property {ParsedBoxIssue[]} issues
  */
 
 /**
@@ -78,26 +78,17 @@
  */
 
 /**
- * Emitted when a non-container box has been parsed, or when parsing cannot
- * continue after a malformed partial box.
+ * Emitted when a box has been parsed, or when parsing cannot continue after a
+ * malformed partial box.
  *
- * @typedef {object} ParsedBoxEvent
- * @property {"box"} event
+ * @typedef {object} ParsedBoxCompleteEvent
+ * @property {"box-complete"} event
  * @property {string[]} path
  * @property {ParsedBox} box
  */
 
 /**
- * Emitted when a container box and all of its parsed children are complete.
- *
- * @typedef {object} ParsedBoxEndEvent
- * @property {"box-end"} event
- * @property {string[]} path
- * @property {ParsedBox} box
- */
-
-/**
- * @typedef {ParsedBoxStartEvent | ParsedBoxEvent | ParsedBoxEndEvent} ParsedBoxParseEvent
+ * @typedef {ParsedBoxStartEvent | ParsedBoxCompleteEvent} ParsedBoxParseEvent
  */
 
 /**

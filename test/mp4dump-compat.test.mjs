@@ -26,11 +26,11 @@ test("parse issues are returned on boxes without console warnings", () => {
     assert.equal(parsed.length, 1);
     assert.equal(parsed[0].type, "ftyp");
     assert.deepEqual(
-      parsed[0].issues?.map((issue) => issue.severity),
+      parsed[0].issues.map((issue) => issue.severity),
       ["error", "error"],
     );
-    assert.match(parsed[0].issues?.[0].message ?? "", /Truncated box/);
-    assert.match(parsed[0].issues?.[1].message ?? "", /Cannot read 4 byte/);
+    assert.match(parsed[0].issues[0].message, /Truncated box/);
+    assert.match(parsed[0].issues[1].message, /Cannot read 4 byte/);
   } finally {
     console.warn = warn;
   }

@@ -16,9 +16,6 @@ function formatErrorMessage(error) {
  * @returns {void}
  */
 export function addBoxIssue(box, severity, message) {
-  if (!box.issues) {
-    box.issues = [];
-  }
   box.issues.push({ severity, message });
 }
 

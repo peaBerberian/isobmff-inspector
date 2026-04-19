@@ -94,6 +94,7 @@ function recursiveParseBoxes(arr, baseOffset = 0) {
       headerSize: currentOffset - boxStartOffset,
       sizeField,
       values: [],
+      issues: [],
     };
 
     if (size < currentOffset - boxStartOffset) {
@@ -241,6 +242,7 @@ async function parseProgressive(source) {
       headerSize,
       sizeField,
       values: [],
+      issues: [],
     };
     if (uuid !== undefined) {
       atomObject.uuid = uuid;

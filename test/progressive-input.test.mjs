@@ -120,6 +120,7 @@ test("parsers expose uuid boxes through a hex uuid property", async () => {
     name: "User-defined Box",
     description: "Custom box. Those are not yet parsed here.",
     values: [],
+    issues: [],
   });
 
   assert.deepEqual((await parseBoxes(chunkBytes(bytes, 5)))[0], {
@@ -127,6 +128,7 @@ test("parsers expose uuid boxes through a hex uuid property", async () => {
     name: "User-defined Box",
     description: "Custom box. Those are not yet parsed here.",
     values: [],
+    issues: [],
   });
 });
 
@@ -148,13 +150,13 @@ test("event parser progressively emits nested box metadata", async () => {
     events.map((event) => [event.event, event.path.join("/")]),
     [
       ["box-start", "ftyp"],
-      ["box", "ftyp"],
+      ["box-complete", "ftyp"],
       ["box-start", "moov"],
       ["box-start", "moov/free"],
-      ["box", "moov/free"],
-      ["box-end", "moov"],
+      ["box-complete", "moov/free"],
+      ["box-complete", "moov"],
       ["box-start", "mdat"],
-      ["box", "mdat"],
+      ["box-complete", "mdat"],
     ],
   );
   assert.deepEqual(
@@ -175,10 +177,11 @@ test("event parser progressively emits nested box metadata", async () => {
     ],
   );
 
-  const moovEnd = events.find(
-    (event) => event.event === "box-end" && event.path.join("/") === "moov",
+  const moovComplete = events.find(
+    (event) =>
+      event.event === "box-complete" && event.path.join("/") === "moov",
   );
-  assert.equal(moovEnd?.box.children?.[0]?.type, "free");
+  assert.equal(moovComplete?.box.children?.[0]?.type, "free");
 });
 
 test("event parser emits the same events for buffer inputs", async () => {
@@ -190,6 +193,5 @@ test("event parser emits the same events for buffer inputs", async () => {
   }
 
   assert.equal(events[0], "box-start");
-  assert(events.includes("box"));
-  assert(events.includes("box-end"));
+  assert(events.includes("box-complete"));
 });
