@@ -90,7 +90,7 @@ function parseVisualSampleEntry(r) {
  * @property {number} struct_size
  * @property {string} sample_rate
  * @property {number} channel_count
- * @property {number} reserved
+ * @property {number} reserved_1
  * @property {number} bits_per_channel
  * @property {number} format_specific_flags
  * @property {number} bytes_per_audio_packet
@@ -112,8 +112,8 @@ function parseVisualSampleEntry(r) {
  */
 
 /**
- * @typedef {AudioSampleEntryBase & { version: 1, version_1_fields: AudioSampleEntryVersion1Fields }} AudioSampleEntryV1
- * @typedef {AudioSampleEntryBase & { version: 2, version_2_fields: AudioSampleEntryVersion2Fields }} AudioSampleEntryV2
+ * @typedef {AudioSampleEntryBase & { version: 1 } & AudioSampleEntryVersion1Fields} AudioSampleEntryV1
+ * @typedef {AudioSampleEntryBase & { version: 2 } & AudioSampleEntryVersion2Fields} AudioSampleEntryV2
  * @typedef {AudioSampleEntryBase | AudioSampleEntryV1 | AudioSampleEntryV2} AudioSampleEntry
  */
 
@@ -141,31 +141,27 @@ function parseAudioSampleEntry(r) {
   };
 
   if (base.version === 1) {
-    /** @type {AudioSampleEntryV1} */
-    return {
+    const result = {
       ...base,
-      version_1_fields: {
-        samples_per_packet: r.bytesToInt(4),
-        bytes_per_packet: r.bytesToInt(4),
-        bytes_per_frame: r.bytesToInt(4),
-        bytes_per_sample: r.bytesToInt(4),
-      },
+      samples_per_packet: r.bytesToInt(4),
+      bytes_per_packet: r.bytesToInt(4),
+      bytes_per_frame: r.bytesToInt(4),
+      bytes_per_sample: r.bytesToInt(4),
     };
+    return /** @type {AudioSampleEntryV1} */ (result);
   } else if (base.version === 2) {
-    /** @type {AudioSampleEntryV2} */
-    return {
+    const result = {
       ...base,
-      version_2_fields: {
-        struct_size: r.bytesToInt(4),
-        sample_rate: formatFixedPoint1616(r.bytesToInt(4)),
-        channel_count: r.bytesToInt(4),
-        reserved: r.bytesToInt(4),
-        bits_per_channel: r.bytesToInt(4),
-        format_specific_flags: r.bytesToInt(4),
-        bytes_per_audio_packet: r.bytesToInt(4),
-        LPCM_frames_per_audio_packet: r.bytesToInt(4),
-      },
+      struct_size: r.bytesToInt(4),
+      sample_rate: formatFixedPoint1616(r.bytesToInt(4)),
+      channel_count: r.bytesToInt(4),
+      reserved_1: r.bytesToInt(4),
+      bits_per_channel: r.bytesToInt(4),
+      format_specific_flags: r.bytesToInt(4),
+      bytes_per_audio_packet: r.bytesToInt(4),
+      LPCM_frames_per_audio_packet: r.bytesToInt(4),
     };
+    return /** @type {AudioSampleEntryV2} */ (result);
   }
 
   return base;
