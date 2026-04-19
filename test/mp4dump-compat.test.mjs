@@ -24,7 +24,7 @@ test("parse errors are returned on boxes without console warnings", () => {
 
     assert.equal(warnCount, 0);
     assert.equal(parsed.length, 1);
-    assert.equal(parsed[0].alias, "ftyp");
+    assert.equal(parsed[0].type, "ftyp");
     assert.deepEqual(
       parsed[0].errors?.map((error) => error.recoverable),
       [false, false],
@@ -109,12 +109,12 @@ function keepSupportedDumpSubtree(nodes) {
 
 function normalizeActual(nodes) {
   return nodes
-    .filter((node) => SUPPORTED_ALIASES.has(node.alias))
+    .filter((node) => SUPPORTED_ALIASES.has(node.type))
     .map((node) => ({
-      alias: node.alias,
+      type: node.type,
       size: node.size,
       values: Object.fromEntries(
-        node.values.map((value) => [value.name, value.value]),
+        node.values.map((value) => [value.key, value.value]),
       ),
       children: normalizeActual(node.children || []),
     }));
@@ -591,7 +591,7 @@ const FIELD_CHECKS = {
 
 function compareNodes(expectedNodes, actualNodes, pathLabel) {
   assert.deepEqual(
-    actualNodes.map((node) => node.alias),
+    actualNodes.map((node) => node.type),
     expectedNodes.map((node) => node.alias),
     `${pathLabel}: supported box sequence mismatch`,
   );

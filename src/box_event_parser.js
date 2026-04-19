@@ -12,7 +12,7 @@ import {
   getProgressiveSource,
   isBufferSource,
 } from "./progressive_source.js";
-import { be4toi, be8toi, betoa } from "./utils/bytes.js";
+import { be4toi, be8toi, betoa, bytesToHex } from "./utils/bytes.js";
 
 const MIN_BOX_HEADER_SIZE = 8;
 const LARGE_BOX_SIZE_BYTES = 8;
@@ -25,13 +25,13 @@ const UUID_SUBTYPE_BYTES = 16;
  */
 async function* emitParsedBoxEvents(boxes, parentPath) {
   for (const box of boxes) {
-    const path = parentPath.concat(box.alias);
+    const path = parentPath.concat(box.type);
     yield {
       type: "box-start",
       path,
-      alias: box.alias,
+      boxType: box.type,
       size: box.size,
-      subtype: box.subtype,
+      uuid: box.uuid,
     };
     if (box.children) {
       yield* emitParsedBoxEvents(box.children, path);
@@ -77,7 +77,7 @@ async function* parseBoxEventsFromReader(
 
     if (header.length < MIN_BOX_HEADER_SIZE) {
       const box = {
-        alias: "",
+        type: "",
         size: header.length,
         values: [],
         errors: [
@@ -110,7 +110,7 @@ async function* parseBoxEventsFromReader(
 
       if (largeSizeBuffer.length < LARGE_BOX_SIZE_BYTES) {
         const box = {
-          alias: name,
+          type: name,
           size: header.length + largeSizeBuffer.length,
           values: [],
           errors: [
@@ -129,35 +129,35 @@ async function* parseBoxEventsFromReader(
       size = be8toi(largeSizeBuffer, 0);
     }
 
-    /** @type {number[] | undefined} */
-    let subtype;
+    /** @type {string | undefined} */
+    let uuid;
     if (name === "uuid") {
-      const subtypeLength =
+      const uuidLength =
         remainingLength === undefined
           ? UUID_SUBTYPE_BYTES
           : Math.min(UUID_SUBTYPE_BYTES, remainingLength - consumedLength);
-      const subtypeBuffer = await reader.read(subtypeLength);
-      consumedLength += subtypeBuffer.length;
-      headerSize += subtypeBuffer.length;
-      subtype = Array.from(subtypeBuffer);
+      const uuidBuffer = await reader.read(uuidLength);
+      consumedLength += uuidBuffer.length;
+      headerSize += uuidBuffer.length;
+      uuid = bytesToHex(uuidBuffer, 0, uuidBuffer.length);
     }
 
     /** @type {import("./types.js").ParsedBox} */
     const box = {
-      alias: name,
+      type: name,
       size,
       values: [],
     };
-    if (subtype !== undefined) {
-      box.subtype = subtype;
+    if (uuid !== undefined) {
+      box.uuid = uuid;
     }
 
     yield {
       type: "box-start",
       path,
-      alias: box.alias,
+      boxType: box.type,
       size: box.size,
-      subtype: box.subtype,
+      uuid: box.uuid,
     };
 
     if (size !== 0 && size < headerSize) {

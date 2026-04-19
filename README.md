@@ -97,7 +97,7 @@ Events:
 {
   type: "box-start",
   path: ["moov", "trak"],
-  alias: "tkhd",
+  boxType: "tkhd",
   size: 92
 }
 ```
@@ -139,11 +139,16 @@ The parsed result is an array of boxes, in the order they are encountered.
 
 ```js
 {
-  alias: "ftyp",
+  type: "ftyp",
   name: "File Type Box",
+  description: "File type and compatibility",
   size: 24,
   values: [
-    { name: "major-brand", value: "iso6" }
+    {
+      key: "major_brand",
+      value: "iso6",
+      description: "Brand identifier."
+    }
   ],
   children: [
     // ParsedBox
@@ -154,28 +159,30 @@ The parsed result is an array of boxes, in the order they are encountered.
 }
 ```
 
-`children` is only present for parsed container boxes. `errors` is only present
-when the parser detected a problem.
+`name`, `description`, `children`, and `errors` are optional. `children` is only
+present for parsed container boxes. `errors` is only present when the parser
+detected a problem. `uuid` is only present on `uuid` boxes and contains the
+user-defined box UUID as an uppercase hexadecimal string.
 
 In the previous example, ``parsed`` will have something like the following
 structure:
 ```js
 [ // boxes, in the order they are encountered
   {
-    alias: "styp", // "short" name of the box
+    type: "styp", // 4-character box type
     name: "Segment Type Box", // more human-readable name for the box
     size: 24, // size, in bytes
     values: [ // values in the box, in the order they are encountered
       {
-        name: "major-brand", // name of the value
+        key: "major_brand", // stable key for the value
         value: "iso6" // ...value. Displayable one are JS strings
       },
       {
-        name: "minor_version",
+        key: "minor_version",
         value: 0 // Number values are usually JS Numbers
       },
       {
-        name: "compatible_brands",
+        key: "compatible_brands",
         value: "iso6, msdh", // here brands are separated by a comma
       }
     ],
@@ -187,24 +194,24 @@ structure:
     ]
   },
   {
-    alias: "moof",
+    type: "moof",
     name: "Movie Fragment Box",
     size: 788,
     children: [ // children boxes, in the order they are encountered
       {
-        alias: "mfhd",
+        type: "mfhd",
         name: "Movie Fragment Header Box",
         values: [
           {
-            name: "version",
+            key: "version",
             value: 0
           }
           {
-            name: "flags",
+            key: "flags",
             value: 0
           },
           {
-            name: "sequence_number",
+            key: "sequence_number",
             value: 2
           }
         ]

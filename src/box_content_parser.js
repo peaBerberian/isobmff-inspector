@@ -56,7 +56,7 @@ export function isContainerBox(name) {
  * @returns {void}
  */
 export function parseBoxContent(atomObject, content, parseChildren) {
-  const config = definitions[atomObject.alias];
+  const config = definitions[atomObject.type];
   if (!config) {
     return;
   }
@@ -64,22 +64,25 @@ export function parseBoxContent(atomObject, content, parseChildren) {
   const contentInfos = config.content
     ? config.content.reduce(
         /**
-         * @param {Record<string, { name: string, description: string }>} acc
+         * @param {Record<string, { description?: string }>} acc
          * @param {import("./types.js").BoxContentEntry} el
          */
         (acc, el) => {
           acc[el.key] = {
-            name: el.name || "",
-            description: el.description || "",
+            description: el.description || undefined,
           };
           return acc;
         },
         {},
       )
-    : /** @type {Record<string, { name: string, description: string }>} */ ({});
+    : /** @type {Record<string, { description?: string }>} */ ({});
 
-  atomObject.name = config.name || "";
-  atomObject.description = config.description || "";
+  if (config.name) {
+    atomObject.name = config.name;
+  }
+  if (config.description) {
+    atomObject.description = config.description;
+  }
   const hasChildren = !!config.container;
   /** @type {Uint8Array | undefined} */
   let contentForChildren;
@@ -111,13 +114,10 @@ export function parseBoxContent(atomObject, content, parseChildren) {
     Object.keys(result).forEach((key) => {
       const infos = contentInfos[key] || {};
 
-      if (!infos.name) {
-        infos.name = key;
-      }
-
       atomObject.values.push(
         Object.assign(
           {
+            key,
             value: result[key],
           },
           infos,

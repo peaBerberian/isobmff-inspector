@@ -11,7 +11,7 @@ import {
   getProgressiveSource,
   isBufferSource,
 } from "./progressive_source.js";
-import { be4toi, be8toi, betoa } from "./utils/bytes.js";
+import { be4toi, be8toi, betoa, bytesToHex } from "./utils/bytes.js";
 
 const MIN_BOX_HEADER_SIZE = 8;
 const LARGE_BOX_SIZE_BYTES = 8;
@@ -32,7 +32,7 @@ function recursiveParseBoxes(arr) {
     let currentOffset = i;
     if (arr.length - currentOffset < MIN_BOX_HEADER_SIZE) {
       returnedArray.push({
-        alias: "",
+        type: "",
         size: arr.length - currentOffset,
         values: [],
         errors: [
@@ -56,7 +56,7 @@ function recursiveParseBoxes(arr) {
     if (size === 1) {
       if (arr.length - currentOffset < LARGE_BOX_SIZE_BYTES) {
         returnedArray.push({
-          alias: name,
+          type: name,
           size: arr.length - boxStartOffset,
           values: [],
           errors: [
@@ -78,7 +78,7 @@ function recursiveParseBoxes(arr) {
 
     /** @type {import("./types.js").ParsedBox} */
     const atomObject = {
-      alias: name,
+      type: name,
       size,
       values: [],
     };
@@ -106,14 +106,9 @@ function recursiveParseBoxes(arr) {
     }
 
     if (name === "uuid") {
-      const subtype = [];
-      let j = UUID_SUBTYPE_BYTES;
-      while (j-- && currentOffset < arr.length) {
-        subtype.push(arr[currentOffset]);
-        currentOffset += 1;
-      }
-
-      atomObject.subtype = subtype;
+      const uuid = arr.slice(currentOffset, currentOffset + UUID_SUBTYPE_BYTES);
+      atomObject.uuid = bytesToHex(uuid, 0, uuid.length);
+      currentOffset += uuid.length;
     }
 
     returnedArray.push(atomObject);
@@ -159,7 +154,7 @@ export async function parseBoxesProgressively(source) {
 
     if (header.length < MIN_BOX_HEADER_SIZE) {
       returnedArray.push({
-        alias: "",
+        type: "",
         size: header.length,
         values: [],
         errors: [
@@ -183,7 +178,7 @@ export async function parseBoxesProgressively(source) {
       headerSize += largeSizeBuffer.length;
       if (largeSizeBuffer.length < LARGE_BOX_SIZE_BYTES) {
         returnedArray.push({
-          alias: name,
+          type: name,
           size: header.length + largeSizeBuffer.length,
           values: [],
           errors: [
@@ -200,22 +195,22 @@ export async function parseBoxesProgressively(source) {
       size = be8toi(largeSizeBuffer, 0);
     }
 
-    /** @type {number[] | undefined} */
-    let subtype;
+    /** @type {string | undefined} */
+    let uuid;
     if (name === "uuid") {
-      const subtypeBuffer = await reader.read(UUID_SUBTYPE_BYTES);
-      headerSize += subtypeBuffer.length;
-      subtype = Array.from(subtypeBuffer);
+      const uuidBuffer = await reader.read(UUID_SUBTYPE_BYTES);
+      headerSize += uuidBuffer.length;
+      uuid = bytesToHex(uuidBuffer, 0, uuidBuffer.length);
     }
 
     /** @type {import("./types.js").ParsedBox} */
     const atomObject = {
-      alias: name,
+      type: name,
       size,
       values: [],
     };
-    if (subtype !== undefined) {
-      atomObject.subtype = subtype;
+    if (uuid !== undefined) {
+      atomObject.uuid = uuid;
     }
     returnedArray.push(atomObject);
 

@@ -38,8 +38,8 @@
 /**
  * @typedef {object} ParsedBoxValue
  * @property {any} value
- * @property {string} name
- * @property {string} description
+ * @property {string} key
+ * @property {string=} description
  */
 
 /**
@@ -50,10 +50,10 @@
 
 /**
  * @typedef {object} ParsedBox
- * @property {string} alias
+ * @property {string} type
  * @property {number} size
  * @property {ParsedBoxValue[]} values
- * @property {number[]=} subtype
+ * @property {string=} uuid
  * @property {string=} name
  * @property {string=} description
  * @property {ParsedBox[]=} children
@@ -66,9 +66,9 @@
  * @typedef {object} ParsedBoxStartEvent
  * @property {"box-start"} type
  * @property {string[]} path
- * @property {string} alias
+ * @property {string} boxType
  * @property {number} size
- * @property {number[]=} subtype
+ * @property {string=} uuid
  */
 
 /**

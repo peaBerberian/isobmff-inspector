@@ -11,7 +11,8 @@ const SAMPLE_MP4 = new URL("./fixtures/mp4s/init.mp4", import.meta.url);
 
 function normalize(nodes) {
   return nodes.map((node) => ({
-    alias: node.alias,
+    type: node.type,
+    uuid: node.uuid,
     size: node.size,
     values: node.values,
     children: normalize(node.children || []),
@@ -82,7 +83,7 @@ test("progressive parser skips unparsed payload boxes before later boxes", async
   const parsed = await parseBoxesProgressively(chunkBytes(bytes, 5));
 
   assert.deepEqual(
-    parsed.map((box) => [box.alias, box.size]),
+    parsed.map((box) => [box.type, box.size]),
     [
       ["ftyp", 16],
       ["mdat", 20],
@@ -91,6 +92,33 @@ test("progressive parser skips unparsed payload boxes before later boxes", async
   );
   assert.equal(parsed[1].name, "Media Data Box");
   assert.equal(parsed[1].values.length, 0);
+});
+
+test("parsers expose uuid boxes through a hex uuid property", async () => {
+  const bytes = new Uint8Array([
+    0x00, 0x00, 0x00, 0x18, 0x75, 0x75, 0x69, 0x64, 0x00, 0x11, 0x22, 0x33,
+    0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff,
+  ]);
+
+  const expected = {
+    type: "uuid",
+    uuid: "00112233445566778899AABBCCDDEEFF",
+    size: 24,
+  };
+
+  assert.deepEqual(parseBoxes(bytes)[0], {
+    ...expected,
+    name: "User-defined Box",
+    description: "Custom box. Those are not yet parsed here.",
+    values: [],
+  });
+
+  assert.deepEqual((await parseBoxesProgressively(chunkBytes(bytes, 5)))[0], {
+    ...expected,
+    name: "User-defined Box",
+    description: "Custom box. Those are not yet parsed here.",
+    values: [],
+  });
 });
 
 test("event parser progressively emits nested box metadata", async () => {
@@ -120,11 +148,17 @@ test("event parser progressively emits nested box metadata", async () => {
       ["box", "mdat"],
     ],
   );
+  assert.deepEqual(
+    events
+      .filter((event) => event.type === "box-start")
+      .map((event) => event.boxType),
+    ["ftyp", "moov", "free", "mdat"],
+  );
 
   const moovEnd = events.find(
     (event) => event.type === "box-end" && event.path.join("/") === "moov",
   );
-  assert.equal(moovEnd?.box.children?.[0]?.alias, "free");
+  assert.equal(moovEnd?.box.children?.[0]?.type, "free");
 });
 
 test("event parser emits the same event types for buffer inputs", async () => {
