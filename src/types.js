@@ -37,7 +37,7 @@
 
 /**
  * @typedef {object} ParsedBoxValue
- * @property {unknown} value
+ * @property {any} value
  * @property {string} name
  * @property {string} description
  */
