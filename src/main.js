@@ -1,5 +1,5 @@
 import {
-  addBoxError,
+  addBoxIssue,
   parseBoxContent,
   shouldReadContent,
 } from "./box_content_parser.js";
@@ -20,9 +20,10 @@ const UUID_SUBTYPE_BYTES = 16;
 /**
  * Parse recursively ISOBMFF Uint8Array.
  * @param {Uint8Array} arr
+ * @param {number} baseOffset
  * @returns {import("./types.js").ParsedBox[]}
  */
-function recursiveParseBoxes(arr) {
+function recursiveParseBoxes(arr, baseOffset = 0) {
   let i = 0;
   /** @type {import("./types.js").ParsedBox[]} */
   const returnedArray = [];
@@ -33,11 +34,13 @@ function recursiveParseBoxes(arr) {
     if (arr.length - currentOffset < MIN_BOX_HEADER_SIZE) {
       returnedArray.push({
         type: "",
+        offset: baseOffset + currentOffset,
         size: arr.length - currentOffset,
+        headerSize: arr.length - currentOffset,
         values: [],
-        errors: [
+        issues: [
           {
-            recoverable: false,
+            severity: "error",
             message: `Cannot parse box header: missing ${
               MIN_BOX_HEADER_SIZE - (arr.length - currentOffset)
             } byte(s).`,
@@ -52,16 +55,22 @@ function recursiveParseBoxes(arr) {
 
     const name = betoa(arr, currentOffset, 4);
     currentOffset += 4;
+    /** @type {"size" | "largeSize" | "extendsToEnd"} */
+    let sizeField = "size";
 
     if (size === 1) {
+      sizeField = "largeSize";
       if (arr.length - currentOffset < LARGE_BOX_SIZE_BYTES) {
         returnedArray.push({
           type: name,
+          offset: baseOffset + boxStartOffset,
           size: arr.length - boxStartOffset,
+          headerSize: arr.length - boxStartOffset,
+          sizeField,
           values: [],
-          errors: [
+          issues: [
             {
-              recoverable: false,
+              severity: "error",
               message: `Cannot parse large box header: missing ${
                 LARGE_BOX_SIZE_BYTES - (arr.length - currentOffset)
               } byte(s).`,
@@ -73,20 +82,24 @@ function recursiveParseBoxes(arr) {
       size = be8toi(arr, currentOffset);
       currentOffset += LARGE_BOX_SIZE_BYTES;
     } else if (size === 0) {
+      sizeField = "extendsToEnd";
       size = arr.length - boxStartOffset;
     }
 
     /** @type {import("./types.js").ParsedBox} */
     const atomObject = {
       type: name,
+      offset: baseOffset + boxStartOffset,
       size,
+      headerSize: currentOffset - boxStartOffset,
+      sizeField,
       values: [],
     };
 
     if (size < currentOffset - boxStartOffset) {
-      addBoxError(
+      addBoxIssue(
         atomObject,
-        false,
+        "error",
         `Invalid box size ${size}: smaller than its ${
           currentOffset - boxStartOffset
         } byte header.`,
@@ -96,9 +109,9 @@ function recursiveParseBoxes(arr) {
     }
 
     if (size > arr.length - boxStartOffset) {
-      addBoxError(
+      addBoxIssue(
         atomObject,
-        false,
+        "error",
         `Truncated box: declared ${size} byte(s), only ${
           arr.length - boxStartOffset
         } available.`,
@@ -109,6 +122,7 @@ function recursiveParseBoxes(arr) {
       const uuid = arr.slice(currentOffset, currentOffset + UUID_SUBTYPE_BYTES);
       atomObject.uuid = bytesToHex(uuid, 0, uuid.length);
       currentOffset += uuid.length;
+      atomObject.headerSize = currentOffset - boxStartOffset;
     }
 
     returnedArray.push(atomObject);
@@ -119,6 +133,7 @@ function recursiveParseBoxes(arr) {
         ? arr.slice(currentOffset, size + boxStartOffset)
         : new Uint8Array(0),
       recursiveParseBoxes,
+      baseOffset + currentOffset,
     );
     i += size;
   }
@@ -131,7 +146,7 @@ function recursiveParseBoxes(arr) {
  * @param {import("./types.js").ISOBMFFInput} input
  * @returns {AsyncGenerator<import("./types.js").ParsedBoxParseEvent, void, void>}
  */
-export async function* parseBoxEvents(input) {
+export async function* parseEvents(input) {
   yield* parseBoxEventsFromInput(input, recursiveParseBoxes);
 }
 
@@ -140,14 +155,17 @@ export async function* parseBoxEvents(input) {
  * @param {AsyncIterable<import("./types.js").ISOBMFFByteChunk> | Iterable<import("./types.js").ISOBMFFByteChunk>} source
  * @returns {Promise<import("./types.js").ParsedBox[]>}
  */
-export async function parseBoxesProgressively(source) {
+async function parseProgressive(source) {
   const iterator = asyncByteIterable(source)[Symbol.asyncIterator]();
   const reader = new ProgressiveByteReader(iterator);
   /** @type {import("./types.js").ParsedBox[]} */
   const returnedArray = [];
+  let offset = 0;
 
   while (true) {
+    const boxOffset = offset;
     const header = await reader.read(MIN_BOX_HEADER_SIZE);
+    offset += header.length;
     if (header.length === 0) {
       break;
     }
@@ -155,11 +173,13 @@ export async function parseBoxesProgressively(source) {
     if (header.length < MIN_BOX_HEADER_SIZE) {
       returnedArray.push({
         type: "",
+        offset: boxOffset,
         size: header.length,
+        headerSize: header.length,
         values: [],
-        errors: [
+        issues: [
           {
-            recoverable: false,
+            severity: "error",
             message: `Cannot parse box header: missing ${
               MIN_BOX_HEADER_SIZE - header.length
             } byte(s).`,
@@ -172,18 +192,25 @@ export async function parseBoxesProgressively(source) {
     let size = be4toi(header, 0);
     const name = betoa(header, 4, 4);
     let headerSize = MIN_BOX_HEADER_SIZE;
+    /** @type {"size" | "largeSize" | "extendsToEnd"} */
+    let sizeField = "size";
 
     if (size === 1) {
+      sizeField = "largeSize";
       const largeSizeBuffer = await reader.read(LARGE_BOX_SIZE_BYTES);
+      offset += largeSizeBuffer.length;
       headerSize += largeSizeBuffer.length;
       if (largeSizeBuffer.length < LARGE_BOX_SIZE_BYTES) {
         returnedArray.push({
           type: name,
+          offset: boxOffset,
           size: header.length + largeSizeBuffer.length,
+          headerSize,
+          sizeField,
           values: [],
-          errors: [
+          issues: [
             {
-              recoverable: false,
+              severity: "error",
               message: `Cannot parse large box header: missing ${
                 LARGE_BOX_SIZE_BYTES - largeSizeBuffer.length
               } byte(s).`,
@@ -193,12 +220,15 @@ export async function parseBoxesProgressively(source) {
         break;
       }
       size = be8toi(largeSizeBuffer, 0);
+    } else if (size === 0) {
+      sizeField = "extendsToEnd";
     }
 
     /** @type {string | undefined} */
     let uuid;
     if (name === "uuid") {
       const uuidBuffer = await reader.read(UUID_SUBTYPE_BYTES);
+      offset += uuidBuffer.length;
       headerSize += uuidBuffer.length;
       uuid = bytesToHex(uuidBuffer, 0, uuidBuffer.length);
     }
@@ -206,7 +236,10 @@ export async function parseBoxesProgressively(source) {
     /** @type {import("./types.js").ParsedBox} */
     const atomObject = {
       type: name,
+      offset: boxOffset,
       size,
+      headerSize,
+      sizeField,
       values: [],
     };
     if (uuid !== undefined) {
@@ -215,9 +248,9 @@ export async function parseBoxesProgressively(source) {
     returnedArray.push(atomObject);
 
     if (size !== 0 && size < headerSize) {
-      addBoxError(
+      addBoxIssue(
         atomObject,
-        false,
+        "error",
         `Invalid box size ${size}: smaller than its ${headerSize} byte header.`,
       );
       break;
@@ -226,12 +259,24 @@ export async function parseBoxesProgressively(source) {
     if (size === 0) {
       if (shouldReadContent(name)) {
         const content = await reader.readUntilEnd();
+        offset += content.length;
         atomObject.size = headerSize + content.length;
-        parseBoxContent(atomObject, content, recursiveParseBoxes);
+        parseBoxContent(
+          atomObject,
+          content,
+          recursiveParseBoxes,
+          boxOffset + headerSize,
+        );
       } else {
         const skippedContentSize = await reader.skipUntilEnd();
+        offset += skippedContentSize;
         atomObject.size = headerSize + skippedContentSize;
-        parseBoxContent(atomObject, new Uint8Array(0), recursiveParseBoxes);
+        parseBoxContent(
+          atomObject,
+          new Uint8Array(0),
+          recursiveParseBoxes,
+          boxOffset + headerSize,
+        );
       }
       break;
     }
@@ -239,32 +284,44 @@ export async function parseBoxesProgressively(source) {
     const contentSize = size - headerSize;
     if (shouldReadContent(name)) {
       const content = await reader.read(contentSize);
+      offset += content.length;
       if (content.length < contentSize) {
-        addBoxError(
+        addBoxIssue(
           atomObject,
-          false,
+          "error",
           `Truncated box: declared ${size} byte(s), only ${
             headerSize + content.length
           } available.`,
         );
       }
-      parseBoxContent(atomObject, content, recursiveParseBoxes);
+      parseBoxContent(
+        atomObject,
+        content,
+        recursiveParseBoxes,
+        boxOffset + headerSize,
+      );
       if (content.length < contentSize) {
         break;
       }
     } else {
       const skippedContentSize = await reader.skip(contentSize);
+      offset += skippedContentSize;
       if (skippedContentSize < contentSize) {
-        addBoxError(
+        addBoxIssue(
           atomObject,
-          false,
+          "error",
           `Truncated box: declared ${size} byte(s), only ${
             headerSize + skippedContentSize
           } available.`,
         );
         break;
       }
-      parseBoxContent(atomObject, new Uint8Array(0), recursiveParseBoxes);
+      parseBoxContent(
+        atomObject,
+        new Uint8Array(0),
+        recursiveParseBoxes,
+        boxOffset + headerSize,
+      );
     }
   }
 
@@ -272,32 +329,19 @@ export async function parseBoxesProgressively(source) {
 }
 
 /**
- * @overload
- * @param {import("./types.js").ISOBMFFByteChunk} arr
- * @returns {import("./types.js").ParsedBox[]}
- */
-
-/**
- * @overload
- * @param {import("./types.js").ISOBMFFProgressiveInput} arr
+ * Parse ISOBMFF data and translate it into a more useful array containing
+ * "atom objects".
+ * @param {import("./types.js").ISOBMFFInput} arr
  * @returns {Promise<import("./types.js").ParsedBox[]>}
  */
-
-/**
- * Parse ISOBMFF data and translate it into a more useful array containing
- * "atom objects". Buffer inputs are parsed synchronously. Progressive inputs
- * are parsed progressively and return a Promise.
- * @param {import("./types.js").ISOBMFFInput} arr
- * @returns {import("./types.js").ParsedBox[] | Promise<import("./types.js").ParsedBox[]>}
- */
-export default function parseBoxes(arr) {
+export async function parse(arr) {
   if (isBufferSource(arr)) {
     return recursiveParseBoxes(bufferSourceToUint8Array(arr));
   }
 
   const progressiveSource = getProgressiveSource(arr);
   if (progressiveSource !== undefined) {
-    return parseBoxesProgressively(progressiveSource);
+    return parseProgressive(progressiveSource);
   }
 
   throw new Error(
@@ -306,3 +350,14 @@ export default function parseBoxes(arr) {
       "Request, Response or byte iterable instead.",
   );
 }
+
+/**
+ * Synchronously parse ISOBMFF data from a buffer input.
+ * @param {import("./types.js").ISOBMFFByteChunk} arr
+ * @returns {import("./types.js").ParsedBox[]}
+ */
+export function parseBuffer(arr) {
+  return recursiveParseBoxes(bufferSourceToUint8Array(arr));
+}
+
+export default parse;

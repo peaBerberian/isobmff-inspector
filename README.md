@@ -22,7 +22,7 @@ Then you can directly use the inspector in your JavaScript or Node file:
 ```js
 import inspectISOBMFF from "isobmff-inspector";
 
-const parsed = inspectISOBMFF(MY_ISOBMFF_FILE);
+const parsed = await inspectISOBMFF(MY_ISOBMFF_FILE);
 console.log(parsed);
 ```
 
@@ -42,10 +42,10 @@ is known, so large media payloads do not have to be kept in memory.
 
 If you want parsed metadata as it becomes available, use the event iterator:
 ```js
-import { parseBoxEvents } from "isobmff-inspector";
+import { parseEvents } from "isobmff-inspector";
 
-for await (const event of parseBoxEvents(response)) {
-  if (event.type === "box") {
+for await (const event of parseEvents(response)) {
+  if (event.event === "box") {
     console.log("box parsed", event.path.join("/"), event.box);
   }
 }
@@ -61,6 +61,12 @@ import inspectISOBMFF from "isobmff-inspector";
 
 Parses an ISOBMFF input.
 
+The same function is also available as a named export:
+
+```js
+import { parse } from "isobmff-inspector";
+```
+
 Supported inputs:
 
 - `ArrayBuffer`
@@ -73,21 +79,32 @@ Supported inputs:
 
 Return value:
 
-- `ParsedBox[]` for `ArrayBuffer` and TypedArray inputs
-- `Promise<ParsedBox[]>` for progressive inputs
+- `Promise<ParsedBox[]>`
 
-### `parseBoxEvents(input)`
+### `parseBuffer(input)`
 
 ```js
-import { parseBoxEvents } from "isobmff-inspector";
+import { parseBuffer } from "isobmff-inspector";
+```
+
+Synchronously parses an `ArrayBuffer` or TypedArray input and returns:
+
+```js
+ParsedBox[]
+```
+
+### `parseEvents(input)`
+
+```js
+import { parseEvents } from "isobmff-inspector";
 ```
 
 Progressively parses an ISOBMFF input and yields metadata events as soon as they
 are available.
 
 ```js
-for await (const event of parseBoxEvents(input)) {
-  // event.type is "box-start", "box", or "box-end"
+for await (const event of parseEvents(input)) {
+  // event.event is "box-start", "box", or "box-end"
 }
 ```
 
@@ -95,16 +112,19 @@ Events:
 
 ```js
 {
-  type: "box-start",
+  event: "box-start",
   path: ["moov", "trak"],
-  boxType: "tkhd",
-  size: 92
+  type: "tkhd",
+  offset: 140,
+  size: 92,
+  headerSize: 8,
+  sizeField: "size"
 }
 ```
 
 ```js
 {
-  type: "box",
+  event: "box",
   path: ["ftyp"],
   box: ParsedBox
 }
@@ -112,26 +132,11 @@ Events:
 
 ```js
 {
-  type: "box-end",
+  event: "box-end",
   path: ["moov"],
   box: ParsedBox
 }
 ```
-
-### `parseBoxesProgressively(source)`
-
-```js
-import { parseBoxesProgressively } from "isobmff-inspector";
-```
-
-Parses an iterable or async iterable of byte chunks and returns:
-
-```js
-Promise<ParsedBox[]>
-```
-
-This is mostly useful when you already have a byte-chunk source. In most cases,
-prefer `inspectISOBMFF(input)` or `parseBoxEvents(input)`.
 
 ### `ParsedBox`
 
@@ -142,7 +147,10 @@ The parsed result is an array of boxes, in the order they are encountered.
   type: "ftyp",
   name: "File Type Box",
   description: "File type and compatibility",
+  offset: 0,
   size: 24,
+  headerSize: 8,
+  sizeField: "size",
   values: [
     {
       key: "major_brand",
@@ -153,16 +161,20 @@ The parsed result is an array of boxes, in the order they are encountered.
   children: [
     // ParsedBox
   ],
-  errors: [
-    { recoverable: false, message: "..." }
+  issues: [
+    { severity: "error", message: "..." }
   ]
 }
 ```
 
-`name`, `description`, `children`, and `errors` are optional. `children` is only
-present for parsed container boxes. `errors` is only present when the parser
+`name`, `description`, `children`, and `issues` are optional. `children` is only
+present for parsed container boxes. `issues` is only present when the parser
 detected a problem. `uuid` is only present on `uuid` boxes and contains the
 user-defined box UUID as an uppercase hexadecimal string.
+
+`sizeField` indicates how the box declared its size: `"size"` for the normal
+32-bit size field, `"largeSize"` for a 64-bit large-size field, or
+`"extendsToEnd"` for boxes declared with size `0`.
 
 In the previous example, ``parsed`` will have something like the following
 structure:
@@ -171,7 +183,10 @@ structure:
   {
     type: "styp", // 4-character box type
     name: "Segment Type Box", // more human-readable name for the box
+    offset: 0, // offset from the beginning of the input, in bytes
     size: 24, // size, in bytes
+    headerSize: 8, // size of the box header, in bytes
+    sizeField: "size", // "size", "largeSize", or "extendsToEnd"
     values: [ // values in the box, in the order they are encountered
       {
         key: "major_brand", // stable key for the value
@@ -186,9 +201,9 @@ structure:
         value: "iso6, msdh", // here brands are separated by a comma
       }
     ],
-    errors: [ // only set when the inspector detected parsing issues
+    issues: [ // only set when the inspector detected parsing issues
       {
-        recoverable: false,
+        severity: "error",
         message: "Truncated box: declared 24 byte(s), only 20 available."
       }
     ]
@@ -224,17 +239,16 @@ structure:
 
 When possible, the inspector keeps parsing after an error to return as much
 information as it can. Parsing issues are reported on the corresponding box
-through an optional ``errors`` array instead of being logged to the console.
+through an optional ``issues`` array instead of being logged to the console.
 
-Each error entry has:
+Each issue entry has:
 
-- ``recoverable``: whether the inspector could recover from this issue while
-  parsing the box
+- ``severity``: either ``"warning"`` or ``"error"``
 - ``message``: a human-readable description of the issue
 
-``recoverable: false`` means the inspector could not reliably parse part of the
+``severity: "error"`` means the inspector could not reliably parse part of the
 file, for example because a box is truncated, has an invalid size, or a field
-could not be read. ``recoverable: true`` means parsing could continue, but the
+could not be read. ``severity: "warning"`` means parsing could continue, but the
 parsed result may be incomplete or suspicious, for example when a known box
 parser left unread bytes.
 

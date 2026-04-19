@@ -13,8 +13,9 @@ const MISSING_BUNDLE_MESSAGE =
 
 function assertPublicApi(inspectISOBMFF) {
   assert.equal(typeof inspectISOBMFF, "function");
-  assert.equal(typeof inspectISOBMFF.parseBoxEvents, "function");
-  assert.equal(typeof inspectISOBMFF.parseBoxesProgressively, "function");
+  assert.equal(typeof inspectISOBMFF.parse, "function");
+  assert.equal(typeof inspectISOBMFF.parseBuffer, "function");
+  assert.equal(typeof inspectISOBMFF.parseEvents, "function");
 }
 
 function skipIfNoBundle(t) {

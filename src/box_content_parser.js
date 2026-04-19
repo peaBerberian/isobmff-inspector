@@ -11,15 +11,15 @@ function formatErrorMessage(error) {
 
 /**
  * @param {import("./types.js").ParsedBox} box
- * @param {boolean} recoverable
+ * @param {"warning" | "error"} severity
  * @param {string} message
  * @returns {void}
  */
-export function addBoxError(box, recoverable, message) {
-  if (!box.errors) {
-    box.errors = [];
+export function addBoxIssue(box, severity, message) {
+  if (!box.issues) {
+    box.issues = [];
   }
-  box.errors.push({ recoverable, message });
+  box.issues.push({ severity, message });
 }
 
 /**
@@ -52,10 +52,16 @@ export function isContainerBox(name) {
 /**
  * @param {import("./types.js").ParsedBox} atomObject
  * @param {Uint8Array} content
- * @param {(content: Uint8Array) => import("./types.js").ParsedBox[]} parseChildren
+ * @param {(content: Uint8Array, offset: number) => import("./types.js").ParsedBox[]} parseChildren
+ * @param {number} contentOffset
  * @returns {void}
  */
-export function parseBoxContent(atomObject, content, parseChildren) {
+export function parseBoxContent(
+  atomObject,
+  content,
+  parseChildren,
+  contentOffset,
+) {
   const config = definitions[atomObject.type];
   if (!config) {
     return;
@@ -96,16 +102,17 @@ export function parseBoxContent(atomObject, content, parseChildren) {
         config.parser(parserReader)
       );
     } catch (e) {
-      addBoxError(atomObject, false, formatErrorMessage(e));
+      addBoxIssue(atomObject, "error", formatErrorMessage(e));
     }
 
     if (hasChildren) {
       const remaining = parserReader.getRemainingLength();
       contentForChildren = content.slice(content.length - remaining);
+      contentOffset += content.length - remaining;
     } else if (!parserReader.isFinished()) {
-      addBoxError(
+      addBoxIssue(
         atomObject,
-        true,
+        "warning",
         `Parser left ${parserReader.getRemainingLength()} byte(s) unread.`,
       );
     }
@@ -127,6 +134,9 @@ export function parseBoxContent(atomObject, content, parseChildren) {
   }
 
   if (hasChildren) {
-    atomObject.children = parseChildren(contentForChildren || content);
+    atomObject.children = parseChildren(
+      contentForChildren || content,
+      contentOffset,
+    );
   }
 }

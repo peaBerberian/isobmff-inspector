@@ -2,10 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import test from "node:test";
 
-import parseBoxes, {
-  parseBoxEvents,
-  parseBoxesProgressively,
-} from "../src/main.js";
+import parseBoxes, { parseBuffer, parseEvents } from "../src/main.js";
 
 const SAMPLE_MP4 = new URL("./fixtures/mp4s/init.mp4", import.meta.url);
 
@@ -13,10 +10,13 @@ function normalize(nodes) {
   return nodes.map((node) => ({
     type: node.type,
     uuid: node.uuid,
+    offset: node.offset,
     size: node.size,
+    headerSize: node.headerSize,
+    sizeField: node.sizeField,
     values: node.values,
     children: normalize(node.children || []),
-    errors: node.errors,
+    issues: node.issues,
   }));
 }
 
@@ -28,7 +28,7 @@ async function* chunkBytes(bytes, chunkSize) {
 
 test("default entry point progressively parses async byte iterables", async () => {
   const bytes = fs.readFileSync(SAMPLE_MP4);
-  const expected = parseBoxes(bytes);
+  const expected = parseBuffer(bytes);
   const actual = await parseBoxes(chunkBytes(bytes, 7));
 
   assert.deepEqual(normalize(actual), normalize(expected));
@@ -36,7 +36,7 @@ test("default entry point progressively parses async byte iterables", async () =
 
 test("default entry point progressively parses body-like inputs", async () => {
   const bytes = fs.readFileSync(SAMPLE_MP4);
-  const expected = parseBoxes(bytes);
+  const expected = parseBuffer(bytes);
   const actual = await parseBoxes({
     body: chunkBytes(bytes, 19),
   });
@@ -46,7 +46,7 @@ test("default entry point progressively parses body-like inputs", async () => {
 
 test("default entry point progressively parses arrayBuffer-like inputs", async () => {
   const bytes = fs.readFileSync(SAMPLE_MP4);
-  const expected = parseBoxes(bytes);
+  const expected = parseBuffer(bytes);
   const actual = await parseBoxes({
     async arrayBuffer() {
       return bytes.buffer.slice(
@@ -59,15 +59,15 @@ test("default entry point progressively parses arrayBuffer-like inputs", async (
   assert.deepEqual(normalize(actual), normalize(expected));
 });
 
-test("progressive parser accepts sync byte iterables", async () => {
+test("default entry point progressively parses sync byte iterables", async () => {
   const bytes = fs.readFileSync(SAMPLE_MP4);
-  const expected = parseBoxes(bytes);
+  const expected = parseBuffer(bytes);
   const chunks = [
     bytes.subarray(0, 11),
     bytes.subarray(11, 67),
     bytes.subarray(67),
   ];
-  const actual = await parseBoxesProgressively(chunks);
+  const actual = await parseBoxes(chunks);
 
   assert.deepEqual(normalize(actual), normalize(expected));
 });
@@ -80,14 +80,20 @@ test("progressive parser skips unparsed payload boxes before later boxes", async
     0x00, 0x00, 0x00, 0x08, 0x66, 0x72, 0x65, 0x65,
   ]);
 
-  const parsed = await parseBoxesProgressively(chunkBytes(bytes, 5));
+  const parsed = await parseBoxes(chunkBytes(bytes, 5));
 
   assert.deepEqual(
-    parsed.map((box) => [box.type, box.size]),
+    parsed.map((box) => [
+      box.type,
+      box.offset,
+      box.size,
+      box.headerSize,
+      box.sizeField,
+    ]),
     [
-      ["ftyp", 16],
-      ["mdat", 20],
-      ["free", 8],
+      ["ftyp", 0, 16, 8, "size"],
+      ["mdat", 16, 20, 8, "size"],
+      ["free", 36, 8, 8, "size"],
     ],
   );
   assert.equal(parsed[1].name, "Media Data Box");
@@ -103,17 +109,20 @@ test("parsers expose uuid boxes through a hex uuid property", async () => {
   const expected = {
     type: "uuid",
     uuid: "00112233445566778899AABBCCDDEEFF",
+    offset: 0,
     size: 24,
+    headerSize: 24,
+    sizeField: "size",
   };
 
-  assert.deepEqual(parseBoxes(bytes)[0], {
+  assert.deepEqual(parseBuffer(bytes)[0], {
     ...expected,
     name: "User-defined Box",
     description: "Custom box. Those are not yet parsed here.",
     values: [],
   });
 
-  assert.deepEqual((await parseBoxesProgressively(chunkBytes(bytes, 5)))[0], {
+  assert.deepEqual((await parseBoxes(chunkBytes(bytes, 5)))[0], {
     ...expected,
     name: "User-defined Box",
     description: "Custom box. Those are not yet parsed here.",
@@ -131,12 +140,12 @@ test("event parser progressively emits nested box metadata", async () => {
   ]);
 
   const events = [];
-  for await (const event of parseBoxEvents(chunkBytes(bytes, 3))) {
+  for await (const event of parseEvents(chunkBytes(bytes, 3))) {
     events.push(event);
   }
 
   assert.deepEqual(
-    events.map((event) => [event.type, event.path.join("/")]),
+    events.map((event) => [event.event, event.path.join("/")]),
     [
       ["box-start", "ftyp"],
       ["box", "ftyp"],
@@ -150,23 +159,34 @@ test("event parser progressively emits nested box metadata", async () => {
   );
   assert.deepEqual(
     events
-      .filter((event) => event.type === "box-start")
-      .map((event) => event.boxType),
-    ["ftyp", "moov", "free", "mdat"],
+      .filter((event) => event.event === "box-start")
+      .map((event) => [
+        event.type,
+        event.offset,
+        event.size,
+        event.headerSize,
+        event.sizeField,
+      ]),
+    [
+      ["ftyp", 0, 16, 8, "size"],
+      ["moov", 16, 16, 8, "size"],
+      ["free", 24, 8, 8, "size"],
+      ["mdat", 32, 20, 8, "size"],
+    ],
   );
 
   const moovEnd = events.find(
-    (event) => event.type === "box-end" && event.path.join("/") === "moov",
+    (event) => event.event === "box-end" && event.path.join("/") === "moov",
   );
   assert.equal(moovEnd?.box.children?.[0]?.type, "free");
 });
 
-test("event parser emits the same event types for buffer inputs", async () => {
+test("event parser emits the same events for buffer inputs", async () => {
   const bytes = fs.readFileSync(SAMPLE_MP4);
   const events = [];
 
-  for await (const event of parseBoxEvents(bytes)) {
-    events.push(event.type);
+  for await (const event of parseEvents(bytes)) {
+    events.push(event.event);
   }
 
   assert.equal(events[0], "box-start");

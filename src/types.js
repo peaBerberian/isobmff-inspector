@@ -43,31 +43,37 @@
  */
 
 /**
- * @typedef {object} ParsedBoxError
- * @property {boolean} recoverable
+ * @typedef {object} ParsedBoxIssue
+ * @property {"warning" | "error"} severity
  * @property {string} message
  */
 
 /**
  * @typedef {object} ParsedBox
  * @property {string} type
+ * @property {number} offset
  * @property {number} size
+ * @property {number} headerSize
+ * @property {"size" | "largeSize" | "extendsToEnd"=} sizeField
  * @property {ParsedBoxValue[]} values
  * @property {string=} uuid
  * @property {string=} name
  * @property {string=} description
  * @property {ParsedBox[]=} children
- * @property {ParsedBoxError[]=} errors
+ * @property {ParsedBoxIssue[]=} issues
  */
 
 /**
  * Emitted as soon as a box header has been parsed.
  *
  * @typedef {object} ParsedBoxStartEvent
- * @property {"box-start"} type
+ * @property {"box-start"} event
  * @property {string[]} path
- * @property {string} boxType
+ * @property {string} type
+ * @property {number} offset
  * @property {number} size
+ * @property {number} headerSize
+ * @property {"size" | "largeSize" | "extendsToEnd"=} sizeField
  * @property {string=} uuid
  */
 
@@ -76,7 +82,7 @@
  * continue after a malformed partial box.
  *
  * @typedef {object} ParsedBoxEvent
- * @property {"box"} type
+ * @property {"box"} event
  * @property {string[]} path
  * @property {ParsedBox} box
  */
@@ -85,7 +91,7 @@
  * Emitted when a container box and all of its parsed children are complete.
  *
  * @typedef {object} ParsedBoxEndEvent
- * @property {"box-end"} type
+ * @property {"box-end"} event
  * @property {string[]} path
  * @property {ParsedBox} box
  */

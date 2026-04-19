@@ -1,5 +1,5 @@
 import {
-  addBoxError,
+  addBoxIssue,
   hasContentParser,
   isContainerBox,
   parseBoxContent,
@@ -27,27 +27,31 @@ async function* emitParsedBoxEvents(boxes, parentPath) {
   for (const box of boxes) {
     const path = parentPath.concat(box.type);
     yield {
-      type: "box-start",
+      event: "box-start",
       path,
-      boxType: box.type,
+      type: box.type,
+      offset: box.offset,
       size: box.size,
+      headerSize: box.headerSize,
+      sizeField: box.sizeField,
       uuid: box.uuid,
     };
     if (box.children) {
       yield* emitParsedBoxEvents(box.children, path);
-      yield { type: "box-end", path, box };
+      yield { event: "box-end", path, box };
     } else {
-      yield { type: "box", path, box };
+      yield { event: "box", path, box };
     }
   }
 }
 
 /**
  * @param {ProgressiveByteReader} reader
- * @param {(content: Uint8Array) => import("./types.js").ParsedBox[]} parseBuffer
+ * @param {(content: Uint8Array, offset: number) => import("./types.js").ParsedBox[]} parseBuffer
  * @param {number | undefined} remainingLength
  * @param {string[]} parentPath
  * @param {((box: import("./types.js").ParsedBox) => void)=} onParsedBox
+ * @param {number=} baseOffset
  * @returns {AsyncGenerator<import("./types.js").ParsedBoxParseEvent, number, void>}
  */
 async function* parseBoxEventsFromReader(
@@ -56,10 +60,12 @@ async function* parseBoxEventsFromReader(
   remainingLength,
   parentPath,
   onParsedBox,
+  baseOffset = 0,
 ) {
   let consumedLength = 0;
 
   while (remainingLength === undefined || consumedLength < remainingLength) {
+    const boxOffset = baseOffset + consumedLength;
     const remainingInParent =
       remainingLength === undefined
         ? undefined
@@ -76,20 +82,23 @@ async function* parseBoxEventsFromReader(
     }
 
     if (header.length < MIN_BOX_HEADER_SIZE) {
+      /** @type {import("./types.js").ParsedBox} */
       const box = {
         type: "",
+        offset: boxOffset,
         size: header.length,
+        headerSize: header.length,
         values: [],
-        errors: [
+        issues: [
           {
-            recoverable: false,
+            severity: "error",
             message: `Cannot parse box header: missing ${
               MIN_BOX_HEADER_SIZE - header.length
             } byte(s).`,
           },
         ],
       };
-      yield { type: "box", path: parentPath.concat(""), box };
+      yield { event: "box", path: parentPath.concat(""), box };
       onParsedBox?.(box);
       break;
     }
@@ -98,8 +107,11 @@ async function* parseBoxEventsFromReader(
     const name = betoa(header, 4, 4);
     const path = parentPath.concat(name);
     let headerSize = MIN_BOX_HEADER_SIZE;
+    /** @type {"size" | "largeSize" | "extendsToEnd"} */
+    let sizeField = "size";
 
     if (size === 1) {
+      sizeField = "largeSize";
       const largeSizeLength =
         remainingLength === undefined
           ? LARGE_BOX_SIZE_BYTES
@@ -109,24 +121,30 @@ async function* parseBoxEventsFromReader(
       headerSize += largeSizeBuffer.length;
 
       if (largeSizeBuffer.length < LARGE_BOX_SIZE_BYTES) {
+        /** @type {import("./types.js").ParsedBox} */
         const box = {
           type: name,
+          offset: boxOffset,
           size: header.length + largeSizeBuffer.length,
+          headerSize,
+          sizeField,
           values: [],
-          errors: [
+          issues: [
             {
-              recoverable: false,
+              severity: "error",
               message: `Cannot parse large box header: missing ${
                 LARGE_BOX_SIZE_BYTES - largeSizeBuffer.length
               } byte(s).`,
             },
           ],
         };
-        yield { type: "box", path, box };
+        yield { event: "box", path, box };
         onParsedBox?.(box);
         break;
       }
       size = be8toi(largeSizeBuffer, 0);
+    } else if (size === 0) {
+      sizeField = "extendsToEnd";
     }
 
     /** @type {string | undefined} */
@@ -145,7 +163,10 @@ async function* parseBoxEventsFromReader(
     /** @type {import("./types.js").ParsedBox} */
     const box = {
       type: name,
+      offset: boxOffset,
       size,
+      headerSize,
+      sizeField,
       values: [],
     };
     if (uuid !== undefined) {
@@ -153,20 +174,23 @@ async function* parseBoxEventsFromReader(
     }
 
     yield {
-      type: "box-start",
+      event: "box-start",
       path,
-      boxType: box.type,
+      type: box.type,
+      offset: box.offset,
       size: box.size,
+      headerSize: box.headerSize,
+      sizeField: box.sizeField,
       uuid: box.uuid,
     };
 
     if (size !== 0 && size < headerSize) {
-      addBoxError(
+      addBoxIssue(
         box,
-        false,
+        "error",
         `Invalid box size ${size}: smaller than its ${headerSize} byte header.`,
       );
-      yield { type: "box", path, box };
+      yield { event: "box", path, box };
       onParsedBox?.(box);
       break;
     }
@@ -196,21 +220,27 @@ async function* parseBoxEventsFromReader(
         (child) => {
           children.push(child);
         },
+        boxOffset + headerSize,
       );
       consumedLength += childConsumedLength;
       if (contentSize === undefined) {
         box.size = headerSize + childConsumedLength;
       } else if (childConsumedLength < contentSize) {
-        addBoxError(
+        addBoxIssue(
           box,
-          false,
+          "error",
           `Truncated box: declared ${box.size} byte(s), only ${
             headerSize + childConsumedLength
           } available.`,
         );
       }
-      parseBoxContent(box, new Uint8Array(0), () => children);
-      yield { type: "box-end", path, box };
+      parseBoxContent(
+        box,
+        new Uint8Array(0),
+        () => children,
+        boxOffset + headerSize,
+      );
+      yield { event: "box-end", path, box };
       onParsedBox?.(box);
       if (contentSize !== undefined && childConsumedLength < contentSize) {
         break;
@@ -227,21 +257,21 @@ async function* parseBoxEventsFromReader(
       if (contentSize === undefined) {
         box.size = headerSize + content.length;
       } else if (content.length < contentSize) {
-        addBoxError(
+        addBoxIssue(
           box,
-          false,
+          "error",
           `Truncated box: declared ${box.size} byte(s), only ${
             headerSize + content.length
           } available.`,
         );
       }
 
-      parseBoxContent(box, content, parseBuffer);
+      parseBoxContent(box, content, parseBuffer, boxOffset + headerSize);
       if (box.children) {
         yield* emitParsedBoxEvents(box.children, path);
-        yield { type: "box-end", path, box };
+        yield { event: "box-end", path, box };
       } else {
-        yield { type: "box", path, box };
+        yield { event: "box", path, box };
       }
       onParsedBox?.(box);
 
@@ -259,16 +289,21 @@ async function* parseBoxEventsFromReader(
     if (contentSize === undefined) {
       box.size = headerSize + skippedContentSize;
     } else if (skippedContentSize < contentSize) {
-      addBoxError(
+      addBoxIssue(
         box,
-        false,
+        "error",
         `Truncated box: declared ${box.size} byte(s), only ${
           headerSize + skippedContentSize
         } available.`,
       );
     }
-    parseBoxContent(box, new Uint8Array(0), parseBuffer);
-    yield { type: "box", path, box };
+    parseBoxContent(
+      box,
+      new Uint8Array(0),
+      parseBuffer,
+      boxOffset + headerSize,
+    );
+    yield { event: "box", path, box };
     onParsedBox?.(box);
 
     if (contentSize !== undefined && skippedContentSize < contentSize) {
@@ -282,13 +317,13 @@ async function* parseBoxEventsFromReader(
 /**
  * Progressively parse ISOBMFF data and yield metadata events as boxes are found.
  * @param {import("./types.js").ISOBMFFInput} input
- * @param {(content: Uint8Array) => import("./types.js").ParsedBox[]} parseBuffer
+ * @param {(content: Uint8Array, offset: number) => import("./types.js").ParsedBox[]} parseBuffer
  * @returns {AsyncGenerator<import("./types.js").ParsedBoxParseEvent, void, void>}
  */
 export default async function* parseBoxEvents(input, parseBuffer) {
   if (isBufferSource(input)) {
     yield* emitParsedBoxEvents(
-      parseBuffer(bufferSourceToUint8Array(input)),
+      parseBuffer(bufferSourceToUint8Array(input), 0),
       [],
     );
     return;
@@ -303,6 +338,8 @@ export default async function* parseBoxEvents(input, parseBuffer) {
       parseBuffer,
       undefined,
       [],
+      undefined,
+      0,
     );
     return;
   }

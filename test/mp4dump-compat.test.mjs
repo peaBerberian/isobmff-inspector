@@ -3,12 +3,12 @@ import fs from "node:fs";
 import test from "node:test";
 
 import definitions from "../src/boxes/index.js";
-import parseBoxes from "../src/main.js";
+import { parseBuffer } from "../src/main.js";
 
 const SUPPORTED_ALIASES = new Set(Object.keys(definitions));
 const MP4_DIR = new URL("./fixtures/mp4s/", import.meta.url);
 
-test("parse errors are returned on boxes without console warnings", () => {
+test("parse issues are returned on boxes without console warnings", () => {
   const warn = console.warn;
   let warnCount = 0;
   console.warn = () => {
@@ -16,7 +16,7 @@ test("parse errors are returned on boxes without console warnings", () => {
   };
 
   try {
-    const parsed = parseBoxes(
+    const parsed = parseBuffer(
       new Uint8Array([
         0x00, 0x00, 0x00, 0x10, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x36,
       ]),
@@ -26,11 +26,11 @@ test("parse errors are returned on boxes without console warnings", () => {
     assert.equal(parsed.length, 1);
     assert.equal(parsed[0].type, "ftyp");
     assert.deepEqual(
-      parsed[0].errors?.map((error) => error.recoverable),
-      [false, false],
+      parsed[0].issues?.map((issue) => issue.severity),
+      ["error", "error"],
     );
-    assert.match(parsed[0].errors?.[0].message ?? "", /Truncated box/);
-    assert.match(parsed[0].errors?.[1].message ?? "", /Cannot read 4 byte/);
+    assert.match(parsed[0].issues?.[0].message ?? "", /Truncated box/);
+    assert.match(parsed[0].issues?.[1].message ?? "", /Cannot read 4 byte/);
   } finally {
     console.warn = warn;
   }
@@ -629,7 +629,7 @@ for (const fixtureName of fixtures) {
     const mp4 = fs.readFileSync(
       new URL(`./fixtures/mp4s/${fixtureName}`, import.meta.url),
     );
-    const actualTree = normalizeActual(parseBoxes(mp4));
+    const actualTree = normalizeActual(parseBuffer(mp4));
 
     compareNodes(dumpTree, actualTree, fixtureName);
   });
