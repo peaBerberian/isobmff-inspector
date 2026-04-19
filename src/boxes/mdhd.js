@@ -1,4 +1,17 @@
-/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
+/**
+ * @typedef {Object} MediaHeaderBoxContent
+ * @property {number} version
+ * @property {number} flags
+ * @property {number|bigint} creation_time
+ * @property {number|bigint} modification_time
+ * @property {number} timescale
+ * @property {number|bigint} duration
+ * @property {number} pad
+ * @property {string} language
+ * @property {number} pre_defined
+ */
+
+/** @type {import("../types.js").BoxDefinition<MediaHeaderBoxContent>} */
 export default {
   name: "Media Header Box",
   description: "Timing and language metadata for one track's media.",
@@ -19,7 +32,7 @@ export default {
       String.fromCharCode(((next2Bytes >> 5) & 0x1f) + 0x60),
       String.fromCharCode((next2Bytes & 0x1f) + 0x60),
     ].join("");
-    const predifined = r.bytesToInt(2);
+    const pre_defined = r.bytesToInt(2);
     return {
       version,
       flags,
@@ -29,7 +42,7 @@ export default {
       duration,
       pad,
       language,
-      predifined,
+      pre_defined,
     };
   },
 };

@@ -2,7 +2,7 @@
  * @typedef {Object} TrackExtensionPropertiesBoxContent
  * @property {number} version
  * @property {number} flags
- * @property {number} track_id
+ * @property {number} track_ID
  */
 
 /** @type {import("../types.js").BoxDefinition<TrackExtensionPropertiesBoxContent>} */
@@ -16,7 +16,7 @@ export default {
     return {
       version: r.bytesToInt(1),
       flags: r.bytesToInt(3),
-      track_id: r.bytesToInt(4),
+      track_ID: r.bytesToInt(4),
     };
   },
 };

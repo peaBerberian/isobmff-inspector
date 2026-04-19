@@ -221,7 +221,7 @@ const FIELD_CHECKS = {
 
   trex(dumpNode, actualNode) {
     assert.equal(
-      actualNode.values.track_id,
+      actualNode.values.track_ID,
       dumpInteger(dumpScalar(dumpNode, "track id")),
     );
     assert.equal(
@@ -417,7 +417,7 @@ const FIELD_CHECKS = {
 
   tenc(dumpNode, actualNode) {
     assert.equal(
-      actualNode.values.default_isProtected,
+      actualNode.values.default_IsProtected,
       dumpInteger(dumpScalar(dumpNode, "default_isProtected")),
     );
     assert.equal(
@@ -571,7 +571,7 @@ const FIELD_CHECKS = {
 
   sidx(dumpNode, actualNode) {
     assert.equal(
-      actualNode.values.reference_id,
+      actualNode.values.reference_ID,
       dumpInteger(dumpScalar(dumpNode, "reference_ID")),
     );
     assert.equal(

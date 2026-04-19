@@ -7,6 +7,7 @@
 - 64-bit fields are now `BigInt`, not JS `number`, to be able to express all possible values without loss
 - Minimum supported version is now es2017
 - Don't `console.warn` when issues are discovered. Use the new `errors` optional property linked to parsed boxes instead.
+- Some properties of the boxes `avcC`, `mdhd`, `mvhd`, `sidx`, `tkhd` and `trex` had their casing modified to be closer to how the specifications named them (e.g. `profile_compatibility`, not `profileCompatibility`)
 
 ### Features
 

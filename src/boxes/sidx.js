@@ -1,4 +1,27 @@
-/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
+/**
+ * @typedef {Object} SegmentIndexReference
+ * @property {number} reference_type
+ * @property {number} referenced_size
+ * @property {number} subsegment_duration
+ * @property {number} starts_with_SAP
+ * @property {number} SAP_type
+ * @property {number} SAP_delta_time
+ */
+
+/**
+ * @typedef {Object} SegmentIndexBoxContent
+ * @property {number} version
+ * @property {number} flags
+ * @property {number} reference_ID
+ * @property {number} timescale
+ * @property {number} earliest_presentation_time
+ * @property {number} first_offset
+ * @property {number} reserved
+ * @property {number} reference_count
+ * @property {SegmentIndexReference[]} items
+ */
+
+/** @type {import("../types.js").BoxDefinition<SegmentIndexBoxContent>} */
 export default {
   name: "Segment Index Box",
   description: "Index of the media stream",
@@ -6,7 +29,7 @@ export default {
   parser(r) {
     const version = r.bytesToInt(1);
     const flags = r.bytesToInt(3);
-    const reference_id = r.bytesToInt(4);
+    const reference_ID = r.bytesToInt(4);
     const timescale = r.bytesToInt(4);
     const earliest_presentation_time = r.bytesToInt(version === 0 ? 4 : 8);
     const first_offset = r.bytesToInt(version === 0 ? 4 : 8);
@@ -32,7 +55,7 @@ export default {
     return {
       version,
       flags,
-      reference_id,
+      reference_ID,
       timescale,
       earliest_presentation_time,
       first_offset,

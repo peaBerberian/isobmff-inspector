@@ -1,4 +1,21 @@
-/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
+/**
+ * @typedef {Object} MovieHeaderBoxContent
+ * @property {number} version
+ * @property {number} flags
+ * @property {number|bigint} creation_time
+ * @property {number|bigint} modification_time
+ * @property {number} timescale
+ * @property {number|bigint} duration
+ * @property {string} rate
+ * @property {string} volume
+ * @property {number} reserved_1
+ * @property {number[]} reserved_2
+ * @property {number[]} matrix
+ * @property {number[]} pre_defined
+ * @property {number} next_track_ID
+ */
+
+/** @type {import("../types.js").BoxDefinition<MovieHeaderBoxContent>} */
 export default {
   name: "Movie Header Box",
   description:
@@ -17,13 +34,13 @@ export default {
     {
       name: "creation_time",
       description: "Creation timestamp in seconds since 1904-01-01 UTC.",
-      key: "creationTime",
+      key: "creation_time",
     },
     {
       name: "modification_time",
       description:
         "Last modification timestamp in seconds since 1904-01-01 UTC.",
-      key: "modificationTime",
+      key: "modification_time",
     },
     {
       name: "timescale",
@@ -48,12 +65,12 @@ export default {
     {
       name: "reserved 1",
       description: "Reserved 16 bits",
-      key: "reserved1",
+      key: "reserved_1",
     },
     {
       name: "reserved 2",
       description: "Reserved 2*32 bits",
-      key: "reserved2",
+      key: "reserved_2",
     },
     {
       name: "matrix",
@@ -63,12 +80,12 @@ export default {
     {
       name: "pre-defined",
       description: "Pre-defined 32*6 bits.",
-      key: "predefined",
+      key: "pre_defined",
     },
     {
       name: "next_track_ID",
       description: "Suggested non-zero track id for the next added track.",
-      key: "nextTrackId",
+      key: "next_track_ID",
     },
   ],
 
@@ -80,15 +97,15 @@ export default {
 
     const flags = reader.bytesToInt(3);
 
-    let creationTime, modificationTime, timescale, duration;
+    let creation_time, modification_time, timescale, duration;
     if (version === 1) {
-      creationTime = reader.bytesToUint64BigInt();
-      modificationTime = reader.bytesToUint64BigInt();
+      creation_time = reader.bytesToUint64BigInt();
+      modification_time = reader.bytesToUint64BigInt();
       timescale = reader.bytesToInt(4);
       duration = reader.bytesToUint64BigInt();
     } else {
-      creationTime = reader.bytesToInt(4);
-      modificationTime = reader.bytesToInt(4);
+      creation_time = reader.bytesToInt(4);
+      modification_time = reader.bytesToInt(4);
       timescale = reader.bytesToInt(4);
       duration = reader.bytesToInt(4);
     }
@@ -97,15 +114,15 @@ export default {
 
     const volume = [reader.bytesToInt(1), reader.bytesToInt(1)].join(".");
 
-    const reserved1 = reader.bytesToInt(2);
-    const reserved2 = [reader.bytesToInt(4), reader.bytesToInt(4)];
+    const reserved_1 = reader.bytesToInt(2);
+    const reserved_2 = [reader.bytesToInt(4), reader.bytesToInt(4)];
 
     const matrixArr = [];
     for (let i = 0; i < 9; i++) {
       matrixArr.push(reader.bytesToInt(4));
     }
 
-    const predefined = [
+    const pre_defined = [
       reader.bytesToInt(4),
       reader.bytesToInt(4),
       reader.bytesToInt(4),
@@ -114,22 +131,22 @@ export default {
       reader.bytesToInt(4),
     ];
 
-    const nextTrackId = reader.bytesToInt(4);
+    const next_track_ID = reader.bytesToInt(4);
 
     return {
       version,
       flags,
-      creationTime,
-      modificationTime,
+      creation_time,
+      modification_time,
       timescale,
       duration,
       rate,
       volume,
-      reserved1,
-      reserved2,
+      reserved_1,
+      reserved_2,
       matrix: matrixArr,
-      predefined,
-      nextTrackId,
+      pre_defined,
+      next_track_ID,
     };
   },
 };

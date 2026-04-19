@@ -1,4 +1,19 @@
-/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
+/**
+ * @typedef {Object} TrackEncryptionBoxContent
+ * @property {number} version
+ * @property {number} flags
+ * @property {number} reserved
+ * @property {number=} reserved_1
+ * @property {number=} default_crypt_byte_block
+ * @property {number=} default_skip_byte_block
+ * @property {number} default_IsProtected
+ * @property {number} default_Per_Sample_IV_Size
+ * @property {string} default_KID
+ * @property {number=} default_constant_IV_size
+ * @property {string=} default_constant_IV
+ */
+
+/** @type {import("../types.js").BoxDefinition<TrackEncryptionBoxContent>} */
 export default {
   name: "Track Encryption Box",
   description:
@@ -11,7 +26,7 @@ export default {
     }
 
     const flags = r.bytesToInt(3);
-    /** @type Partial<Record<string, unknown>> */
+    /** @type {Partial<TrackEncryptionBoxContent>} */
     const ret = {
       version,
       flags,
@@ -26,7 +41,7 @@ export default {
       ret.default_skip_byte_block = blocks & 0x0f;
     }
 
-    ret.default_isProtected = r.bytesToInt(1);
+    ret.default_IsProtected = r.bytesToInt(1);
     ret.default_Per_Sample_IV_Size = r.bytesToInt(1);
     ret.default_KID = r.bytesToHex(16);
 
@@ -36,6 +51,6 @@ export default {
       ret.default_constant_IV = r.bytesToHex(default_constant_IV_size);
     }
 
-    return ret;
+    return /** @type {TrackEncryptionBoxContent} */ (ret);
   },
 };

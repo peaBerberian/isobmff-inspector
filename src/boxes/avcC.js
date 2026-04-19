@@ -1,4 +1,24 @@
-/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
+/**
+ * @typedef {Object} AvcParameterSet
+ * @property {number} length
+ * @property {string} data
+ */
+
+/**
+ * @typedef {Object} AvcDecoderConfigurationRecordContent
+ * @property {number} configurationVersion
+ * @property {number} AVCProfileIndication
+ * @property {number} profile_compatibility
+ * @property {number} AVCLevelIndication
+ * @property {number} lengthSizeMinusOne
+ * @property {number} numOfSequenceParameterSets
+ * @property {AvcParameterSet[]} sequenceParameterSets
+ * @property {number} numOfPictureParameterSets
+ * @property {AvcParameterSet[]} pictureParameterSets
+ * @property {string=} ext
+ */
+
+/** @type {import("../types.js").BoxDefinition<AvcDecoderConfigurationRecordContent>} */
 export default {
   name: "AVC Decoder Configuration Record",
   description:
@@ -7,7 +27,7 @@ export default {
   parser(r) {
     const configurationVersion = r.bytesToInt(1);
     const AVCProfileIndication = r.bytesToInt(1);
-    const profileCompatibility = r.bytesToInt(1);
+    const profile_compatibility = r.bytesToInt(1);
     const AVCLevelIndication = r.bytesToInt(1);
     const lengthSizeMinusOneByte = r.bytesToInt(1);
     const numOfSequenceParameterSetsByte = r.bytesToInt(1);
@@ -33,11 +53,11 @@ export default {
       });
     }
 
-    /** @type Partial<Record<string, unknown>> */
+    /** @type {AvcDecoderConfigurationRecordContent} */
     const ret = {
       configurationVersion,
       AVCProfileIndication,
-      profileCompatibility,
+      profile_compatibility,
       AVCLevelIndication,
       lengthSizeMinusOne: lengthSizeMinusOneByte & 0x03,
       numOfSequenceParameterSets,
