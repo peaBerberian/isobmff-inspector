@@ -18,13 +18,10 @@ You can install it through npm:
 npm install isobmff-inspector
 ```
 
-Then you can then directly use the inspector in your JavaScript or Node file:
+Then you can directly use the inspector in your JavaScript or Node file:
 ```js
 import inspectISOBMFF from "isobmff-inspector";
 
-// The given file can be of either of those types:
-//   - ArrayBuffer
-//   - Any TypedArray (Uint8Array, Uint16Array, etc.)
 const parsed = inspectISOBMFF(MY_ISOBMFF_FILE);
 console.log(parsed);
 ```
@@ -33,23 +30,11 @@ The same entry point can also progressively parse usual byte sources:
 ```js
 import inspectISOBMFF from "isobmff-inspector";
 
-// Browser File/Blob, for example from an <input type="file">
 const parsedFile = await inspectISOBMFF(fileInput.files[0]);
 
-// Fetch Response or Request objects
 const response = await fetch("https://example.com/video.mp4");
 const parsedResponse = await inspectISOBMFF(response);
-
-// Web ReadableStream<Uint8Array> or Node.js readable streams
-const parsedStream = await inspectISOBMFF(readableStream);
-
-// AsyncIterable/Iterable byte chunks
-const parsedChunks = await inspectISOBMFF(asyncByteIterable);
 ```
-
-`ArrayBuffer` and TypedArray inputs are still parsed synchronously and directly
-return the parsed boxes array. Progressive inputs return a `Promise` resolving
-to that same parsed boxes array.
 
 The inspector only buffers the bytes it needs to parse a box. Boxes without a
 parser or children, including `mdat`, are skipped progressively when their size
@@ -60,19 +45,117 @@ If you want parsed metadata as it becomes available, use the event iterator:
 import { parseBoxEvents } from "isobmff-inspector";
 
 for await (const event of parseBoxEvents(response)) {
-  if (event.type === "box-start") {
-    console.log("box started", event.path.join("/"), event.size);
-  } else if (event.type === "box") {
+  if (event.type === "box") {
     console.log("box parsed", event.path.join("/"), event.box);
-  } else if (event.type === "box-end") {
-    console.log("container parsed", event.path.join("/"), event.box);
   }
 }
 ```
 
-`box-start` is emitted as soon as the box header is parsed. `box` is emitted for
-parsed non-container boxes, and `box-end` is emitted when a container box and
-its parsed children are complete.
+## API #########################################################################
+
+### `inspectISOBMFF(input)`
+
+```js
+import inspectISOBMFF from "isobmff-inspector";
+```
+
+Parses an ISOBMFF input.
+
+Supported inputs:
+
+- `ArrayBuffer`
+- any TypedArray, such as `Uint8Array`
+- `Blob` or `File`
+- `Request` or `Response`
+- Web `ReadableStream`
+- Node.js readable streams
+- sync or async iterables of byte chunks
+
+Return value:
+
+- `ParsedBox[]` for `ArrayBuffer` and TypedArray inputs
+- `Promise<ParsedBox[]>` for progressive inputs
+
+### `parseBoxEvents(input)`
+
+```js
+import { parseBoxEvents } from "isobmff-inspector";
+```
+
+Progressively parses an ISOBMFF input and yields metadata events as soon as they
+are available.
+
+```js
+for await (const event of parseBoxEvents(input)) {
+  // event.type is "box-start", "box", or "box-end"
+}
+```
+
+Events:
+
+```js
+{
+  type: "box-start",
+  path: ["moov", "trak"],
+  alias: "tkhd",
+  size: 92
+}
+```
+
+```js
+{
+  type: "box",
+  path: ["ftyp"],
+  box: ParsedBox
+}
+```
+
+```js
+{
+  type: "box-end",
+  path: ["moov"],
+  box: ParsedBox
+}
+```
+
+### `parseBoxesProgressively(source)`
+
+```js
+import { parseBoxesProgressively } from "isobmff-inspector";
+```
+
+Parses an iterable or async iterable of byte chunks and returns:
+
+```js
+Promise<ParsedBox[]>
+```
+
+This is mostly useful when you already have a byte-chunk source. In most cases,
+prefer `inspectISOBMFF(input)` or `parseBoxEvents(input)`.
+
+### `ParsedBox`
+
+The parsed result is an array of boxes, in the order they are encountered.
+
+```js
+{
+  alias: "ftyp",
+  name: "File Type Box",
+  size: 24,
+  values: [
+    { name: "major-brand", value: "iso6" }
+  ],
+  children: [
+    // ParsedBox
+  ],
+  errors: [
+    { recoverable: false, message: "..." }
+  ]
+}
+```
+
+`children` is only present for parsed container boxes. `errors` is only present
+when the parser detected a problem.
 
 In the previous example, ``parsed`` will have something like the following
 structure:
