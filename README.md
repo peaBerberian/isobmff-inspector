@@ -148,53 +148,29 @@ Events:
 
 The parsed result is an array of boxes, in the order they are encountered.
 
-```js
-{
-  type: "ftyp",
-  name: "File Type Box",
-  description: "File type and compatibility",
-  offset: 0,
-  size: 24,
-  headerSize: 8,
-  sizeField: "size",
-  values: [
-    {
-      key: "major_brand",
-      kind: "string",
-      value: "iso6",
-      description: "Brand identifier."
-    }
-  ],
-  children: [
-    // ParsedBox
-  ],
-  issues: [
-    { severity: "error", message: "..." }
-  ]
-}
-```
-
-`name`, `description`, and `children` are optional. `children` is only present
-for parsed container boxes. `issues` is always present and is empty when the
-parser detected no problem. `uuid` is only present on `uuid` boxes and contains
-the user-defined box UUID as an uppercase hexadecimal string.
-
-`sizeField` indicates how the box declared its size: `"size"` for the normal
-32-bit size field, `"largeSize"` for a 64-bit large-size field, or
-`"extendsToEnd"` for boxes declared with size `0`.
-
 In the previous example, ``parsed`` will have something like the following
 structure:
 ```js
 [ // boxes, in the order they are encountered
+
+  // A simple parsed styp leaf box at the root:
   {
     type: "styp", // 4-character box type
-    name: "Segment Type Box", // more human-readable name for the box
+    name: "Segment Type Box", // Optional. More human-readable name for the box
     offset: 0, // offset from the beginning of the input, in bytes
     size: 24, // size, in bytes
     headerSize: 8, // size of the box header, in bytes
-    sizeField: "size", // "size", "largeSize", or "extendsToEnd"
-    values: [ // values in the box, in the order they are encountered
+
+    // Optional box human-readable description
+    description: "Identifies the brands and compatibility of a media segment.",
+
+    // indicates how the box declared its size: `"size"` for the normal
+    // 32-bit size field, `"largeSize"` for a 64-bit large-size field, or
+    // `"extendsToEnd"` for boxes declared with size `0`.
+    sizeField: "size",
+
+    // values in the box, in the order they are encountered
+    values: [
       {
         key: "major_brand", // stable key for the value
         kind: "string", // kind of parsed field
@@ -211,13 +187,16 @@ structure:
         value: "iso6, msdh", // here brands are separated by a comma
       }
     ],
-    issues: [ // issues detected while parsing this box
+
+    issues: [ // issues detected while parsing this box. Empty for no issue
       {
         severity: "error",
         message: "Truncated box: declared 24 byte(s), only 20 available."
       }
     ]
   },
+
+  // Another example for a container box: it has a `children` key but no `values`:
   {
     type: "moof",
     name: "Movie Fragment Box",
@@ -250,6 +229,9 @@ structure:
 ]
 ```
 
+An `uuid` property is also present only on `uuid` boxes and contains
+the user-defined box UUID as an uppercase hexadecimal string.
+
 When possible, the inspector keeps parsing after an error to return as much
 information as it can. Parsing issues are reported on the corresponding box
 through an ``issues`` array.
@@ -278,29 +260,55 @@ Most scalar fields follow this shape:
   key: "sequence_number",
   kind: "number",
   value: 2,
-  description: "Movie fragment sequence number."
+  description: "Movie fragment sequence number." // Optional
 }
 ```
 
 Applications should switch on `kind` when reading fields:
 
-- `number`: a JavaScript `number`. Used for 8-bit to 32-bit integer fields.
-- `bigint`: a JavaScript `bigint`. Used for 64-bit integer fields.
-- `string`: a JavaScript string. Used for ASCII fields, hexadecimal fields, and
-  derived display strings.
-- `boolean`: a JavaScript boolean.
-- `null`: a parsed null value.
-- `unknown`: a value that did not match one of the recognized public field
-  shapes.
-- `fixed-point`: a fixed-point numeric field.
-- `date`: an ISOBMFF date field.
+- `number`: Used for 8-bit to 32-bit integer fields.
+  `value` is a JavaScript `number`.
+- `bigint`: Used for 64-bit integer fields.
+  `value` is a JavaScript `bigint`.
+- `string`: Used for ASCII fields, hexadecimal fields, and derived display strings.
+  `value` is a JavaScript `string`.
+- `boolean`: `value` is a JavaScript boolean.
+- `null`: `value` is a parsed null value.
+- `fixed-point`: For most ISOBMFF floating numbers.
+  `value` is a JavaScript `number`.
+  More advanced info is also available (described below).
+- `date`: For what are semantically dates.
+  `value` is either a `number` or `bigint` depending on its size.
+  More advanced info is also available (described below).
 - `bits`: a packed integer split into named bit ranges.
+  `value` is a JavaScript `number`.
+  More advanced info is also available (described below).
 - `flags`: a packed integer interpreted as named boolean flags.
+  `value` is a JavaScript `number`.
+  More advanced info is also available (described below).
 - `array`: an ordered list of parsed fields.
+  This list is in an `items` array property. It has no `value` property.
+  More advanced info is also available (described below).
 - `struct`: a named group of parsed fields.
+  Those fields are defined in a `fields` array property.
+  It has no `value` property.
+  More advanced info is also available (described below).
+- `unknown`: `value` is a value that did not match one of the recognized public
+  field shapes.
 
-`fixed-point` fields expose the decoded number through `value`, plus the raw
-integer and its declared format:
+For a very simple exploitation, you can thus just read the `value` property of
+all of those but `array` (which relies on an `items` array of further field
+values objects) and `struct` (similar, but they rely on a `fields` array).
+
+For more advanced usages, you can read below.
+
+#### `fixed-point`
+
+`fixed-point` fields corresponds to cases where the ISOBMFF format encodes fixed
+point numbers explicitly (which is often preferred by this format instead of
+less precize IEEE 754 float values like `number` in JavaScript).
+It exposes the decoded number through `value`, plus the raw integer and its
+declared format:
 
 ```js
 {
@@ -314,10 +322,14 @@ integer and its declared format:
 }
 ```
 
-`bits` is the size of the raw fixed-point integer before fractional scaling.
+The `bits` property is the size of the raw fixed-point integer before fractional scaling.
 
-`date` fields expose the raw ISOBMFF value and, when it can be represented by
-JavaScript's `Date`, an ISO-8601 string:
+#### `date`
+
+`date` fields corresponds to ISOBMFF properties encoding a date.
+As a `value` they expose the raw ISOBMFF value (a timestamp, /!\ they generally do not
+rely on the unix epoch, the ISO-8601 epoch is given through the `epoch` property instead)
+and, when it can be represented by JavaScript's `Date`, an ISO-8601 string:
 
 ```js
 {
@@ -333,6 +345,8 @@ JavaScript's `Date`, an ISO-8601 string:
 `date` is `null` when the corresponding Unix timestamp cannot be converted to a
 finite, valid JavaScript `Date`. For `bigint` values, this also happens when the
 timestamp is outside JavaScript's safe integer range.
+
+#### `bits`
 
 `bits` fields keep the original integer in `raw` and describe each named
 sub-field in `fields`. `value` is a convenience for minimal consumers: it is the
@@ -353,6 +367,8 @@ otherwise. Consumers that need precise bit-level meaning should read `fields`.
 }
 ```
 
+#### `flags`
+
 `flags` fields keep the original integer in both `value` and `raw`, then expose
 the named flags as booleans:
 
@@ -368,6 +384,8 @@ the named flags as booleans:
   ]
 }
 ```
+
+#### `array` and `struct`
 
 `array` and `struct` fields are recursive. Array `items` contain parsed fields
 without a `key`; struct `fields` contain normal keyed `ParsedBoxValue` entries.
