@@ -1,10 +1,11 @@
 import { execFile } from "node:child_process";
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { chmod, mkdir, rm, writeFile } from "node:fs/promises";
 import { promisify } from "node:util";
 import { build } from "esbuild";
 
 const bundleGlobal = "__inspectISOBMFFBundle";
 const outputFile = "dist/bundle.js";
+const cliOutputFile = "dist/cli.cjs";
 const execFileAsync = promisify(execFile);
 
 const result = await build({
@@ -43,6 +44,16 @@ const umdBundle =
 await rm("dist", { recursive: true, force: true });
 await mkdir("dist", { recursive: true });
 await writeFile(outputFile, umdBundle);
+await build({
+  bundle: true,
+  entryPoints: ["cli/cli.js"],
+  format: "cjs",
+  legalComments: "none",
+  outfile: cliOutputFile,
+  platform: "node",
+  target: ["node18"],
+});
+await chmod(cliOutputFile, 0o755);
 await execFileAsync("tsc", [
   "-p",
   "tsconfig.json",

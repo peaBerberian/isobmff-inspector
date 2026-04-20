@@ -4,13 +4,12 @@
 
 ### Changes
 
+- The main API now returns a `Promise`, including for `ArrayBuffer` and TypedArray inputs. Use exported `parseBuffer` function for synchronous buffer parsing.
+- In parsed boxes, `values[].name` is now `values[].key` to better illustrate that they are supposed to mirror the original spec's canonical keys exactly
+- Reformat `values` (fields of boxes) to permit richer types with added metadata (e.g. Date which have their original timestamp, associated epoch and corresponding `Date` JS Object). If using this library previously, re-check the API
 - 64-bit fields are now `BigInt`, not JS `number`, to be able to express all possible values without loss
-- The main API now returns a `Promise`, including for `ArrayBuffer` and TypedArray inputs. Use `parseBuffer` for synchronous buffer parsing.
 - In parsed boxes, `alias` (the fourCC, e.g. `mdat`) is now called `type`
 - In parsed boxes, `uuid` boxes now have a `uuid` hex property instead of a `subtype` property being an Array of numbers.
-- In parsed boxes, `values[].name` is now `values[].key` to better illustrate that they are supposed to mirror the original spec's canonical keys exactly
-- Parsed field values now use a discriminated union with a `kind` property, allowing fields to expose raw and semantic representations when useful.
-- Fixed-point fields that previously used strings or integer/fraction arrays now expose semantic JS `number` values alongside their raw integer representation.
 - Minimum supported version is now es2017
 - Don't `console.warn` when issues are discovered. Use the new `issues` property linked to parsed boxes instead.
 - Some properties of the boxes `avcC`, `mdhd`, `mvhd`, `sidx`, `tkhd` and `trex` had their casing modified to be closer to how the specifications named them (e.g. `profile_compatibility`, not `profileCompatibility`)
@@ -22,7 +21,9 @@
 - Add `parseBuffer` exported function for synchronous buffer parsing
 - Add parser for the following boxes: `btrt`, `colr`, `encv`, `frma`, `ID32`, `iods`, `leva`, `pasp`, `schi`, `schm`, `sinf`, `tenc`, `trep` and `uuid`
 - Complete parsing of `iods`, `leva`, `tkhd` and `urn ` boxes
+- This tool can now be used as a CLI directly, e.g. `npx isobmff-inspector my-mp4-file`
 - Add `offset`, `headerSize`, and `sizeField` properties to parsed box objects and `box-start` events.
 - Add `issues` property to parsed box objects to signal warnings or errors that happened when parsing them
 - Add typings (not of boxes themselves for now)
 - Add textual description to all boxes
+- An error happening while parsing a box can (depending on the box) now keep what has been parsed until that point.

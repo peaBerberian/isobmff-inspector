@@ -3,6 +3,9 @@
   "version": "0.2.2",
   "description": "Simple ISOBMFF parser, compatible with JavaScript and Node.JS",
   "main": "dist/bundle.js",
+  "bin": {
+    "isobmff-inspector": "dist/cli.cjs"
+  },
   "types": "dist/main.d.ts",
   "files": [
     "dist/",
