@@ -11,6 +11,35 @@
  */
 
 /**
+ * @typedef {object} ParsedBoxFieldMetadata
+ * @property {string=} description
+ */
+
+/**
+ * Field-aware reader passed to box parsers.
+ *
+ * The bytesTo* methods are inherited for compatibility and only consume input.
+ * The named methods consume input and append a public ParsedBoxValue in call
+ * order. field() appends a derived value without consuming input.
+ *
+ * @typedef {object} BoxReaderFields
+ * @property {(key: string, value: unknown, meta?: string | ParsedBoxFieldMetadata) => unknown} field
+ * @property {(key: string, nbBytes: number, meta?: string | ParsedBoxFieldMetadata) => number} uint
+ * @property {(key: string, meta?: string | ParsedBoxFieldMetadata) => bigint} uint64
+ * @property {(key: string, meta?: string | ParsedBoxFieldMetadata) => bigint} int64
+ * @property {(key: string, nbBytes: number, meta?: string | ParsedBoxFieldMetadata) => string} hex
+ * @property {(key: string, nbBytes: number, meta?: string | ParsedBoxFieldMetadata) => string} ascii
+ * @property {(key: string, nbBytes: number, fractionalBits: number, format: string, meta?: string | ParsedBoxFieldMetadata) => ParsedFixedPointField} fixedPoint
+ * @property {(key: string, nbBytes: number, bits: number, fractionalBits: number, format: string, meta?: string | ParsedBoxFieldMetadata) => ParsedFixedPointField} signedFixedPoint
+ * @property {(key: string, nbBytes: number, meta?: string | ParsedBoxFieldMetadata) => ParsedDateField} macDate
+ * @property {() => ParsedBoxValue[]} getValues
+ */
+
+/**
+ * @typedef {BufferReader & BoxReaderFields} BoxReader
+ */
+
+/**
  * @typedef {object} BoxContentEntry
  * @property {string} key
  * @property {string=} name
@@ -104,7 +133,7 @@
  * @property {string=} description
  * @property {BoxContentEntry[]=} content
  * @property {boolean=} container
- * @property {(reader: BufferReader) => T=} parser
+ * @property {(reader: BoxReader) => T | void=} parser
  */
 
 /**

@@ -1,5 +1,6 @@
+import BoxReader from "./box_reader.js";
 import definitions from "./boxes/index.js";
-import BufferReader from "./utils/buffer_reader.js";
+import { parsedBoxValue } from "./fields.js";
 
 /**
  * @param {unknown} error
@@ -91,11 +92,11 @@ export function parseBoxContent(
   let contentForChildren;
 
   if (typeof config.parser === "function") {
-    const parserReader = BufferReader(content);
-    /** @type {import("./types.js").BoxParserFields} */
-    let result = {};
+    const parserReader = BoxReader(content);
+    /** @type {import("./types.js").BoxParserFields | undefined} */
+    let result;
     try {
-      result = /** @type {import("./types.js").BoxParserFields} */ (
+      result = /** @type {import("./types.js").BoxParserFields | undefined} */ (
         config.parser(parserReader)
       );
     } catch (e) {
