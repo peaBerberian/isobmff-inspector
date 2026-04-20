@@ -11,6 +11,7 @@ import {
   getProgressiveSource,
   isBufferSource,
 } from "./progressive_source.js";
+import { formatParsedBoxes } from "./simple_format.js";
 import { be4toi, be8toi, betoa, bytesToHex } from "./utils/bytes.js";
 
 const MIN_BOX_HEADER_SIZE = 8;
@@ -331,35 +332,104 @@ async function parseProgressive(source) {
 }
 
 /**
- * Parse ISOBMFF data and translate it into a more useful array containing
- * "atom objects".
- * @param {import("./types.js").ISOBMFFInput} arr
- * @returns {Promise<import("./types.js").ParsedBox[]>}
+ * @param {import("./types.js").ParseOptions=} options
+ * @returns {"full" | "simple"}
  */
-export async function parse(arr) {
-  if (isBufferSource(arr)) {
-    return recursiveParseBoxes(bufferSourceToUint8Array(arr));
+function getParseFormat(options) {
+  const format = options?.format ?? "full";
+  if (format === "full" || format === "simple") {
+    return format;
   }
-
-  const progressiveSource = getProgressiveSource(arr);
-  if (progressiveSource !== undefined) {
-    return parseProgressive(progressiveSource);
-  }
-
-  throw new Error(
-    "Unrecognized format. " +
-      "Please give an ArrayBuffer, TypedArray, Blob, ReadableStream, " +
-      "Request, Response or byte iterable instead.",
-  );
+  throw new Error(`Unsupported parse format: ${format}`);
 }
 
 /**
- * Synchronously parse ISOBMFF data from a buffer input.
+ * @template {import("./types.js").ParsedBox[] | import("./types.js").SimpleParsedBox[]} T
+ * @param {import("./types.js").ParsedBox[]} boxes
+ * @param {"full" | "simple"} format
+ * @returns {T}
+ */
+function formatParseResult(boxes, format) {
+  if (format === "full") {
+    return /** @type {T} */ (boxes);
+  }
+  return /** @type {T} */ (formatParsedBoxes(boxes));
+}
+
+/**
+ * @overload
+ * @param {import("./types.js").ISOBMFFInput} arr
+ * @returns {Promise<import("./types.js").ParsedBox[]>}
+ */
+/**
+ * @overload
+ * @param {import("./types.js").ISOBMFFInput} arr
+ * @param {{ format?: "full" }} options
+ * @returns {Promise<import("./types.js").ParsedBox[]>}
+ */
+/**
+ * @overload
+ * @param {import("./types.js").ISOBMFFInput} arr
+ * @param {{ format: "simple" }} options
+ * @returns {Promise<import("./types.js").SimpleParsedBox[]>}
+ */
+/**
+ * Parse ISOBMFF data and translate it into a more useful array containing
+ * parsed box objects.
+ * @param {import("./types.js").ISOBMFFInput} arr
+ * @param {import("./types.js").ParseOptions=} options
+ * @returns {Promise<import("./types.js").ParsedBox[] | import("./types.js").SimpleParsedBox[]>}
+ */
+export async function parse(arr, options) {
+  const format = getParseFormat(options);
+  /** @type {import("./types.js").ParsedBox[]} */
+  let boxes;
+  if (isBufferSource(arr)) {
+    boxes = recursiveParseBoxes(bufferSourceToUint8Array(arr));
+  } else {
+    const progressiveSource = getProgressiveSource(arr);
+    if (progressiveSource === undefined) {
+      throw new Error(
+        "Unrecognized format. " +
+          "Please give an ArrayBuffer, TypedArray, Blob, ReadableStream, " +
+          "Request, Response or byte iterable instead.",
+      );
+    }
+    boxes = await parseProgressive(progressiveSource);
+  }
+
+  return formatParseResult(boxes, format);
+}
+
+/**
+ * @overload
  * @param {import("./types.js").ISOBMFFByteChunk} arr
  * @returns {import("./types.js").ParsedBox[]}
  */
-export function parseBuffer(arr) {
-  return recursiveParseBoxes(bufferSourceToUint8Array(arr));
+/**
+ * @overload
+ * @param {import("./types.js").ISOBMFFByteChunk} arr
+ * @param {{ format?: "full" }} options
+ * @returns {import("./types.js").ParsedBox[]}
+ */
+/**
+ * @overload
+ * @param {import("./types.js").ISOBMFFByteChunk} arr
+ * @param {{ format: "simple" }} options
+ * @returns {import("./types.js").SimpleParsedBox[]}
+ */
+/**
+ * Synchronously parse ISOBMFF data from a buffer input.
+ * @param {import("./types.js").ISOBMFFByteChunk} arr
+ * @param {import("./types.js").ParseOptions=} options
+ * @returns {import("./types.js").ParsedBox[] | import("./types.js").SimpleParsedBox[]}
+ */
+export function parseBuffer(arr, options) {
+  const format = getParseFormat(options);
+  return formatParseResult(
+    recursiveParseBoxes(bufferSourceToUint8Array(arr)),
+    format,
+  );
 }
 
 export default parse;

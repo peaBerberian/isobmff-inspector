@@ -61,13 +61,22 @@ npx isobmff-inspector myfile.mp4
 
 This prints the parsed box tree as formatted JSON.
 
+Use `--format simple` to print a lighter JSON tree intended for quick
+inspection:
+
+```sh
+npx isobmff-inspector --format simple myfile.mp4
+```
+
+The default is `--format full`.
+
 The command reads the input file progressively, so large media payloads do not
 have to be loaded fully in memory before parsing. The current output is emitted
 once the parse is complete.
 
 ## API #########################################################################
 
-### `inspectISOBMFF(input)`
+### `inspectISOBMFF(input, options)`
 
 ```js
 import inspectISOBMFF from "isobmff-inspector";
@@ -95,13 +104,28 @@ Return value:
 
 - `Promise<ParsedBox[]>`
 
-### `parseBuffer(input)`
+Options:
+
+```js
+{
+  format: "full" // or "simple"
+}
+```
+
+`"full"` is the default and returns the rich `ParsedBox[]` structure documented
+below. `"simple"` returns a `SimpleParsedBox[]` structure with parsed field
+values projected to plain JavaScript values for console and CLI inspection.
+
+### `parseBuffer(input, options)`
 
 ```js
 import { parseBuffer } from "isobmff-inspector";
 ```
 
-Synchronously parses an `ArrayBuffer` or TypedArray input and returns:
+Synchronously parses an `ArrayBuffer` or TypedArray input. It accepts the same
+`format` option as `inspectISOBMFF`.
+
+The default return value is:
 
 ```js
 ParsedBox[]
@@ -432,6 +456,74 @@ should be displayed. Current layout values are:
   ]
 }
 ```
+
+### Simple format
+
+The `"simple"` format keeps box-level metadata but replaces `values` with a
+plain `fields` object:
+
+```js
+const parsed = await inspectISOBMFF(input, { format: "simple" });
+```
+
+```js
+{
+  type: "ftyp",
+  offset: 0,
+  size: 24,
+  headerSize: 8,
+  sizeField: "size",
+  fields: {
+    major_brand: "iso6",
+    minor_version: 0,
+    compatible_brands: "iso6, msdh"
+  }
+}
+```
+
+Simple boxes use the following shape:
+
+```js
+{
+  type: "moov",
+  offset: 24,
+  size: 1024,
+  headerSize: 8,
+  sizeField: "size",
+  uuid: "001122...", // only for uuid boxes
+  fields: {},
+  children: [
+    // SimpleParsedBox
+  ],
+  issues: [
+    // only present when non-empty
+  ]
+}
+```
+
+Field keys are kept unchanged. Packed `bits` and `flags` fields become plain
+objects containing the decoded named entries plus the original integer in
+`$raw`:
+
+```js
+{
+  fields: {
+    lengthSizeMinusOne: {
+      $raw: 255,
+      reserved: 63,
+      value: 3
+    },
+    flags: {
+      $raw: 131072,
+      "default-base-is-moof": true
+    }
+  }
+}
+```
+
+`fixed-point` fields become their decoded number. `date` fields become their
+ISO-8601 string when available, otherwise their raw value. `array` and `struct`
+fields are recursively simplified.
 
 ## Integer types ###############################################################
 

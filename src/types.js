@@ -241,6 +241,24 @@
  */
 
 /**
+ * @typedef {object} ParseOptions
+ * @property {"full" | "simple"=} format
+ */
+
+/**
+ * @typedef {object} SimpleParsedBox
+ * @property {string} type
+ * @property {number} offset
+ * @property {number} size
+ * @property {number} headerSize
+ * @property {"size" | "largeSize" | "extendsToEnd"=} sizeField
+ * @property {string=} uuid
+ * @property {Record<string, unknown>} fields
+ * @property {SimpleParsedBox[]=} children
+ * @property {ParsedBoxIssue[]=} issues
+ */
+
+/**
  * Emitted as soon as a box header has been parsed.
  *
  * @typedef {object} ParsedBoxStartEvent

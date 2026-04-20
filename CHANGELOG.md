@@ -22,6 +22,8 @@
 - Add parser for the following boxes: `btrt`, `colr`, `encv`, `frma`, `ID32`, `iods`, `leva`, `pasp`, `schi`, `schm`, `sinf`, `tenc`, `trep` and `uuid`
 - Complete parsing of `iods`, `leva`, `tkhd` and `urn ` boxes
 - This tool can now be used as a CLI directly, e.g. `npx isobmff-inspector my-mp4-file`
+- Add `--simple` flag to CLI for a new "simple" non-verbose format
+- Add `format` option to methods to allow to enable the new "simple" format as output
 - Add `offset`, `headerSize`, and `sizeField` properties to parsed box objects and `box-start` events.
 - Add `issues` property to parsed box objects to signal warnings or errors that happened when parsing them
 - Add typings (not of boxes themselves for now)
