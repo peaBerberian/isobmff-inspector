@@ -9,9 +9,24 @@ const BUNDLE_URL = new URL("../dist/bundle.js", import.meta.url);
 const BUNDLE_PATH = fileURLToPath(BUNDLE_URL);
 const CLI_URL = new URL("../dist/cli.cjs", import.meta.url);
 const CLI_PATH = fileURLToPath(CLI_URL);
+const DECLARATION_URL = new URL("../dist/main.d.ts", import.meta.url);
 const require = createRequire(import.meta.url);
 const MISSING_BUNDLE_MESSAGE =
   "dist/bundle.js is missing; run npm run build to test package output";
+const PUBLIC_TYPE_EXPORTS = [
+  "ParsedBox",
+  "SimpleParsedBox",
+  "ParsedBoxValue",
+  "ParsedField",
+  "ParsedBoxIssue",
+  "ParseOptions",
+  "ParsedBoxParseEvent",
+  "ParsedBoxStartEvent",
+  "ParsedBoxCompleteEvent",
+  "ISOBMFFInput",
+  "ISOBMFFByteChunk",
+  "ISOBMFFProgressiveInput",
+];
 
 function assertPublicApi(inspectISOBMFF) {
   assert.equal(typeof inspectISOBMFF, "function");
@@ -29,6 +44,14 @@ function skipIfNoBundle(t) {
 function skipIfNoCli(t) {
   if (!fs.existsSync(CLI_URL)) {
     t.skip("dist/cli.cjs is missing; run npm run build to test package output");
+  }
+}
+
+function skipIfNoDeclarations(t) {
+  if (!fs.existsSync(DECLARATION_URL)) {
+    t.skip(
+      "dist/main.d.ts is missing; run npm run build to test package output",
+    );
   }
 }
 
@@ -65,6 +88,19 @@ test("package metadata exposes an npx-compatible CLI command", () => {
   );
 
   assert.equal(packageJson.bin["isobmff-inspector"], "dist/cli.cjs");
+});
+
+test("built declarations expose public types from the package root", (t) => {
+  skipIfNoDeclarations(t);
+
+  const declaration = fs.readFileSync(DECLARATION_URL, "utf8");
+
+  for (const typeName of PUBLIC_TYPE_EXPORTS) {
+    assert.match(
+      declaration,
+      new RegExp(`export type ${typeName} = import\\("\\./types\\.js"\\)\\.`),
+    );
+  }
 });
 
 test("built CLI is executable by Node and package managers", (t) => {

@@ -14,6 +14,21 @@ import {
 import { formatParsedBoxes } from "./simple_format.js";
 import { be4toi, be8toi, betoa, bytesToHex } from "./utils/bytes.js";
 
+/**
+ * @typedef {import("./types.js").ParsedBox} ParsedBox
+ * @typedef {import("./types.js").SimpleParsedBox} SimpleParsedBox
+ * @typedef {import("./types.js").ParsedBoxValue} ParsedBoxValue
+ * @typedef {import("./types.js").ParsedField} ParsedField
+ * @typedef {import("./types.js").ParsedBoxIssue} ParsedBoxIssue
+ * @typedef {import("./types.js").ParseOptions} ParseOptions
+ * @typedef {import("./types.js").ParsedBoxParseEvent} ParsedBoxParseEvent
+ * @typedef {import("./types.js").ParsedBoxStartEvent} ParsedBoxStartEvent
+ * @typedef {import("./types.js").ParsedBoxCompleteEvent} ParsedBoxCompleteEvent
+ * @typedef {import("./types.js").ISOBMFFInput} ISOBMFFInput
+ * @typedef {import("./types.js").ISOBMFFByteChunk} ISOBMFFByteChunk
+ * @typedef {import("./types.js").ISOBMFFProgressiveInput} ISOBMFFProgressiveInput
+ */
+
 const MIN_BOX_HEADER_SIZE = 8;
 const LARGE_BOX_SIZE_BYTES = 8;
 const UUID_SUBTYPE_BYTES = 16;
