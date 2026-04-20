@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { Blob as NodeBlob, File as NodeFile } from "node:buffer";
 import fs from "node:fs";
 import test from "node:test";
 
@@ -25,6 +26,9 @@ async function* chunkBytes(bytes, chunkSize) {
     yield bytes.subarray(offset, offset + chunkSize);
   }
 }
+
+const WebBlob = globalThis.Blob ?? NodeBlob;
+const WebFile = globalThis.File ?? NodeFile;
 
 test("default entry point progressively parses async byte iterables", async () => {
   const bytes = fs.readFileSync(SAMPLE_MP4);
@@ -57,6 +61,37 @@ test("default entry point progressively parses arrayBuffer-like inputs", async (
   });
 
   assert.deepEqual(normalize(actual), normalize(expected));
+});
+
+test("default entry point progressively parses Blob inputs", async () => {
+  const bytes = fs.readFileSync(SAMPLE_MP4);
+  const expected = parseBuffer(bytes);
+  const blob = new WebBlob([bytes], { type: "video/mp4" });
+  const actual = await parseBoxes(blob);
+
+  assert.deepEqual(normalize(actual), normalize(expected));
+});
+
+test("default entry point progressively parses File inputs", async () => {
+  const bytes = fs.readFileSync(SAMPLE_MP4);
+  const expected = parseBuffer(bytes);
+  const file = new WebFile([bytes], "init.mp4", { type: "video/mp4" });
+  const actual = await parseBoxes(file);
+
+  assert.deepEqual(normalize(actual), normalize(expected));
+});
+
+test("event parser progressively parses File inputs", async () => {
+  const bytes = fs.readFileSync(SAMPLE_MP4);
+  const file = new WebFile([bytes], "init.mp4", { type: "video/mp4" });
+  const events = [];
+
+  for await (const event of parseEvents(file)) {
+    events.push(event.event);
+  }
+
+  assert.equal(events[0], "box-start");
+  assert(events.includes("box-complete"));
 });
 
 test("default entry point progressively parses sync byte iterables", async () => {

@@ -78,12 +78,16 @@ export function getProgressiveSource(input) {
   }
 
   if (
-    typeof ReadableStream !== "undefined" &&
-    input instanceof ReadableStream
+    typeof input === "object" &&
+    "getReader" in input &&
+    typeof input.getReader === "function"
   ) {
     return {
       async *[Symbol.asyncIterator]() {
-        const reader = input.getReader();
+        const reader =
+          /** @type {ReadableStream<import("./types.js").ISOBMFFByteChunk>} */ (
+            input
+          ).getReader();
         try {
           while (true) {
             const { done, value } = await reader.read();
