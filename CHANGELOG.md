@@ -4,9 +4,9 @@
 
 ### Changes
 
-- The main API now returns a `Promise`, including for `ArrayBuffer` and TypedArray inputs. Use exported `parseBuffer` function for synchronous buffer parsing.
-- In parsed boxes, `values[].name` is now `values[].key` to better illustrate that they are supposed to mirror the original spec's canonical keys exactly
-- Reformat `values` (fields of boxes) to permit richer types with added metadata (e.g. Date which have their original timestamp, associated epoch and corresponding `Date` JS Object). If using this library previously, re-check the API (indicated in README.md)
+- The main API now returns a `Promise`. Use exported `parseBuffer` function for synchronous buffer parsing.
+- In parsed boxes, `values[].name` is now `values[].key` to better reflect the original spec's canonical keys exactly
+- Reformat `values` (fields from boxes) to permit richer types with added metadata (e.g. Date which have their original timestamp, associated epoch and corresponding `Date` JS Object). If using this library previously, re-check the API (indicated in README.md)
 - 64-bit fields are now `BigInt`, not JS `number`, to be able to express all possible values without loss
 - In parsed boxes, `alias` (the fourCC, e.g. `mdat`) is now called `type`
 - In parsed boxes, `uuid` boxes now have a `uuid` hex property instead of a `subtype` property being an Array of numbers.
