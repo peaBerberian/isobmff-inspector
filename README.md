@@ -51,6 +51,20 @@ for await (const event of parseEvents(response)) {
 }
 ```
 
+## Command line ###############################################################
+
+You can also run the inspector directly from npm:
+
+```sh
+npx isobmff-inspector myfile.mp4
+```
+
+This prints the parsed box tree as formatted JSON.
+
+The command reads the input file progressively, so large media payloads do not
+have to be loaded fully in memory before parsing. The current output is emitted
+once the parse is complete.
+
 ## API #########################################################################
 
 ### `inspectISOBMFF(input)`
@@ -146,6 +160,7 @@ The parsed result is an array of boxes, in the order they are encountered.
   values: [
     {
       key: "major_brand",
+      kind: "string",
       value: "iso6",
       description: "Brand identifier."
     }
@@ -182,14 +197,17 @@ structure:
     values: [ // values in the box, in the order they are encountered
       {
         key: "major_brand", // stable key for the value
+        kind: "string", // kind of parsed field
         value: "iso6" // ...value. Displayable one are JS strings
       },
       {
         key: "minor_version",
+        kind: "number",
         value: 0 // Number values are usually JS Numbers
       },
       {
         key: "compatible_brands",
+        kind: "string",
         value: "iso6, msdh", // here brands are separated by a comma
       }
     ],
@@ -211,14 +229,17 @@ structure:
         values: [
           {
             key: "version",
+            kind: "number",
             value: 0
-          }
+          },
           {
             key: "flags",
+            kind: "number",
             value: 0
           },
           {
             key: "sequence_number",
+            kind: "number",
             value: 2
           }
         ]
@@ -243,6 +264,131 @@ file, for example because a box is truncated, has an invalid size, or a field
 could not be read. ``severity: "warning"`` means parsing could continue, but the
 parsed result may be incomplete or suspicious, for example when a known box
 parser left unread bytes.
+
+### Field values
+
+Each parsed field in `ParsedBox.values` has a stable `key`, a `kind`, and
+kind-specific data. `description` is optional and is present when the parser has
+extra human-readable context for that field.
+
+Most scalar fields follow this shape:
+
+```js
+{
+  key: "sequence_number",
+  kind: "number",
+  value: 2,
+  description: "Movie fragment sequence number."
+}
+```
+
+Applications should switch on `kind` when reading fields:
+
+- `number`: a JavaScript `number`. Used for 8-bit to 32-bit integer fields.
+- `bigint`: a JavaScript `bigint`. Used for 64-bit integer fields.
+- `string`: a JavaScript string. Used for ASCII fields, hexadecimal fields, and
+  derived display strings.
+- `boolean`: a JavaScript boolean.
+- `null`: a parsed null value.
+- `unknown`: a value that did not match one of the recognized public field
+  shapes.
+- `fixed-point`: a fixed-point numeric field.
+- `date`: an ISOBMFF date field.
+- `bits`: a packed integer split into named bit ranges.
+- `flags`: a packed integer interpreted as named boolean flags.
+- `array`: an ordered list of parsed fields.
+- `struct`: a named group of parsed fields.
+
+`fixed-point` fields expose the decoded number through `value`, plus the raw
+integer and its declared format:
+
+```js
+{
+  key: "horizontal_resolution",
+  kind: "fixed-point",
+  value: 72,
+  raw: 4718592,
+  format: "16.16",
+  signed: false
+}
+```
+
+Signed fixed-point fields also expose `bits`, the number of bits used to
+interpret the signed raw value.
+
+`date` fields expose the raw ISOBMFF value and, when it can be represented by
+JavaScript's `Date`, an ISO-8601 string:
+
+```js
+{
+  key: "creation_time",
+  kind: "date",
+  value: 3846096077n,
+  date: "2025-11-21T09:21:17.000Z",
+  epoch: "1904-01-01T00:00:00.000Z",
+  unit: "seconds"
+}
+```
+
+`date` is `null` when the raw value is outside JavaScript's safe date range.
+
+`bits` fields keep the original integer in `raw` and describe each named
+sub-field in `fields`. `value` is the sub-field named `"value"` when one exists,
+otherwise it is the raw integer.
+
+```js
+{
+  key: "lengthSizeMinusOne",
+  kind: "bits",
+  value: 3,
+  raw: 255,
+  bits: 8,
+  fields: [
+    { key: "reserved", value: 63, bits: 6, shift: 2, mask: 252 },
+    { key: "value", value: 3, bits: 2, shift: 0, mask: 3 }
+  ]
+}
+```
+
+`flags` fields keep the original integer in both `value` and `raw`, then expose
+the named flags as booleans:
+
+```js
+{
+  key: "flags",
+  kind: "flags",
+  value: 131072,
+  raw: 131072,
+  bits: 24,
+  flags: [
+    { key: "default-base-is-moof", value: true, mask: 131072 }
+  ]
+}
+```
+
+`array` and `struct` fields are recursive. Array `items` contain parsed fields
+without a `key`; struct `fields` contain normal keyed `ParsedBoxValue` entries.
+A struct may also expose a `layout` hint when the parser knows how the fields
+should be displayed.
+
+```js
+{
+  key: "matrix",
+  kind: "struct",
+  layout: "matrix",
+  fields: [
+    {
+      key: "a",
+      kind: "fixed-point",
+      value: 1,
+      raw: 65536,
+      format: "16.16",
+      signed: true,
+      bits: 32
+    }
+  ]
+}
+```
 
 ## Integer types ###############################################################
 
@@ -341,8 +487,22 @@ You can help me to add parsing logic for other boxes by updating the
 ``src/boxes`` directory.
 
 You can base yourself on already-defined boxes. Each of the ``parser`` functions
-there receive a ``bufferReader`` object.
+there receive a ``BoxReader`` object.
+They can parse the associated box either:
 
-This object is obtained by giving the box's content as an ``Uint8Array`` to the
-``createBufferReader`` function defined and documented in
-``src/utils/buffer_reader.js``.
+- By "reading" the box (with the given `BoxReader` e.g. though
+  `reader.readUint(4)`) and ultimately returning an object from that ``parser``
+  function, whose keys are in the same order than the fields in the source
+  ISOBMFF, where each key corresponds to a different box field, and whose value
+  is the corresponding parsed value in the most expected format (e.g. `number`
+  for integers, `string` for ASCII etc.)
+
+- Or by declaring directly all fields with the given `BoxReader` without having
+  to return any object.
+
+  This can e.g. be done through a method like
+  `reader.fieldUint("version", 1, "The box version")` and allows to also provide
+  a description for the field.
+
+Note that each of those call advance the `BoxReader`'s internal cursor so
+consecutive calls will progress through the file.
