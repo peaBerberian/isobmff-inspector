@@ -242,7 +242,7 @@ function normalizeField(value) {
   if (value === null) {
     return { kind: "null", value: null };
   }
-  return { kind: "unknown", value };
+  throw new TypeError(`Unsupported parsed field value: ${typeof value}`);
 }
 
 export {

@@ -117,15 +117,19 @@ export function parseBoxContent(
 
     atomObject.values.push(...parserReader.getValues());
 
-    if (result !== undefined) {
-      delete result.__data__;
-      Object.keys(result).forEach((key) => {
-        const infos = contentInfos[key] || {};
+    try {
+      if (result !== undefined) {
+        delete result.__data__;
+        Object.keys(result).forEach((key) => {
+          const infos = contentInfos[key] || {};
 
-        atomObject.values.push(
-          parsedBoxValue(key, result[key], infos.description),
-        );
-      });
+          atomObject.values.push(
+            parsedBoxValue(key, result[key], infos.description),
+          );
+        });
+      }
+    } catch (e) {
+      addBoxIssue(atomObject, "error", formatErrorMessage(e));
     }
   }
 

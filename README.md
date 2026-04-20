@@ -293,8 +293,6 @@ Applications should switch on `kind` when reading fields:
   Those fields are defined in a `fields` array property.
   It has no `value` property.
   More advanced info is also available (described below).
-- `unknown`: `value` is a value that did not match one of the recognized public
-  field shapes.
 
 For a very simple exploitation, you can thus just read the `value` property of
 all of those but `array` (which relies on an `items` array of further field

@@ -187,3 +187,43 @@ test("fixed-point fields expose their raw bit size", () => {
     delete definitions.TST6;
   }
 });
+
+test("unsupported reader field values are reported as parser errors", () => {
+  definitions.TST7 = {
+    parser(r) {
+      r.addField("bad", undefined);
+    },
+  };
+
+  try {
+    const parsed = parseBuffer(boxBytes("TST7", new Uint8Array([])));
+
+    assert.deepEqual(parsed[0].values, []);
+    assert.deepEqual(
+      parsed[0].issues.map((issue) => issue.message),
+      ["Unsupported parsed field value: undefined"],
+    );
+  } finally {
+    delete definitions.TST7;
+  }
+});
+
+test("unsupported legacy return values are reported as parser errors", () => {
+  definitions.TST8 = {
+    parser() {
+      return { bad: undefined };
+    },
+  };
+
+  try {
+    const parsed = parseBuffer(boxBytes("TST8", new Uint8Array([])));
+
+    assert.deepEqual(parsed[0].values, []);
+    assert.deepEqual(
+      parsed[0].issues.map((issue) => issue.message),
+      ["Unsupported parsed field value: undefined"],
+    );
+  } finally {
+    delete definitions.TST8;
+  }
+});

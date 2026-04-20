@@ -126,12 +126,6 @@
  */
 
 /**
- * @typedef {object} ParsedUnknownField
- * @property {"unknown"} kind
- * @property {unknown} value
- */
-
-/**
  * @typedef {object} ParsedFixedPointField
  * @property {"fixed-point"} kind
  * @property {number} value
@@ -204,7 +198,7 @@
  */
 
 /**
- * @typedef {ParsedNumberField | ParsedBigIntField | ParsedStringField | ParsedBooleanField | ParsedNullField | ParsedUnknownField | ParsedFixedPointField | ParsedDateField | ParsedBitsField | ParsedFlagsField | ParsedArrayField | ParsedStructField} ParsedField
+ * @typedef {ParsedNumberField | ParsedBigIntField | ParsedStringField | ParsedBooleanField | ParsedNullField | ParsedFixedPointField | ParsedDateField | ParsedBitsField | ParsedFlagsField | ParsedArrayField | ParsedStructField} ParsedField
  */
 
 /**
