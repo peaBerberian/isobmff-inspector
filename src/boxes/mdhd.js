@@ -1,13 +1,15 @@
+import { macDateField, parsedBoxValue, structField } from "../fields.js";
+
 /**
  * @typedef {Object} MediaHeaderBoxContent
  * @property {number} version
  * @property {number} flags
- * @property {number|bigint} creation_time
- * @property {number|bigint} modification_time
+ * @property {import("../types.js").ParsedDateField} creation_time
+ * @property {import("../types.js").ParsedDateField} modification_time
  * @property {number} timescale
  * @property {number|bigint} duration
  * @property {number} pad
- * @property {string} language
+ * @property {import("../types.js").ParsedStructField} language
  * @property {number} pre_defined
  */
 
@@ -36,12 +38,15 @@ export default {
     return {
       version,
       flags,
-      creation_time,
-      modification_time,
+      creation_time: macDateField(creation_time),
+      modification_time: macDateField(modification_time),
       timescale,
       duration,
       pad,
-      language,
+      language: structField(
+        [parsedBoxValue("value", language), parsedBoxValue("raw", next2Bytes)],
+        "iso-639-2-t",
+      ),
       pre_defined,
     };
   },

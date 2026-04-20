@@ -93,7 +93,6 @@ function bytesToHex(uint8arr, off, nbBytes) {
   return hexStr.toUpperCase();
 }
 
-// XXX TODO test that
 /**
  * @param {Uint8Array} uint8arr
  * @param {number} off

@@ -1,20 +1,59 @@
-/**
- * @param {number} value
- * @returns {string}
- */
-function formatFixedPoint1616(value) {
-  return `${value >>> 16}.${value & 0xffff}`;
-}
+import {
+  decodeFixedPoint,
+  decodeSignedFixedPoint,
+  fixedPointField,
+  parsedBoxValue,
+  signedFixedPointField,
+  structField,
+  toSignedInt,
+} from "../fields.js";
 
 /**
- * @param {number} value
- * @param {number} bits
- * @returns {number}
+ * @param {import("../types").BufferReader} r
+ * @returns {import("../types.js").ParsedStructField}
  */
-function toSignedInt(value, bits) {
-  const maxUnsigned = 2 ** bits;
-  const signedBoundary = 2 ** (bits - 1);
-  return value >= signedBoundary ? value - maxUnsigned : value;
+function parseTransformationMatrix(r) {
+  return structField(
+    [
+      parsedBoxValue(
+        "a",
+        signedFixedPointField(r.bytesToInt(4), 32, 16, "16.16"),
+      ),
+      parsedBoxValue(
+        "b",
+        signedFixedPointField(r.bytesToInt(4), 32, 16, "16.16"),
+      ),
+      parsedBoxValue(
+        "u",
+        signedFixedPointField(r.bytesToInt(4), 32, 30, "2.30"),
+      ),
+      parsedBoxValue(
+        "c",
+        signedFixedPointField(r.bytesToInt(4), 32, 16, "16.16"),
+      ),
+      parsedBoxValue(
+        "d",
+        signedFixedPointField(r.bytesToInt(4), 32, 16, "16.16"),
+      ),
+      parsedBoxValue(
+        "v",
+        signedFixedPointField(r.bytesToInt(4), 32, 30, "2.30"),
+      ),
+      parsedBoxValue(
+        "x",
+        signedFixedPointField(r.bytesToInt(4), 32, 16, "16.16"),
+      ),
+      parsedBoxValue(
+        "y",
+        signedFixedPointField(r.bytesToInt(4), 32, 16, "16.16"),
+      ),
+      parsedBoxValue(
+        "w",
+        signedFixedPointField(r.bytesToInt(4), 32, 30, "2.30"),
+      ),
+    ],
+    "matrix-3x3",
+  );
 }
 
 /**
@@ -41,8 +80,8 @@ function parsePascalString(r, length) {
  * @property {[number, number, number]} pre_defined_1
  * @property {number} width
  * @property {number} height
- * @property {string} horizresolution - 16.16 fixed point
- * @property {string} vertresolution - 16.16 fixed point
+ * @property {import("../types.js").ParsedFixedPointField} horizresolution - 16.16 fixed point
+ * @property {import("../types.js").ParsedFixedPointField} vertresolution - 16.16 fixed point
  * @property {number} reserved_2
  * @property {number} frame_count
  * @property {string} compressorname
@@ -67,8 +106,8 @@ function parseVisualSampleEntry(r) {
     pre_defined_1: [r.bytesToInt(4), r.bytesToInt(4), r.bytesToInt(4)],
     width: r.bytesToInt(2),
     height: r.bytesToInt(2),
-    horizresolution: formatFixedPoint1616(r.bytesToInt(4)),
-    vertresolution: formatFixedPoint1616(r.bytesToInt(4)),
+    horizresolution: fixedPointField(r.bytesToInt(4), 16, "16.16"),
+    vertresolution: fixedPointField(r.bytesToInt(4), 16, "16.16"),
     reserved_2: r.bytesToInt(4),
     frame_count: r.bytesToInt(2),
     compressorname: parsePascalString(r, 32),
@@ -88,7 +127,7 @@ function parseVisualSampleEntry(r) {
 /**
  * @typedef {Object} AudioSampleEntryVersion2Fields
  * @property {number} struct_size
- * @property {string} sample_rate
+ * @property {import("../types.js").ParsedFixedPointField} sample_rate
  * @property {number} channel_count
  * @property {number} reserved_1
  * @property {number} bits_per_channel
@@ -108,7 +147,7 @@ function parseVisualSampleEntry(r) {
  * @property {number} samplesize
  * @property {number} compression_id
  * @property {number} packet_size
- * @property {string} samplerate
+ * @property {import("../types.js").ParsedFixedPointField} samplerate
  */
 
 /**
@@ -137,7 +176,7 @@ function parseAudioSampleEntry(r) {
     samplesize: r.bytesToInt(2),
     compression_id: r.bytesToInt(2),
     packet_size: r.bytesToInt(2),
-    samplerate: formatFixedPoint1616(r.bytesToInt(4)),
+    samplerate: fixedPointField(r.bytesToInt(4), 16, "16.16"),
   };
 
   if (base.version === 1) {
@@ -153,7 +192,7 @@ function parseAudioSampleEntry(r) {
     const result = {
       ...base,
       struct_size: r.bytesToInt(4),
-      sample_rate: formatFixedPoint1616(r.bytesToInt(4)),
+      sample_rate: fixedPointField(r.bytesToInt(4), 16, "16.16"),
       channel_count: r.bytesToInt(4),
       reserved_1: r.bytesToInt(4),
       bits_per_channel: r.bytesToInt(4),
@@ -316,8 +355,11 @@ function parseDescriptor(r) {
 }
 
 export {
+  decodeFixedPoint,
+  decodeSignedFixedPoint,
   parseAudioSampleEntry,
   parseDescriptor,
+  parseTransformationMatrix,
   parseVisualSampleEntry,
   toSignedInt,
 };

@@ -1,16 +1,23 @@
+import {
+  fixedPointField,
+  macDateField,
+  signedFixedPointField,
+} from "../fields.js";
+import { parseTransformationMatrix } from "./helpers.js";
+
 /**
  * @typedef {Object} MovieHeaderBoxContent
  * @property {number} version
  * @property {number} flags
- * @property {number|bigint} creation_time
- * @property {number|bigint} modification_time
+ * @property {import("../types.js").ParsedDateField} creation_time
+ * @property {import("../types.js").ParsedDateField} modification_time
  * @property {number} timescale
  * @property {number|bigint} duration
- * @property {string} rate
- * @property {string} volume
+ * @property {import("../types.js").ParsedFixedPointField} rate
+ * @property {import("../types.js").ParsedFixedPointField} volume
  * @property {number} reserved_1
  * @property {number[]} reserved_2
- * @property {number[]} matrix
+ * @property {import("../types.js").ParsedStructField} matrix
  * @property {number[]} pre_defined
  * @property {number} next_track_ID
  */
@@ -110,17 +117,14 @@ export default {
       duration = reader.bytesToInt(4);
     }
 
-    const rate = [reader.bytesToInt(2), reader.bytesToInt(2)].join(".");
+    const rate = signedFixedPointField(reader.bytesToInt(4), 32, 16, "16.16");
 
-    const volume = [reader.bytesToInt(1), reader.bytesToInt(1)].join(".");
+    const volume = fixedPointField(reader.bytesToInt(2), 8, "8.8");
 
     const reserved_1 = reader.bytesToInt(2);
     const reserved_2 = [reader.bytesToInt(4), reader.bytesToInt(4)];
 
-    const matrixArr = [];
-    for (let i = 0; i < 9; i++) {
-      matrixArr.push(reader.bytesToInt(4));
-    }
+    const matrix = parseTransformationMatrix(reader);
 
     const pre_defined = [
       reader.bytesToInt(4),
@@ -136,15 +140,15 @@ export default {
     return {
       version,
       flags,
-      creation_time,
-      modification_time,
+      creation_time: macDateField(creation_time),
+      modification_time: macDateField(modification_time),
       timescale,
       duration,
       rate,
       volume,
       reserved_1,
       reserved_2,
-      matrix: matrixArr,
+      matrix,
       pre_defined,
       next_track_ID,
     };

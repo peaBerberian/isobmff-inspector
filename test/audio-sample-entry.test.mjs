@@ -65,7 +65,9 @@ test("version 2 audio sample entry fields are parsed flat", () => {
 
   assert.equal(result.version_2_fields, undefined);
   assert.equal(result.struct_size, 36);
-  assert.equal(result.sample_rate, "44100.0");
+  assert.equal(result.sample_rate.kind, "fixed-point");
+  assert.equal(result.sample_rate.value, 44100);
+  assert.equal(result.sample_rate.raw, 0xac440000);
   assert.equal(result.channel_count, 2);
   assert.equal(result.reserved_1, 0);
   assert.equal(result.bits_per_channel, 16);

@@ -51,7 +51,6 @@ export default function createBufferReader(buffer) {
      * Returns the N next bytes, as a single number.
      *
      * /!\ only work for now for 1, 2, 3, 4, 5 or 8 bytes.
-     * TODO Define a more global solution.
      *
      * /!\ Depending on the size of the number, it may be larger than JS'
      * limit.

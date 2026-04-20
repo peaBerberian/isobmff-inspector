@@ -1,9 +1,12 @@
+import { parsedBoxValue, structField } from "../fields.js";
+
 /**
  * @typedef {Object} TrackEncryptionBoxContent
  * @property {number} version
  * @property {number} flags
  * @property {number} reserved
  * @property {number=} reserved_1
+ * @property {import("../types.js").ParsedStructField=} default_pattern
  * @property {number=} default_crypt_byte_block
  * @property {number=} default_skip_byte_block
  * @property {number} default_IsProtected
@@ -39,6 +42,14 @@ export default {
       const blocks = r.bytesToInt(1);
       ret.default_crypt_byte_block = (blocks >> 4) & 0x0f;
       ret.default_skip_byte_block = blocks & 0x0f;
+      ret.default_pattern = structField(
+        [
+          parsedBoxValue("crypt_byte_block", ret.default_crypt_byte_block),
+          parsedBoxValue("skip_byte_block", ret.default_skip_byte_block),
+          parsedBoxValue("raw", blocks),
+        ],
+        "cenc-pattern",
+      );
     }
 
     ret.default_IsProtected = r.bytesToInt(1);

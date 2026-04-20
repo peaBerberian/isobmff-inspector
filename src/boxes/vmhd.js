@@ -15,7 +15,6 @@ export default {
       throw new Error("invalid flags");
     }
 
-    // TODO template?
     const graphicsmode = reader.bytesToInt(2);
     const opcolor = [
       reader.bytesToInt(2),

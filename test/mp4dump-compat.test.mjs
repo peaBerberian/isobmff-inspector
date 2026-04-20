@@ -114,10 +114,33 @@ function normalizeActual(nodes) {
       type: node.type,
       size: node.size,
       values: Object.fromEntries(
-        node.values.map((value) => [value.key, value.value]),
+        node.values.map((value) => [value.key, unwrapParsedField(value)]),
       ),
       children: normalizeActual(node.children || []),
     }));
+}
+
+function unwrapParsedField(field) {
+  if (!field || typeof field !== "object" || typeof field.kind !== "string") {
+    return field;
+  }
+
+  if (field.kind === "array") {
+    return field.items.map(unwrapParsedField);
+  }
+  if (field.kind === "struct") {
+    if (field.layout === "iso-639-2-t") {
+      const values = Object.fromEntries(
+        field.fields.map((value) => [value.key, unwrapParsedField(value)]),
+      );
+      return values.value;
+    }
+    return Object.fromEntries(
+      field.fields.map((value) => [value.key, unwrapParsedField(value)]),
+    );
+  }
+
+  return field.value;
 }
 
 function dumpScalar(node, key) {
@@ -164,13 +187,6 @@ function dumpBoxSize(raw) {
   }
 
   return parts.reduce((acc, part) => acc + part, 0);
-}
-
-function fixedPoint1616FromArray(value) {
-  if (!Array.isArray(value) || value.length !== 2) {
-    return Number.NaN;
-  }
-  return value[0] + value[1] / 65536;
 }
 
 function normalizeHexDump(raw) {
@@ -255,11 +271,11 @@ const FIELD_CHECKS = {
         : dumpInteger(dumpScalar(dumpNode, "duration")),
     );
     assert.equal(
-      fixedPoint1616FromArray(actualNode.values.width),
+      actualNode.values.width,
       dumpFloat(dumpScalar(dumpNode, "width")),
     );
     assert.equal(
-      fixedPoint1616FromArray(actualNode.values.height),
+      actualNode.values.height,
       dumpFloat(dumpScalar(dumpNode, "height")),
     );
   },
@@ -392,7 +408,7 @@ const FIELD_CHECKS = {
       dumpInteger(dumpScalar(dumpNode, "sample_size")),
     );
     assert.equal(
-      Number(actualNode.values.samplerate),
+      actualNode.values.samplerate,
       dumpFloat(dumpScalar(dumpNode, "sample_rate")),
     );
   },

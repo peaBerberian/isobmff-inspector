@@ -22,6 +22,82 @@
  */
 
 /**
+ * @typedef {object} ParsedNumberField
+ * @property {"number"} kind
+ * @property {number} value
+ */
+
+/**
+ * @typedef {object} ParsedBigIntField
+ * @property {"bigint"} kind
+ * @property {bigint} value
+ */
+
+/**
+ * @typedef {object} ParsedStringField
+ * @property {"string"} kind
+ * @property {string} value
+ */
+
+/**
+ * @typedef {object} ParsedBooleanField
+ * @property {"boolean"} kind
+ * @property {boolean} value
+ */
+
+/**
+ * @typedef {object} ParsedNullField
+ * @property {"null"} kind
+ * @property {null} value
+ */
+
+/**
+ * @typedef {object} ParsedUnknownField
+ * @property {"unknown"} kind
+ * @property {unknown} value
+ */
+
+/**
+ * @typedef {object} ParsedFixedPointField
+ * @property {"fixed-point"} kind
+ * @property {number} value
+ * @property {number} raw
+ * @property {string} format
+ * @property {boolean} signed
+ * @property {number=} bits
+ */
+
+/**
+ * @typedef {object} ParsedDateField
+ * @property {"date"} kind
+ * @property {number | bigint} value
+ * @property {string | null} date
+ * @property {string} epoch
+ * @property {"seconds"} unit
+ */
+
+/**
+ * @typedef {object} ParsedArrayField
+ * @property {"array"} kind
+ * @property {ParsedField[]} items
+ */
+
+/**
+ * @typedef {object} ParsedStructField
+ * @property {"struct"} kind
+ * @property {ParsedBoxValue[]} fields
+ * @property {string=} layout
+ */
+
+/**
+ * @typedef {ParsedNumberField | ParsedBigIntField | ParsedStringField | ParsedBooleanField | ParsedNullField | ParsedUnknownField | ParsedFixedPointField | ParsedDateField | ParsedArrayField | ParsedStructField} ParsedField
+ */
+
+/**
+ * @typedef {{ key: string, description?: string } & ParsedField} ParsedBoxValue
+ */
+
+/**
  * @template {{ [k: string]: unknown }} T
  * @typedef {object} BoxDefinition
  * @property {string=} name
@@ -33,13 +109,6 @@
 
 /**
  * @typedef {Record<string, BoxDefinition<{ [k: string]: unknown }>>} BoxDefinitionsMap
- */
-
-/**
- * @typedef {object} ParsedBoxValue
- * @property {any} value
- * @property {string} key
- * @property {string=} description
  */
 
 /**

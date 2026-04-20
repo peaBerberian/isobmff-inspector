@@ -114,20 +114,18 @@ export function parseBoxContent(
       );
     }
 
-    delete result.__data__;
-    Object.keys(result).forEach((key) => {
-      const infos = contentInfos[key] || {};
+    atomObject.values.push(...parserReader.getValues());
 
-      atomObject.values.push(
-        Object.assign(
-          {
-            key,
-            value: result[key],
-          },
-          infos,
-        ),
-      );
-    });
+    if (result !== undefined) {
+      delete result.__data__;
+      Object.keys(result).forEach((key) => {
+        const infos = contentInfos[key] || {};
+
+        atomObject.values.push(
+          parsedBoxValue(key, result[key], infos.description),
+        );
+      });
+    }
   }
 
   if (hasChildren) {

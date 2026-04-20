@@ -9,7 +9,8 @@
 - In parsed boxes, `alias` (the fourCC, e.g. `mdat`) is now called `type`
 - In parsed boxes, `uuid` boxes now have a `uuid` hex property instead of a `subtype` property being an Array of numbers.
 - In parsed boxes, `values[].name` is now `values[].key` to better illustrate that they are supposed to mirror the original spec's canonical keys exactly
-- Fixed-point fields that previously used strings or integer/fraction arrays are now parsed as JS `number` values when their storage fits safely in a 32-bit integer, `bigint` if they do not, just like any other numeric values now.
+- Parsed field values now use a discriminated union with a `kind` property, allowing fields to expose raw and semantic representations when useful.
+- Fixed-point fields that previously used strings or integer/fraction arrays now expose semantic JS `number` values alongside their raw integer representation.
 - Minimum supported version is now es2017
 - Don't `console.warn` when issues are discovered. Use the new `issues` property linked to parsed boxes instead.
 - Some properties of the boxes `avcC`, `mdhd`, `mvhd`, `sidx`, `tkhd` and `trex` had their casing modified to be closer to how the specifications named them (e.g. `profile_compatibility`, not `profileCompatibility`)
