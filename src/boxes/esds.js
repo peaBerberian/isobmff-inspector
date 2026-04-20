@@ -13,23 +13,16 @@ export default {
   description:
     "Carries MPEG-4 elementary stream descriptors for a sample entry.",
 
-  parser(r) {
-    const version = r.bytesToInt(1);
+  parser(reader) {
+    const version = reader.fieldUint("version", 1);
     if (version !== 0) {
       throw new Error("invalid version");
     }
-
-    const flags = r.bytesToInt(3);
+    reader.fieldUint("flags", 3);
     const descriptors = [];
-
-    while (!r.isFinished()) {
-      descriptors.push(parseDescriptor(r));
+    while (!reader.isFinished()) {
+      descriptors.push(parseDescriptor(reader));
     }
-
-    return {
-      version,
-      flags,
-      descriptors,
-    };
+    reader.addField("descriptors", descriptors);
   },
 };

@@ -65,6 +65,55 @@ function signedFixedPointField(raw, bits, fractionalBits, format) {
 }
 
 /**
+ * @param {number} raw
+ * @param {number} totalBits
+ * @param {import("./types.js").ParsedBitsFieldPartDefinition[]} parts
+ * @returns {import("./types.js").ParsedBitsField}
+ */
+function bitsField(raw, totalBits, parts) {
+  let remainingBits = totalBits;
+  const fields = parts.map((part) => {
+    remainingBits -= part.bits;
+    const value = Math.floor(raw / 2 ** remainingBits) & (2 ** part.bits - 1);
+    return {
+      key: part.key,
+      value,
+      bits: part.bits,
+      shift: remainingBits,
+      mask: (2 ** part.bits - 1) * 2 ** remainingBits,
+    };
+  });
+
+  return {
+    kind: "bits",
+    value: fields.find((field) => field.key === "value")?.value ?? raw,
+    raw,
+    bits: totalBits,
+    fields,
+  };
+}
+
+/**
+ * @param {number} raw
+ * @param {number} totalBits
+ * @param {Record<string, number>} flags
+ * @returns {import("./types.js").ParsedFlagsField}
+ */
+function flagsField(raw, totalBits, flags) {
+  return {
+    kind: "flags",
+    value: raw,
+    raw,
+    bits: totalBits,
+    flags: Object.entries(flags).map(([key, mask]) => ({
+      key,
+      value: (raw & mask) !== 0,
+      mask,
+    })),
+  };
+}
+
+/**
  * @param {number | bigint} unixSeconds
  * @returns {string | null}
  */
@@ -195,9 +244,11 @@ function normalizeField(value) {
 }
 
 export {
+  bitsField,
   decodeFixedPoint,
   decodeSignedFixedPoint,
   fixedPointField,
+  flagsField,
   macDateField,
   normalizeField,
   parsedBoxValue,

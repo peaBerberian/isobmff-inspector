@@ -11,10 +11,8 @@ export default {
   description:
     "declare the location(s) of the media data used within the presentation.",
   parser(r) {
-    return {
-      version: r.bytesToInt(1),
-      flags: r.bytesToInt(3),
-      location: r.bytesToASCII(r.getRemainingLength()),
-    };
+    r.fieldUint("version", 1, "That box's version");
+    r.fieldUint("flags", 3);
+    r.fieldAscii("location", r.getRemainingLength());
   },
 };

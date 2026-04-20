@@ -18,25 +18,70 @@
 /**
  * Field-aware reader passed to box parsers.
  *
- * The bytesTo* methods are inherited for compatibility and only consume input.
- * The named methods consume input and append a public ParsedBoxValue in call
- * order. field() appends a derived value without consuming input.
+ * The bytesTo* methods are inherited for compatibility. read* methods consume
+ * input without emitting fields. field* methods consume input and append a
+ * public ParsedBoxValue in call order. addField() appends a derived value
+ * without consuming input.
  *
+ * @template T
+ * @typedef {{ [K in Extract<keyof T, string>]: number extends T[K] ? K : never }[Extract<keyof T, string>]} NumberKeys
+ */
+
+/**
+ * @template T
+ * @typedef {{ [K in Extract<keyof T, string>]: bigint extends T[K] ? K : never }[Extract<keyof T, string>]} BigIntKeys
+ */
+
+/**
+ * @template T
+ * @typedef {{ [K in Extract<keyof T, string>]: string extends T[K] ? K : never }[Extract<keyof T, string>]} StringKeys
+ */
+
+/**
+ * @template T
+ * @typedef {{ [K in Extract<keyof T, string>]: ParsedFixedPointField extends T[K] ? K : never }[Extract<keyof T, string>]} FixedPointKeys
+ */
+
+/**
+ * @template T
+ * @typedef {{ [K in Extract<keyof T, string>]: ParsedDateField extends T[K] ? K : never }[Extract<keyof T, string>]} DateKeys
+ */
+
+/**
+ * @template T
+ * @typedef {{ [K in Extract<keyof T, string>]: ParsedBitsField extends T[K] ? K : never }[Extract<keyof T, string>]} BitsKeys
+ */
+
+/**
+ * @template T
+ * @typedef {{ [K in Extract<keyof T, string>]: ParsedFlagsField extends T[K] ? K : never }[Extract<keyof T, string>]} FlagsKeys
+ */
+
+/**
+ * @template {{ [k: string]: unknown }} T
  * @typedef {object} BoxReaderFields
- * @property {(key: string, value: unknown, meta?: string | ParsedBoxFieldMetadata) => unknown} field
- * @property {(key: string, nbBytes: number, meta?: string | ParsedBoxFieldMetadata) => number} uint
- * @property {(key: string, meta?: string | ParsedBoxFieldMetadata) => bigint} uint64
- * @property {(key: string, meta?: string | ParsedBoxFieldMetadata) => bigint} int64
- * @property {(key: string, nbBytes: number, meta?: string | ParsedBoxFieldMetadata) => string} hex
- * @property {(key: string, nbBytes: number, meta?: string | ParsedBoxFieldMetadata) => string} ascii
- * @property {(key: string, nbBytes: number, fractionalBits: number, format: string, meta?: string | ParsedBoxFieldMetadata) => ParsedFixedPointField} fixedPoint
- * @property {(key: string, nbBytes: number, bits: number, fractionalBits: number, format: string, meta?: string | ParsedBoxFieldMetadata) => ParsedFixedPointField} signedFixedPoint
- * @property {(key: string, nbBytes: number, meta?: string | ParsedBoxFieldMetadata) => ParsedDateField} macDate
+ * @property {<K extends Extract<keyof T, string>>(key: K, value: T[K], meta?: string | ParsedBoxFieldMetadata) => T[K]} addField
+ * @property {(nbBytes: number) => number} readUint
+ * @property {() => bigint} readUint64
+ * @property {() => bigint} readInt64
+ * @property {(nbBytes: number) => string} readHex
+ * @property {(nbBytes: number) => string} readAscii
+ * @property {<K extends NumberKeys<T>>(key: K, nbBytes: number, meta?: string | ParsedBoxFieldMetadata) => number} fieldUint
+ * @property {<K extends BigIntKeys<T>>(key: K, meta?: string | ParsedBoxFieldMetadata) => bigint} fieldUint64
+ * @property {<K extends BigIntKeys<T>>(key: K, meta?: string | ParsedBoxFieldMetadata) => bigint} fieldInt64
+ * @property {<K extends StringKeys<T>>(key: K, nbBytes: number, meta?: string | ParsedBoxFieldMetadata) => string} fieldHex
+ * @property {<K extends StringKeys<T>>(key: K, nbBytes: number, meta?: string | ParsedBoxFieldMetadata) => string} fieldAscii
+ * @property {<K extends FixedPointKeys<T>>(key: K, nbBytes: number, fractionalBits: number, format: string, meta?: string | ParsedBoxFieldMetadata) => ParsedFixedPointField} fieldFixedPoint
+ * @property {<K extends FixedPointKeys<T>>(key: K, nbBytes: number, bits: number, fractionalBits: number, format: string, meta?: string | ParsedBoxFieldMetadata) => ParsedFixedPointField} fieldSignedFixedPoint
+ * @property {<K extends DateKeys<T>>(key: K, nbBytes: number, meta?: string | ParsedBoxFieldMetadata) => ParsedDateField} fieldMacDate
+ * @property {<K extends BitsKeys<T>>(key: K, nbBytes: number, parts: ParsedBitsFieldPartDefinition[], meta?: string | ParsedBoxFieldMetadata) => number} fieldBits
+ * @property {<K extends FlagsKeys<T>>(key: K, nbBytes: number, flags: Record<string, number>, meta?: string | ParsedBoxFieldMetadata) => number} fieldFlags
  * @property {() => ParsedBoxValue[]} getValues
  */
 
 /**
- * @typedef {BufferReader & BoxReaderFields} BoxReader
+ * @template {{ [k: string]: unknown }} T
+ * @typedef {BufferReader & BoxReaderFields<T>} BoxReader
  */
 
 /**
@@ -106,6 +151,46 @@
  */
 
 /**
+ * @typedef {object} ParsedBitsFieldPartDefinition
+ * @property {string} key
+ * @property {number} bits
+ */
+
+/**
+ * @typedef {object} ParsedBitsFieldPart
+ * @property {string} key
+ * @property {number} value
+ * @property {number} bits
+ * @property {number} shift
+ * @property {number} mask
+ */
+
+/**
+ * @typedef {object} ParsedBitsField
+ * @property {"bits"} kind
+ * @property {number} value
+ * @property {number} raw
+ * @property {number} bits
+ * @property {ParsedBitsFieldPart[]} fields
+ */
+
+/**
+ * @typedef {object} ParsedFlagsFieldEntry
+ * @property {string} key
+ * @property {boolean} value
+ * @property {number} mask
+ */
+
+/**
+ * @typedef {object} ParsedFlagsField
+ * @property {"flags"} kind
+ * @property {number} value
+ * @property {number} raw
+ * @property {number} bits
+ * @property {ParsedFlagsFieldEntry[]} flags
+ */
+
+/**
  * @typedef {object} ParsedArrayField
  * @property {"array"} kind
  * @property {ParsedField[]} items
@@ -119,7 +204,7 @@
  */
 
 /**
- * @typedef {ParsedNumberField | ParsedBigIntField | ParsedStringField | ParsedBooleanField | ParsedNullField | ParsedUnknownField | ParsedFixedPointField | ParsedDateField | ParsedArrayField | ParsedStructField} ParsedField
+ * @typedef {ParsedNumberField | ParsedBigIntField | ParsedStringField | ParsedBooleanField | ParsedNullField | ParsedUnknownField | ParsedFixedPointField | ParsedDateField | ParsedBitsField | ParsedFlagsField | ParsedArrayField | ParsedStructField} ParsedField
  */
 
 /**
@@ -133,11 +218,11 @@
  * @property {string=} description
  * @property {BoxContentEntry[]=} content
  * @property {boolean=} container
- * @property {(reader: BoxReader) => T | void=} parser
+ * @property {(reader: BoxReader<T>) => T | void=} parser
  */
 
 /**
- * @typedef {Record<string, BoxDefinition<{ [k: string]: unknown }>>} BoxDefinitionsMap
+ * @typedef {Record<string, any>} BoxDefinitionsMap
  */
 
 /**

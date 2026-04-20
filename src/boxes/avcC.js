@@ -10,8 +10,8 @@
  * @property {number} AVCProfileIndication
  * @property {number} profile_compatibility
  * @property {number} AVCLevelIndication
- * @property {number} lengthSizeMinusOne
- * @property {number} numOfSequenceParameterSets
+ * @property {import("../types.js").ParsedBitsField} lengthSizeMinusOne
+ * @property {import("../types.js").ParsedBitsField} numOfSequenceParameterSets
  * @property {AvcParameterSet[]} sequenceParameterSets
  * @property {number} numOfPictureParameterSets
  * @property {AvcParameterSet[]} pictureParameterSets
@@ -24,52 +24,49 @@ export default {
   description:
     "Stores AVC decoder configuration, including profile data and parameter sets.",
 
-  parser(r) {
-    const configurationVersion = r.bytesToInt(1);
-    const AVCProfileIndication = r.bytesToInt(1);
-    const profile_compatibility = r.bytesToInt(1);
-    const AVCLevelIndication = r.bytesToInt(1);
-    const lengthSizeMinusOneByte = r.bytesToInt(1);
-    const numOfSequenceParameterSetsByte = r.bytesToInt(1);
-    const numOfSequenceParameterSets = numOfSequenceParameterSetsByte & 0x1f;
-    const sequenceParameterSets = [];
+  parser(reader) {
+    reader.fieldUint("configurationVersion", 1);
+    reader.fieldUint("AVCProfileIndication", 1);
+    reader.fieldUint("profile_compatibility", 1);
+    reader.fieldUint("AVCLevelIndication", 1);
+    reader.fieldBits("lengthSizeMinusOne", 1, [
+      { key: "reserved", bits: 6 },
+      { key: "value", bits: 2 },
+    ]);
 
+    const numOfSequenceParameterSets = reader.fieldBits(
+      "numOfSequenceParameterSets",
+      1,
+      [
+        { key: "reserved", bits: 3 },
+        { key: "value", bits: 5 },
+      ],
+    );
+    const sequenceParameterSets = [];
     for (let i = 0; i < numOfSequenceParameterSets; i++) {
-      const sequenceParameterSetLength = r.bytesToInt(2);
+      const sequenceParameterSetLength = reader.readUint(2);
       sequenceParameterSets.push({
         length: sequenceParameterSetLength,
-        data: r.bytesToHex(sequenceParameterSetLength),
+        data: reader.readHex(sequenceParameterSetLength),
       });
     }
+    reader.addField("sequenceParameterSets", sequenceParameterSets);
 
-    const numOfPictureParameterSets = r.bytesToInt(1);
+    const numOfPictureParameterSets = reader.fieldUint(
+      "numOfPictureParameterSets",
+      1,
+    );
     const pictureParameterSets = [];
-
     for (let i = 0; i < numOfPictureParameterSets; i++) {
-      const pictureParameterSetLength = r.bytesToInt(2);
+      const pictureParameterSetLength = reader.readUint(2);
       pictureParameterSets.push({
         length: pictureParameterSetLength,
-        data: r.bytesToHex(pictureParameterSetLength),
+        data: reader.readHex(pictureParameterSetLength),
       });
     }
-
-    /** @type {AvcDecoderConfigurationRecordContent} */
-    const ret = {
-      configurationVersion,
-      AVCProfileIndication,
-      profile_compatibility,
-      AVCLevelIndication,
-      lengthSizeMinusOne: lengthSizeMinusOneByte & 0x03,
-      numOfSequenceParameterSets,
-      sequenceParameterSets,
-      numOfPictureParameterSets,
-      pictureParameterSets,
-    };
-
-    if (!r.isFinished()) {
-      ret.ext = r.bytesToHex(r.getRemainingLength());
+    reader.addField("pictureParameterSets", pictureParameterSets);
+    if (!reader.isFinished()) {
+      reader.fieldHex("ext", reader.getRemainingLength());
     }
-
-    return ret;
   },
 };
