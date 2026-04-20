@@ -106,8 +106,8 @@ function parseVisualSampleEntry(r) {
     pre_defined_1: [r.bytesToInt(4), r.bytesToInt(4), r.bytesToInt(4)],
     width: r.bytesToInt(2),
     height: r.bytesToInt(2),
-    horizresolution: fixedPointField(r.bytesToInt(4), 16, "16.16"),
-    vertresolution: fixedPointField(r.bytesToInt(4), 16, "16.16"),
+    horizresolution: fixedPointField(r.bytesToInt(4), 32, 16, "16.16"),
+    vertresolution: fixedPointField(r.bytesToInt(4), 32, 16, "16.16"),
     reserved_2: r.bytesToInt(4),
     frame_count: r.bytesToInt(2),
     compressorname: parsePascalString(r, 32),
@@ -176,7 +176,7 @@ function parseAudioSampleEntry(r) {
     samplesize: r.bytesToInt(2),
     compression_id: r.bytesToInt(2),
     packet_size: r.bytesToInt(2),
-    samplerate: fixedPointField(r.bytesToInt(4), 16, "16.16"),
+    samplerate: fixedPointField(r.bytesToInt(4), 32, 16, "16.16"),
   };
 
   if (base.version === 1) {
@@ -192,7 +192,7 @@ function parseAudioSampleEntry(r) {
     const result = {
       ...base,
       struct_size: r.bytesToInt(4),
-      sample_rate: fixedPointField(r.bytesToInt(4), 16, "16.16"),
+      sample_rate: fixedPointField(r.bytesToInt(4), 32, 16, "16.16"),
       channel_count: r.bytesToInt(4),
       reserved_1: r.bytesToInt(4),
       bits_per_channel: r.bytesToInt(4),

@@ -309,12 +309,12 @@ integer and its declared format:
   value: 72,
   raw: 4718592,
   format: "16.16",
-  signed: false
+  signed: false,
+  bits: 32
 }
 ```
 
-Signed fixed-point fields also expose `bits`, the number of bits used to
-interpret the signed raw value.
+`bits` is the size of the raw fixed-point integer before fractional scaling.
 
 `date` fields expose the raw ISOBMFF value and, when it can be represented by
 JavaScript's `Date`, an ISO-8601 string:
@@ -330,11 +330,14 @@ JavaScript's `Date`, an ISO-8601 string:
 }
 ```
 
-`date` is `null` when the raw value is outside JavaScript's safe date range.
+`date` is `null` when the corresponding Unix timestamp cannot be converted to a
+finite, valid JavaScript `Date`. For `bigint` values, this also happens when the
+timestamp is outside JavaScript's safe integer range.
 
 `bits` fields keep the original integer in `raw` and describe each named
-sub-field in `fields`. `value` is the sub-field named `"value"` when one exists,
-otherwise it is the raw integer.
+sub-field in `fields`. `value` is a convenience for minimal consumers: it is the
+most meaningful decoded value when the parser identifies one, or the raw integer
+otherwise. Consumers that need precise bit-level meaning should read `fields`.
 
 ```js
 {
@@ -368,14 +371,38 @@ the named flags as booleans:
 
 `array` and `struct` fields are recursive. Array `items` contain parsed fields
 without a `key`; struct `fields` contain normal keyed `ParsedBoxValue` entries.
+
+For example, an array of AVC parameter-set objects is represented as an array of
+struct fields:
+
+```js
+{
+  key: "sequenceParameterSets",
+  kind: "array",
+  items: [
+    {
+      kind: "struct",
+      fields: [
+        { key: "length", kind: "number", value: 24 },
+        { key: "data", kind: "string", value: "6742c00d..." }
+      ]
+    }
+  ]
+}
+```
+
 A struct may also expose a `layout` hint when the parser knows how the fields
-should be displayed.
+should be displayed. Current layout values are:
+
+- `"matrix-3x3"`: a 3 by 3 transformation matrix.
+- `"iso-639-2-t"`: an ISO 639-2/T language code plus its packed raw value.
+- `"cenc-pattern"`: Common Encryption crypt/skip byte-block pattern fields.
 
 ```js
 {
   key: "matrix",
   kind: "struct",
-  layout: "matrix",
+  layout: "matrix-3x3",
   fields: [
     {
       key: "a",

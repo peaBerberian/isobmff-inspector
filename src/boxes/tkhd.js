@@ -44,11 +44,11 @@ export default {
 
       layer: toSignedInt(r.bytesToInt(2), 16),
       alternate_group: toSignedInt(r.bytesToInt(2), 16),
-      volume: fixedPointField(r.bytesToInt(2), 8, "8.8"),
+      volume: fixedPointField(r.bytesToInt(2), 16, 8, "8.8"),
       reserved_3: r.bytesToInt(2),
       matrix: parseTransformationMatrix(r),
-      width: fixedPointField(r.bytesToInt(4), 16, "16.16"),
-      height: fixedPointField(r.bytesToInt(4), 16, "16.16"),
+      width: fixedPointField(r.bytesToInt(4), 32, 16, "16.16"),
+      height: fixedPointField(r.bytesToInt(4), 32, 16, "16.16"),
     };
   },
 };

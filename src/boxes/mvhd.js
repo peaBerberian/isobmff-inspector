@@ -119,7 +119,7 @@ export default {
 
     const rate = signedFixedPointField(reader.bytesToInt(4), 32, 16, "16.16");
 
-    const volume = fixedPointField(reader.bytesToInt(2), 8, "8.8");
+    const volume = fixedPointField(reader.bytesToInt(2), 16, 8, "8.8");
 
     const reserved_1 = reader.bytesToInt(2);
     const reserved_2 = [reader.bytesToInt(4), reader.bytesToInt(4)];

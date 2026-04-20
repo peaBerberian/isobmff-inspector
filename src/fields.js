@@ -32,17 +32,19 @@ function decodeSignedFixedPoint(value, bits, fractionalBits) {
 
 /**
  * @param {number} raw
+ * @param {number} bits
  * @param {number} fractionalBits
  * @param {string} format
  * @returns {import("./types.js").ParsedFixedPointField}
  */
-function fixedPointField(raw, fractionalBits, format) {
+function fixedPointField(raw, bits, fractionalBits, format) {
   return {
     kind: "fixed-point",
     value: decodeFixedPoint(raw, fractionalBits),
     raw,
     format,
     signed: false,
+    bits,
   };
 }
 

@@ -155,3 +155,35 @@ test("bit and flag fields expose decoded details", () => {
     delete definitions.TST5;
   }
 });
+
+test("fixed-point fields expose their raw bit size", () => {
+  definitions.TST6 = {
+    parser(r) {
+      r.fieldFixedPoint("unsigned", 2, 8, "8.8");
+      r.fieldSignedFixedPoint("signed", 4, 32, 16, "16.16");
+    },
+  };
+
+  try {
+    const parsed = parseBuffer(
+      boxBytes("TST6", new Uint8Array([0x01, 0x80, 0xff, 0xff, 0x00, 0x00])),
+    );
+    const [unsigned, signed] = parsed[0].values;
+
+    assert.equal(unsigned.kind, "fixed-point");
+    assert.equal(unsigned.value, 1.5);
+    assert.equal(unsigned.raw, 0x0180);
+    assert.equal(unsigned.format, "8.8");
+    assert.equal(unsigned.signed, false);
+    assert.equal(unsigned.bits, 16);
+
+    assert.equal(signed.kind, "fixed-point");
+    assert.equal(signed.value, -1);
+    assert.equal(signed.raw, 0xffff0000);
+    assert.equal(signed.format, "16.16");
+    assert.equal(signed.signed, true);
+    assert.equal(signed.bits, 32);
+  } finally {
+    delete definitions.TST6;
+  }
+});

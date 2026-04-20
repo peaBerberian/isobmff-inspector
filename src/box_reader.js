@@ -92,6 +92,7 @@ export default function createBoxReader(buffer) {
     fieldFixedPoint(key, nbBytes, fractionalBits, format, meta) {
       const value = fixedPointField(
         reader.bytesToInt(nbBytes),
+        nbBytes * 8,
         fractionalBits,
         format,
       );

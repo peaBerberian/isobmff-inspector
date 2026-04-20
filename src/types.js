@@ -138,7 +138,7 @@
  * @property {number} raw
  * @property {string} format
  * @property {boolean} signed
- * @property {number=} bits
+ * @property {number} bits
  */
 
 /**
