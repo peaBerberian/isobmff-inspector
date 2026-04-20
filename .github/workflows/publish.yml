@@ -36,6 +36,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-tags: true
+          fetch-depth: 0
       - name: Check last commit contains right version tag
         id: getversion
         run: |
@@ -66,9 +67,6 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
 
       - name: Install dependencies
         run: npm ci
@@ -156,3 +154,36 @@ jobs:
         run: |
           npm run build
           npm publish --provenance
+
+      - name: Extract changelog for this version
+        id: changelog
+        run: |
+          version="$GITHUB_REF_NAME"
+      
+          awk -v version="$version" '
+            $0 ~ "^## " version {found=1; next}
+            found && /^## / {exit}
+            found
+          ' CHANGELOG.md > CHANGELOG_LATEST.md
+      
+      - name: Create GitHub Release
+        id: create_release
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file CHANGELOG_LATEST.md
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Upload all artifacts
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          for file in "dist/cli.cjs" "dist/bundle.js"; do
+            name=$(basename "$file")
+            echo "Uploading $name ..."
+            gh release upload "$GITHUB_REF_NAME" "$file" \
+              --clobber \
+              --repo "$GITHUB_REPOSITORY"
+          done
+
