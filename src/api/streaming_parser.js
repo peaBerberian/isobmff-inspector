@@ -1,27 +1,30 @@
 import {
+  asyncByteIterable,
+  be4toi,
+  be8toi,
+  bufferSourceToUint8Array,
+  bytesToHex,
+  getProgressiveSource,
+  isBufferSource,
+  utf8ToStr,
+} from "../utils/bytes.js";
+import ProgressiveByteReader from "../utils/ProgressiveByteReader.js";
+import {
   addBoxIssue,
   hasContentParser,
   isContainerBox,
   parseBoxContent,
   shouldReadContent,
-} from "./box_content_parser.js";
-import ProgressiveByteReader from "./progressive_byte_reader.js";
-import {
-  asyncByteIterable,
-  bufferSourceToUint8Array,
-  getProgressiveSource,
-  isBufferSource,
-} from "./progressive_source.js";
-import { be4toi, be8toi, bytesToHex, utf8ToStr } from "./utils/bytes.js";
+} from "./box_parsing.js";
 
 const MIN_BOX_HEADER_SIZE = 8;
 const LARGE_BOX_SIZE_BYTES = 8;
 const UUID_SUBTYPE_BYTES = 16;
 
 /**
- * @param {import("./types.js").ParsedBox[]} boxes
+ * @param {import("../types.js").ParsedBox[]} boxes
  * @param {string[]} parentPath
- * @returns {AsyncGenerator<import("./types.js").ParsedBoxParseEvent, void, void>}
+ * @returns {AsyncGenerator<import("../types.js").ParsedBoxParseEvent, void, void>}
  */
 async function* emitParsedBoxEvents(boxes, parentPath) {
   for (const box of boxes) {
@@ -47,12 +50,12 @@ async function* emitParsedBoxEvents(boxes, parentPath) {
 
 /**
  * @param {ProgressiveByteReader} reader
- * @param {(content: Uint8Array, offset: number) => import("./types.js").ParsedBox[]} parseBuffer
+ * @param {(content: Uint8Array, offset: number) => import("../types.js").ParsedBox[]} parseBuffer
  * @param {number | undefined} remainingLength
  * @param {string[]} parentPath
- * @param {((box: import("./types.js").ParsedBox) => void)=} onParsedBox
+ * @param {((box: import("../types.js").ParsedBox) => void)=} onParsedBox
  * @param {number=} baseOffset
- * @returns {AsyncGenerator<import("./types.js").ParsedBoxParseEvent, number, void>}
+ * @returns {AsyncGenerator<import("../types.js").ParsedBoxParseEvent, number, void>}
  */
 async function* parseBoxEventsFromReader(
   reader,
@@ -82,7 +85,7 @@ async function* parseBoxEventsFromReader(
     }
 
     if (header.length < MIN_BOX_HEADER_SIZE) {
-      /** @type {import("./types.js").ParsedBox} */
+      /** @type {import("../types.js").ParsedBox} */
       const box = {
         type: "",
         offset: boxOffset,
@@ -122,7 +125,7 @@ async function* parseBoxEventsFromReader(
       headerSize += largeSizeBuffer.length;
 
       if (largeSizeBuffer.length < LARGE_BOX_SIZE_BYTES) {
-        /** @type {import("./types.js").ParsedBox} */
+        /** @type {import("../types.js").ParsedBox} */
         const box = {
           type: name,
           offset: boxOffset,
@@ -161,7 +164,7 @@ async function* parseBoxEventsFromReader(
       uuid = bytesToHex(uuidBuffer, 0, uuidBuffer.length);
     }
 
-    /** @type {import("./types.js").ParsedBox} */
+    /** @type {import("../types.js").ParsedBox} */
     const box = {
       type: name,
       offset: boxOffset,
@@ -212,7 +215,7 @@ async function* parseBoxEventsFromReader(
     }
 
     if (isContainerBox(name) && !hasContentParser(name)) {
-      /** @type {import("./types.js").ParsedBox[]} */
+      /** @type {import("../types.js").ParsedBox[]} */
       const children = [];
       const childConsumedLength = yield* parseBoxEventsFromReader(
         reader,
@@ -318,9 +321,9 @@ async function* parseBoxEventsFromReader(
 
 /**
  * Progressively parse ISOBMFF data and yield metadata events as boxes are found.
- * @param {import("./types.js").ISOBMFFInput} input
- * @param {(content: Uint8Array, offset: number) => import("./types.js").ParsedBox[]} parseBuffer
- * @returns {AsyncGenerator<import("./types.js").ParsedBoxParseEvent, void, void>}
+ * @param {import("../types.js").ISOBMFFInput} input
+ * @param {(content: Uint8Array, offset: number) => import("../types.js").ParsedBox[]} parseBuffer
+ * @returns {AsyncGenerator<import("../types.js").ParsedBoxParseEvent, void, void>}
  */
 export default async function* parseBoxEvents(input, parseBuffer) {
   if (isBufferSource(input)) {

@@ -1,17 +1,17 @@
 /**
- * @param {import("./types.js").ParsedBox[]} boxes
- * @returns {import("./types.js").SimpleParsedBox[]}
+ * @param {import("../types.js").ParsedBox[]} boxes
+ * @returns {import("../types.js").SimpleParsedBox[]}
  */
 export function formatParsedBoxes(boxes) {
   return boxes.map(formatParsedBox);
 }
 
 /**
- * @param {import("./types.js").ParsedBox} box
- * @returns {import("./types.js").SimpleParsedBox}
+ * @param {import("../types.js").ParsedBox} box
+ * @returns {import("../types.js").SimpleParsedBox}
  */
 function formatParsedBox(box) {
-  /** @type {import("./types.js").SimpleParsedBox} */
+  /** @type {import("../types.js").SimpleParsedBox} */
   const simpleBox = {
     type: box.type,
     offset: box.offset,
@@ -37,7 +37,7 @@ function formatParsedBox(box) {
 }
 
 /**
- * @param {import("./types.js").ParsedBoxValue[]} values
+ * @param {import("../types.js").ParsedBoxValue[]} values
  * @returns {Record<string, unknown>}
  */
 function formatValues(values) {
@@ -47,7 +47,7 @@ function formatValues(values) {
 }
 
 /**
- * @param {import("./types.js").ParsedField} field
+ * @param {import("../types.js").ParsedField} field
  * @returns {unknown}
  */
 function formatField(field) {

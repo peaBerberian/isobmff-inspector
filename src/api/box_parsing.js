@@ -1,6 +1,6 @@
-import BoxReader from "./box_reader.js";
-import definitions from "./boxes/index.js";
-import { parsedBoxValue } from "./fields.js";
+import BoxReader from "../BoxReader.js";
+import definitions from "../boxes/index.js";
+import { parsedBoxValue } from "../fields.js";
 
 /**
  * @param {unknown} error
@@ -11,7 +11,7 @@ function formatErrorMessage(error) {
 }
 
 /**
- * @param {import("./types.js").ParsedBox} box
+ * @param {import("../types.js").ParsedBox} box
  * @param {"warning" | "error"} severity
  * @param {string} message
  * @returns {void}
@@ -48,9 +48,9 @@ export function isContainerBox(name) {
 }
 
 /**
- * @param {import("./types.js").ParsedBox} atomObject
+ * @param {import("../types.js").ParsedBox} atomObject
  * @param {Uint8Array} content
- * @param {(content: Uint8Array, offset: number) => import("./types.js").ParsedBox[]} parseChildren
+ * @param {(content: Uint8Array, offset: number) => import("../types.js").ParsedBox[]} parseChildren
  * @param {number} contentOffset
  * @returns {void}
  */
@@ -77,12 +77,13 @@ export function parseBoxContent(
 
   if (typeof config.parser === "function") {
     const parserReader = BoxReader(content);
-    /** @type {import("./types.js").BoxParserFields | undefined} */
+    /** @type {import("../types.js").BoxParserFields | undefined} */
     let result;
     try {
-      result = /** @type {import("./types.js").BoxParserFields | undefined} */ (
-        config.parser(parserReader)
-      );
+      result =
+        /** @type {import("../types.js").BoxParserFields | undefined} */ (
+          config.parser(parserReader)
+        );
     } catch (e) {
       addBoxIssue(atomObject, "error", formatErrorMessage(e));
     }
@@ -104,6 +105,7 @@ export function parseBoxContent(
     atomObject.values.push(...parserReader.getValues());
 
     try {
+      // TODO: Remove when API transition done
       if (result !== undefined) {
         delete result.__data__;
         Object.keys(result).forEach((key) => {
