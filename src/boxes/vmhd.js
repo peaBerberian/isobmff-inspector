@@ -6,21 +6,23 @@ export default {
     "information, independent of the coding, for video media.",
 
   parser(reader) {
-    const version = reader.bytesToInt(1);
-    const flags = reader.bytesToInt(3);
+    const version = reader.fieldUint("version", 1);
+    const flags = reader.fieldUint("flags", 3);
     if (version !== 0) {
       throw new Error("invalid version");
     }
     if (flags !== 1) {
-      throw new Error("invalid flags");
+      reader.addIssue(
+        "warning",
+        `Unexpected vmhd flags value ${flags}; expected 1.`,
+      );
     }
 
-    const graphicsmode = reader.bytesToInt(2);
-    const opcolor = [
-      reader.bytesToInt(2),
-      reader.bytesToInt(2),
-      reader.bytesToInt(2),
-    ];
-    return { version, flags, graphicsmode, opcolor };
+    reader.fieldUint("graphicsmode", 2);
+    reader.addField("opcolor", [
+      reader.readUint(2),
+      reader.readUint(2),
+      reader.readUint(2),
+    ]);
   },
 };

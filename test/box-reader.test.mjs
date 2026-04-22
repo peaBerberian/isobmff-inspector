@@ -69,6 +69,32 @@ test("reader-emitted fields survive parser errors", () => {
   }
 });
 
+test("reader-emitted issues are attached to parsed boxes", () => {
+  definitions.TS2W = {
+    parser(r) {
+      r.fieldUint("version", 1);
+      r.addIssue("warning", "nonstandard but parseable");
+    },
+  };
+
+  try {
+    const parsed = parseBuffer(boxBytes("TS2W", new Uint8Array([7])));
+
+    assert.deepEqual(
+      parsed[0].values.map((value) => value.key),
+      ["version"],
+    );
+    assert.deepEqual(parsed[0].issues, [
+      {
+        severity: "warning",
+        message: "nonstandard but parseable",
+      },
+    ]);
+  } finally {
+    delete definitions.TS2W;
+  }
+});
+
 test("legacy parser return objects still append after reader fields", () => {
   definitions.TST3 = {
     parser(r) {

@@ -36,6 +36,8 @@ export default function createBoxReader(buffer) {
   const reader = BufferReader(buffer);
   /** @type {import("./types.js").ParsedBoxValue[]} */
   const values = [];
+  /** @type {import("./types.js").ParsedBoxIssue[]} */
+  const issues = [];
 
   /**
    * @param {string} key
@@ -48,10 +50,20 @@ export default function createBoxReader(buffer) {
     return value;
   }
 
+  /**
+   * @param {"warning" | "error"} severity
+   * @param {string} message
+   * @returns {void}
+   */
+  function addIssue(severity, message) {
+    issues.push({ severity, message });
+  }
+
   return /** @type {import("./types.js").BoxReader<T>} */ ({
     ...reader,
 
     addField,
+    addIssue,
 
     readUint: reader.bytesToInt,
     readUint64: reader.bytesToUint64BigInt,
@@ -135,6 +147,10 @@ export default function createBoxReader(buffer) {
 
     getValues() {
       return values.slice();
+    },
+
+    getIssues() {
+      return issues.slice();
     },
   });
 }

@@ -103,6 +103,8 @@ export function parseBoxContent(
       addBoxIssue(atomObject, "error", formatErrorMessage(e));
     }
 
+    atomObject.issues.push(...parserReader.getIssues());
+
     if (hasChildren) {
       const remaining = parserReader.getRemainingLength();
       contentForChildren = content.slice(content.length - remaining);

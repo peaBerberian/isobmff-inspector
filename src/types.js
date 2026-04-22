@@ -61,6 +61,7 @@
  * @template {{ [k: string]: unknown }} T
  * @typedef {object} BoxReaderFields
  * @property {<K extends Extract<keyof T, string>>(key: K, value: T[K], meta?: string | ParsedBoxFieldMetadata) => T[K]} addField
+ * @property {(severity: "warning" | "error", message: string) => void} addIssue
  * @property {(nbBytes: number) => number} readUint
  * @property {() => bigint} readUint64
  * @property {() => bigint} readInt64
@@ -77,6 +78,7 @@
  * @property {<K extends BitsKeys<T>>(key: K, nbBytes: number, parts: ParsedBitsFieldPartDefinition[], meta?: string | ParsedBoxFieldMetadata) => number} fieldBits
  * @property {<K extends FlagsKeys<T>>(key: K, nbBytes: number, flags: Record<string, number>, meta?: string | ParsedBoxFieldMetadata) => number} fieldFlags
  * @property {() => ParsedBoxValue[]} getValues
+ * @property {() => ParsedBoxIssue[]} getIssues
  */
 
 /**
