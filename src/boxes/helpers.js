@@ -9,7 +9,8 @@ import {
 } from "../fields.js";
 
 /**
- * @param {import("../types").BufferReader} r
+ * @template {{ [k: string]: unknown }} T
+ * @param {import("../types").BoxReader<T>} r
  * @returns {import("../types.js").ParsedStructField}
  */
 function parseTransformationMatrix(r) {
@@ -57,7 +58,8 @@ function parseTransformationMatrix(r) {
 }
 
 /**
- * @param {import("../types").BufferReader} r
+ * @template {{ [k: string]: unknown }} T
+ * @param {import("../types").BoxReader<T>} r
  * @param {number} length
  * @returns {string}
  */
@@ -172,7 +174,7 @@ function readVisualSampleEntry(reader) {
  */
 
 /**
- * @param {import("../types").BufferReader} r
+ * @param {import("../types").BoxReader<AudioSampleEntry>} r
  * @returns {AudioSampleEntry}
  */
 function parseAudioSampleEntry(r) {
@@ -223,7 +225,8 @@ function parseAudioSampleEntry(r) {
 }
 
 /**
- * @param {import("../types").BufferReader} r
+ * @template {{ [k: string]: unknown }} T
+ * @param {import("../types").BoxReader<T>} r
  * @returns {{ length: number; size: number }}
  */
 function parseDescriptorLength(r) {
@@ -246,7 +249,8 @@ function parseDescriptorLength(r) {
 }
 
 /**
- * @param {import("../types").BufferReader} r
+ * @template {{ [k: string]: unknown }} T
+ * @param {import("../types").BoxReader<T>} r
  * @param {number} size
  * @returns {Array.<unknown>}
  */
@@ -270,7 +274,8 @@ function parseNestedDescriptors(r, size) {
 }
 
 /**
- * @param {import("../types").BufferReader} r
+ * @template {{ [k: string]: unknown }} T
+ * @param {import("../types").BoxReader<T>} r
  * @param {number} tag
  * @param {number} size
  * @returns {unknown}
@@ -356,7 +361,8 @@ function parseDescriptorPayload(r, tag, size) {
  */
 
 /**
- * @param {import("../types").BufferReader} r
+ * @template {{ [k: string]: unknown }} T
+ * @param {import("../types").BoxReader<T>} r
  * @returns {Descriptor}
  */
 function parseDescriptor(r) {

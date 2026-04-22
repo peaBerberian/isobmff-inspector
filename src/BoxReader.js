@@ -185,7 +185,7 @@ function getDescription(meta) {
 }
 
 /**
- * @param {import("./types.js").BufferReader} reader
+ * @param {BufferReader} reader
  * @returns {string}
  */
 function parseNullTerminatedAscii(reader) {
@@ -202,7 +202,7 @@ function parseNullTerminatedAscii(reader) {
 }
 
 /**
- * @param {import("./types.js").BufferReader} reader
+ * @param {BufferReader} reader
  * @returns {string}
  */
 function parseNullTerminatedUtf8(reader) {
@@ -224,7 +224,7 @@ function parseNullTerminatedUtf8(reader) {
  * call, allowing to easily parse contiguous bytes in box parsers.
  *
  * @param {Uint8Array} buffer
- * @returns {import("./types.js").BufferReader}
+ * @returns {BufferReader}
  */
 function createBufferReader(buffer) {
   let currentOffset = 0;
@@ -404,3 +404,16 @@ function createBufferReader(buffer) {
     },
   };
 }
+
+/**
+ * @typedef {object} BufferReader
+ * @property {(nbBytes: number) => number} bytesToInt
+ * @property {(nbBytes: number) => string} bytesToHex
+ * @property {() => bigint} bytesToUint64BigInt
+ * @property {() => bigint} bytesToInt64BigInt
+ * @property {(nbBytes: number) => string} readAsUtf8
+ * @property {() => number|string} readFourCc
+ * @property {() => number} getTotalLength
+ * @property {() => number} getRemainingLength
+ * @property {() => boolean} isFinished
+ */
