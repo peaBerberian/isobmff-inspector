@@ -4,7 +4,7 @@
 
 ### Features
 
-- add parsing of boxes: `enca`
+- add parsing of boxes: `enca`, `ac-3`, `av01`, `ec-3`, `cslg`, `Opus`, and `dOps`
 - improve parsing of `colr` by parsing more colour types' information
 - be more resilient to `vmhd` boxes which wrongly do not have their mvhd flag to `1` (just emit a warning)
 

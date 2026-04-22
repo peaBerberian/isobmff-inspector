@@ -541,15 +541,20 @@ handling numeric values, as those are mostly incompatible with `number` values.
 ## Parsed boxes ################################################################
 
 The inspector only parses the following ISOBMFF boxes for now:
+  - ac-3
+  - av01
   - avc1
   - avc3
   - avcC
   - btrt
   - co64
   - colr
+  - cslg
   - ctts
+  - dOps
   - dinf
   - dref
+  - ec-3
   - edts
   - elst
   - enca
@@ -578,6 +583,7 @@ The inspector only parses the following ISOBMFF boxes for now:
   - mp4a
   - mvex
   - mvhd
+  - Opus
   - pasp
   - pdin
   - pssh

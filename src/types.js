@@ -70,6 +70,7 @@
  * @property {<K extends NumberKeys<T>>(key: K, nbBytes: number, meta?: string | ParsedBoxFieldMetadata) => number} fieldUint
  * @property {<K extends BigIntKeys<T>>(key: K, meta?: string | ParsedBoxFieldMetadata) => bigint} fieldUint64
  * @property {<K extends BigIntKeys<T>>(key: K, meta?: string | ParsedBoxFieldMetadata) => bigint} fieldInt64
+ * @property {<K extends NumberKeys<T>>(key: K, nbBytes: number, bits: number, meta?: string | ParsedBoxFieldMetadata) => number} fieldSignedInt
  * @property {<K extends StringKeys<T>>(key: K, nbBytes: number, meta?: string | ParsedBoxFieldMetadata) => string} fieldHex
  * @property {<K extends StringKeys<T>>(key: K, nbBytes: number, meta?: string | ParsedBoxFieldMetadata) => string} fieldAscii
  * @property {<K extends FixedPointKeys<T>>(key: K, nbBytes: number, fractionalBits: number, format: string, meta?: string | ParsedBoxFieldMetadata) => ParsedFixedPointField} fieldFixedPoint

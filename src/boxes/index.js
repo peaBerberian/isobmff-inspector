@@ -1,12 +1,17 @@
+import ac3 from "./ac-3.js";
+import av01 from "./av01.js";
 import avc1 from "./avc1.js";
 import avc3 from "./avc3.js";
 import avcC from "./avcC.js";
 import btrt from "./btrt.js";
 import co64 from "./co64.js";
 import colr from "./colr.js";
+import cslg from "./cslg.js";
 import ctts from "./ctts.js";
 import dinf from "./dinf.js";
+import dOps from "./dOps.js";
 import dref from "./dref.js";
+import ec3 from "./ec-3.js";
 import edts from "./edts.js";
 import elst from "./elst.js";
 import enca from "./enca.js";
@@ -35,6 +40,7 @@ import moov from "./moov.js";
 import mp4a from "./mp4a.js";
 import mvex from "./mvex.js";
 import mvhd from "./mvhd.js";
+import Opus from "./Opus.js";
 import pasp from "./pasp.js";
 import pdin from "./pdin.js";
 import pssh from "./pssh.js";
@@ -72,17 +78,23 @@ import vmhd from "./vmhd.js";
 
 /** @type {import("../types.js").BoxDefinitionsMap} */
 export default {
+  "ac-3": ac3,
   ID32,
+  Opus,
+  av01,
   avc1,
   avc3,
   avcC,
   btrt,
   colr,
   co64,
+  cslg,
   ctts,
+  dOps,
   dinf,
   dref,
   edts,
+  "ec-3": ec3,
   elst,
   enca,
   encv,

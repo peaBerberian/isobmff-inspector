@@ -5,6 +5,7 @@ import {
   macDateField,
   parsedBoxValue,
   signedFixedPointField,
+  toSignedInt,
 } from "./fields.js";
 import BufferReader from "./utils/buffer_reader.js";
 
@@ -86,6 +87,13 @@ export default function createBoxReader(buffer) {
     fieldInt64(key, meta) {
       return /** @type {bigint} */ (
         addField(key, reader.bytesToInt64BigInt(), meta)
+      );
+    },
+
+    // TODO: bits probably just could be very easily derived from nbBytes!!!!
+    fieldSignedInt(key, nbBytes, bits, meta) {
+      return /** @type {number} */ (
+        addField(key, toSignedInt(reader.bytesToInt(nbBytes), bits), meta)
       );
     },
 
