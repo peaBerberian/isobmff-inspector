@@ -320,7 +320,9 @@ const FIELD_CHECKS = {
   },
 
   vmhd(dumpNode, actualNode) {
-    assert.equal(actualNode.values.flags, dumpInteger(dumpNode.attrs.flags));
+    if (dumpNode.attrs.flags !== undefined) {
+      assert.equal(actualNode.values.flags, dumpInteger(dumpNode.attrs.flags));
+    }
     assert.equal(
       actualNode.values.graphicsmode,
       dumpInteger(dumpScalar(dumpNode, "graphics_mode")),

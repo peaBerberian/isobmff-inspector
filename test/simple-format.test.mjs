@@ -99,6 +99,64 @@ test("simple format preserves bit and flag names with raw values", () => {
   }
 });
 
+test("simple format exposes colr nclx full_range_flag as a packed field", () => {
+  const parsed = parseBuffer(
+    boxBytes(
+      "colr",
+      new Uint8Array([
+        0x6e, 0x63, 0x6c, 0x78, 0x00, 0x01, 0x00, 0x0d, 0x00, 0x06, 0x80,
+      ]),
+    ),
+    { format: "simple" },
+  );
+
+  assert.deepEqual(parsed[0].fields, {
+    colour_type: "nclx",
+    colour_primaries: 1,
+    transfer_characteristics: 13,
+    matrix_coefficients: 6,
+    full_range_flag: {
+      $raw: 0x80,
+      value: 1,
+      reserved: 0,
+    },
+  });
+});
+
+test("simple format exposes colr nclc without a full_range_flag byte", () => {
+  const parsed = parseBuffer(
+    boxBytes(
+      "colr",
+      new Uint8Array([
+        0x6e, 0x63, 0x6c, 0x63, 0x00, 0x01, 0x00, 0x0d, 0x00, 0x06,
+      ]),
+    ),
+    { format: "simple" },
+  );
+
+  assert.deepEqual(parsed[0].fields, {
+    colour_type: "nclc",
+    colour_primaries: 1,
+    transfer_characteristics: 13,
+    matrix_coefficients: 6,
+  });
+});
+
+test("simple format exposes colr ICC payload as ICC_profile", () => {
+  const parsed = parseBuffer(
+    boxBytes(
+      "colr",
+      new Uint8Array([0x72, 0x49, 0x43, 0x43, 0xde, 0xad, 0xbe, 0xef]),
+    ),
+    { format: "simple" },
+  );
+
+  assert.deepEqual(parsed[0].fields, {
+    colour_type: "rICC",
+    ICC_profile: "DEADBEEF",
+  });
+});
+
 test("simple format keeps children", async () => {
   const bytes = new Uint8Array([
     0x00, 0x00, 0x00, 0x10, 0x6d, 0x6f, 0x6f, 0x76, 0x00, 0x00, 0x00, 0x08,

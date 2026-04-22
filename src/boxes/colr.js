@@ -4,8 +4,8 @@
  * @property {number=} colour_primaries
  * @property {number=} transfer_characteristics
  * @property {number=} matrix_coefficients
- * @property {boolean=} full_range_flag
- * @property {string=} data
+ * @property {import("../types.js").ParsedBitsField=} full_range_flag
+ * @property {string=} ICC_profile
  */
 
 /** @type {import("../types.js").BoxDefinition<ColorInformationBoxContent>} */
@@ -15,16 +15,27 @@ export default {
 
   parser(reader) {
     const colour_type = reader.fieldAscii("colour_type", 4);
-    if (colour_type === "nclx" || colour_type === "nclc") {
+    if (colour_type === "nclx") {
       reader.fieldUint("colour_primaries", 2);
       reader.fieldUint("transfer_characteristics", 2);
       reader.fieldUint("matrix_coefficients", 2);
       if (!reader.isFinished()) {
-        // XXX TODO:
-        ret.full_range_flag = !!(reader.bytesToInt(1) & 0x80);
+        reader.fieldBits("full_range_flag", 1, [
+          { key: "value", bits: 1 },
+          { key: "reserved", bits: 7 },
+        ]);
       }
+    } else if (colour_type === "nclc") {
+      reader.fieldUint("colour_primaries", 2);
+      reader.fieldUint("transfer_characteristics", 2);
+      reader.fieldUint("matrix_coefficients", 2);
+    } else if (
+      (colour_type === "rICC" || colour_type === "prof") &&
+      !reader.isFinished()
+    ) {
+      reader.fieldHex("ICC_profile", reader.getRemainingLength());
     } else if (!reader.isFinished()) {
-      reader.fieldHex("data", reader.getRemainingLength());
+      reader.fieldHex("ICC_profile", reader.getRemainingLength());
     }
   },
 };
