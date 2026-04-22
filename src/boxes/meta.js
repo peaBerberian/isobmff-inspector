@@ -4,7 +4,7 @@
  * @property {number} flags
  */
 
-/** @type {import("../types.js").BoxDefinition<MetadataBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<MetadataBoxContent>} */
 export default {
   name: "Metadata Box",
   description: "Container for metadata boxes and their handler.",

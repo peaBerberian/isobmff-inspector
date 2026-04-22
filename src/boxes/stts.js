@@ -12,7 +12,7 @@
  * @property {number} sample_delta
  */
 
-/** @type {import("../types.js").BoxDefinition<DecodingTimeToSampleBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<DecodingTimeToSampleBoxContent>} */
 export default {
   name: "Decoding Time to Sample",
   description: "Maps consecutive samples to their decoding-time deltas.",
@@ -27,8 +27,8 @@ export default {
     let i = entry_count;
     while (i--) {
       entries.push({
-        sample_count: r.bytesToInt(4),
-        sample_delta: r.bytesToInt(4),
+        sample_count: r.readUint(4),
+        sample_delta: r.readUint(4),
       });
     }
     r.addField("entries", entries);

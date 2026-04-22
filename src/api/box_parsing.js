@@ -76,7 +76,7 @@ export function parseBoxContent(
   let contentForChildren;
 
   if (typeof config.parser === "function") {
-    const parserReader = BoxReader(content);
+    const parserReader = new BoxReader(content);
     /** @type {import("../types.js").BoxParserFields | undefined} */
     let result;
     try {
@@ -107,7 +107,6 @@ export function parseBoxContent(
     try {
       // TODO: Remove when API transition done
       if (result !== undefined) {
-        delete result.__data__;
         Object.keys(result).forEach((key) => {
           atomObject.values.push(parsedBoxValue(key, result[key]));
         });

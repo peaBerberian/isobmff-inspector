@@ -8,7 +8,7 @@
  * @property {string} name
  */
 
-/** @type {import("../types.js").BoxDefinition<HandlerReferenceBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<HandlerReferenceBoxContent>} */
 export default {
   name: "Handler Reference Box",
   description:
@@ -19,11 +19,13 @@ export default {
     reader.fieldUint("flags", 3);
     reader.fieldUint("pre_defined", 4);
     reader.fieldUint("handler_type", 4);
-    reader.addField("reserved", [
-      reader.bytesToInt(4),
-      reader.bytesToInt(4),
-      reader.bytesToInt(4),
-    ]);
+    /** @type {[number, number, number]} */
+    const reserved = [
+      reader.readUint(4),
+      reader.readUint(4),
+      reader.readUint(4),
+    ];
+    reader.addField("reserved", reserved);
     reader.fieldNullTerminatedUtf8("name");
   },
 };

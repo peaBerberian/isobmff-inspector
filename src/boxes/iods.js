@@ -7,7 +7,7 @@ import { parseDescriptor } from "./helpers.js";
  * @property {Array<import("./helpers.js").Descriptor>} descriptors
  */
 
-/** @type {import("../types.js").BoxDefinition<InitialObjectDescriptorBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<InitialObjectDescriptorBoxContent>} */
 export default {
   name: "Initial Object Descriptor Box",
   description: "Container for MPEG-4 object descriptor information.",

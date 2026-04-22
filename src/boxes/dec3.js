@@ -1,6 +1,6 @@
 import { bitsField, parsedBoxValue, structField } from "../fields.js";
 
-/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
+/** @type {import("./types.js").BoxDefinition<{ [k: string]: unknown }>} */
 export default {
   name: "EC-3 Specific Box",
   description:

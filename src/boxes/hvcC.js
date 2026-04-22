@@ -1,4 +1,4 @@
-/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
+/** @type {import("./types.js").BoxDefinition<{ [k: string]: unknown }>} */
 export default {
   name: "HEVC Decoder Configuration Record",
   description:
@@ -6,32 +6,32 @@ export default {
 
   parser(r) {
     // TODO: To new reader API
-    const configurationVersion = r.bytesToInt(1);
-    const generalProfileByte = r.bytesToInt(1);
-    const generalCompatibilityFlagsUpper = r.bytesToInt(4);
-    const generalLevelIdc = r.bytesToInt(1);
-    const constraintUpper = r.bytesToInt(4);
-    const constraintLower = r.bytesToInt(2);
-    const minSpatialSegmentation = r.bytesToInt(2);
-    const parallelismType = r.bytesToInt(1);
-    const chromaFormat = r.bytesToInt(1);
-    const bitDepthLumaMinus8 = r.bytesToInt(1);
-    const bitDepthChromaMinus8 = r.bytesToInt(1);
-    const avgFrameRate = r.bytesToInt(2);
-    const miscByte = r.bytesToInt(1);
-    const numOfArrays = r.bytesToInt(1);
+    const configurationVersion = r.readUint(1);
+    const generalProfileByte = r.readUint(1);
+    const generalCompatibilityFlagsUpper = r.readUint(4);
+    const generalLevelIdc = r.readUint(1);
+    const constraintUpper = r.readUint(4);
+    const constraintLower = r.readUint(2);
+    const minSpatialSegmentation = r.readUint(2);
+    const parallelismType = r.readUint(1);
+    const chromaFormat = r.readUint(1);
+    const bitDepthLumaMinus8 = r.readUint(1);
+    const bitDepthChromaMinus8 = r.readUint(1);
+    const avgFrameRate = r.readUint(2);
+    const miscByte = r.readUint(1);
+    const numOfArrays = r.readUint(1);
     const arrays = [];
 
     for (let i = 0; i < numOfArrays; i++) {
-      const arrayCompletenessByte = r.bytesToInt(1);
-      const numNalus = r.bytesToInt(2);
+      const arrayCompletenessByte = r.readUint(1);
+      const numNalus = r.readUint(2);
       const nalus = [];
 
       for (let j = 0; j < numNalus; j++) {
-        const nalUnitLength = r.bytesToInt(2);
+        const nalUnitLength = r.readUint(2);
         nalus.push({
           length: nalUnitLength,
-          data: r.bytesToHex(nalUnitLength),
+          data: r.readHex(nalUnitLength),
         });
       }
 

@@ -5,7 +5,7 @@
  * @property {number} entry_count
  */
 
-/** @type {import("../types.js").BoxDefinition<DataReferenceBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<DataReferenceBoxContent>} */
 export default {
   name: "Data Reference Box",
   description: "Lists references that locate the media data used by the track.",

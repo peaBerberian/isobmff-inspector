@@ -16,7 +16,7 @@ import { toSignedInt } from "./helpers.js";
  * @property {number} media_rate_fraction
  */
 
-/** @type {import("../types.js").BoxDefinition<EditListBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<EditListBoxContent>} */
 export default {
   name: "Edit List Box",
   description: "Defines timeline edits that map movie time to media time.",
@@ -34,11 +34,10 @@ export default {
     for (let i = 0; i < entry_count; i++) {
       entries.push({
         segment_duration:
-          version === 0 ? reader.bytesToInt(4) : reader.bytesToUint64BigInt(),
-        media_time:
-          version === 0 ? ~~reader.bytesToInt(4) : reader.bytesToInt64BigInt(),
-        media_rate_integer: toSignedInt(reader.bytesToInt(2), 16),
-        media_rate_fraction: reader.bytesToInt(2),
+          version === 0 ? reader.readUint(4) : reader.readUint64(),
+        media_time: version === 0 ? ~~reader.readUint(4) : reader.readUint64(),
+        media_rate_integer: toSignedInt(reader.readUint(2), 16),
+        media_rate_fraction: reader.readUint(2),
       });
     }
     reader.addField("entries", entries);

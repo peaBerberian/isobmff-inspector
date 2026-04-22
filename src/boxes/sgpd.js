@@ -2,7 +2,7 @@ import { bitsField, parsedBoxValue, structField } from "../fields.js";
 import { toSignedInt } from "./helpers.js";
 
 /**
- * @param {string} groupingType
+ * @param {string|number} groupingType
  * @param {Uint8Array} data
  * @returns {import("../types.js").ParsedStructField | import("../types.js").ParsedStringField}
  */
@@ -110,7 +110,7 @@ function parseGroupEntry(groupingType, data) {
   };
 }
 
-/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
+/** @type {import("./types.js").BoxDefinition<{ [k: string]: unknown }>} */
 export default {
   name: "Sample Group Description Box",
   description:

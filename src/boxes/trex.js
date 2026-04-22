@@ -9,7 +9,7 @@
  * @property {number} default_sample_flags
  */
 
-/** @type {import("../types.js").BoxDefinition<TrackExtendsBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<TrackExtendsBoxContent>} */
 export default {
   name: "Track Extends Box",
   description:
@@ -20,13 +20,13 @@ export default {
   parser(reader) {
     // TODO: To new reader API
     return {
-      version: reader.bytesToInt(1),
-      flags: reader.bytesToInt(3),
-      track_ID: reader.bytesToInt(4),
-      default_sample_description_index: reader.bytesToInt(4),
-      default_sample_duration: reader.bytesToInt(4),
-      default_sample_size: reader.bytesToInt(4),
-      default_sample_flags: reader.bytesToInt(4),
+      version: reader.readUint(1),
+      flags: reader.readUint(3),
+      track_ID: reader.readUint(4),
+      default_sample_description_index: reader.readUint(4),
+      default_sample_duration: reader.readUint(4),
+      default_sample_size: reader.readUint(4),
+      default_sample_flags: reader.readUint(4),
     };
   },
 };

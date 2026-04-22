@@ -1,4 +1,4 @@
-/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
+/** @type {import("./types.js").BoxDefinition<{ [k: string]: unknown }>} */
 export default {
   name: "Sample Description",
   description: "Information about the coding type used",

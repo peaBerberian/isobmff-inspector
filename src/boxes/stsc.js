@@ -5,7 +5,7 @@
  * @property {number} sample_description_index
  */
 
-/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
+/** @type {import("./types.js").BoxDefinition<{ [k: string]: unknown }>} */
 export default {
   name: "Sample To Chunk",
   description:
@@ -15,9 +15,9 @@ export default {
     // TODO: To new reader API
     /** @type Partial<Record<string, unknown>> */
     const ret = {};
-    ret.version = r.bytesToInt(1);
-    ret.flags = r.bytesToInt(3);
-    const entry_count = r.bytesToInt(4);
+    ret.version = r.readUint(1);
+    ret.flags = r.readUint(3);
+    const entry_count = r.readUint(4);
     ret.entry_count = entry_count;
 
     /** @type {Array.<StscEntry>} */
@@ -26,9 +26,9 @@ export default {
     let i = entry_count;
     while (i--) {
       const e = {
-        first_chunk: r.bytesToInt(4),
-        samples_per_chunk: r.bytesToInt(4),
-        sample_description_index: r.bytesToInt(4),
+        first_chunk: r.readUint(4),
+        samples_per_chunk: r.readUint(4),
+        sample_description_index: r.readUint(4),
       };
       entries.push(e);
     }

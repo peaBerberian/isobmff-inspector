@@ -5,7 +5,7 @@
  * @property {number} track_ID
  */
 
-/** @type {import("../types.js").BoxDefinition<TrackExtensionPropertiesBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<TrackExtensionPropertiesBoxContent>} */
 export default {
   name: "Track Extension Properties Box",
   description:

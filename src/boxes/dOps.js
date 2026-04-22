@@ -11,7 +11,7 @@
  * @property {number[]} [ChannelMapping]
  */
 
-/** @type {import("../types.js").BoxDefinition<OpusSpecificBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<OpusSpecificBoxContent>} */
 export default {
   name: "Opus Specific Box",
   description:

@@ -5,7 +5,7 @@
  * @property {string} location
  */
 
-/** @type {import("../types.js").BoxDefinition<DataEntryUrlBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<DataEntryUrlBoxContent>} */
 export default {
   name: "Data Entry Url Box",
   description:

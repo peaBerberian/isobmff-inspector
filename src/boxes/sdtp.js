@@ -1,4 +1,4 @@
-/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
+/** @type {import("./types.js").BoxDefinition<{ [k: string]: unknown }>} */
 export default {
   name: "Independent and Disposable Samples Box",
   description: "Records dependency flags for samples in decoding order.",
@@ -7,8 +7,8 @@ export default {
     // TODO: To new reader API
     /** @type Partial<Record<string, unknown>> */
     const ret = {
-      version: r.bytesToInt(1),
-      flags: r.bytesToInt(3),
+      version: r.readUint(1),
+      flags: r.readUint(3),
     };
 
     const remaining = r.getRemainingLength();
@@ -19,7 +19,7 @@ export default {
     const samples = [];
     ret.samples = samples;
     while (i--) {
-      const byte = r.bytesToInt(1);
+      const byte = r.readUint(1);
       samples.push({
         is_leading: (byte >> 6) & 0x03,
         sample_depends_on: (byte >> 4) & 0x03,

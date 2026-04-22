@@ -5,7 +5,7 @@
  * @property {number} sequence_number
  */
 
-/** @type {import("../types.js").BoxDefinition<MovieFragmentHeaderBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<MovieFragmentHeaderBoxContent>} */
 export default {
   name: "Movie Fragment Header Box",
   description:

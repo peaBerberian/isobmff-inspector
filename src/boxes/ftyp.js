@@ -5,7 +5,7 @@
  * @property {string} compatible_brands
  */
 
-/** @type {import("../types.js").BoxDefinition<FileTypeBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<FileTypeBoxContent>} */
 export default {
   name: "File Type Box",
   description: "File type and compatibility",

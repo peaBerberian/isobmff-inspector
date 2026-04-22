@@ -1,4 +1,4 @@
-/** @type {import("../types.js").BoxDefinition<{ version: number, flags: number, extended_language: string }>} */
+/** @type {import("./types.js").BoxDefinition<{ version: number, flags: number, extended_language: string }>} */
 export default {
   name: "Extended Language Box",
   description:

@@ -1,4 +1,4 @@
-/** @type {import("../types.js").BoxDefinition<{ version: number, flags: number, reference_track_id: number, ntp_timestamp: bigint, media_time: number | bigint }>} */
+/** @type {import("./types.js").BoxDefinition<{ version: number, flags: number, reference_track_id: number, ntp_timestamp: bigint, media_time: number | bigint }>} */
 export default {
   name: "Producer Reference Time Box",
   description:

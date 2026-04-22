@@ -6,7 +6,7 @@
  * @property {Array<bigint>} chunk_offsets
  */
 
-/** @type {import("../types.js").BoxDefinition<ChunkLargeOffsetBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<ChunkLargeOffsetBoxContent>} */
 export default {
   name: "Chunk Large Offset Box",
   description: "Maps each media chunk to its 64-bit byte offset in the file.",
@@ -28,7 +28,7 @@ export default {
     );
     const chunk_offsets = [];
     for (let i = 0; i < entry_count; i++) {
-      chunk_offsets.push(reader.bytesToUint64BigInt());
+      chunk_offsets.push(reader.readUint64());
     }
     reader.addField("chunk_offsets", chunk_offsets);
   },

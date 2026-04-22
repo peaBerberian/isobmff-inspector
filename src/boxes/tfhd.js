@@ -1,4 +1,4 @@
-/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
+/** @type {import("./types.js").BoxDefinition<{ [k: string]: unknown }>} */
 export default {
   name: "Track Fragment Header Box",
   description:
@@ -9,8 +9,8 @@ export default {
     /** @type Partial<Record<string, unknown>> */
     const ret = {};
 
-    ret.version = r.bytesToInt(1);
-    const flags = r.bytesToInt(3);
+    ret.version = r.readUint(1);
+    const flags = r.readUint(3);
 
     const hasBaseDataOffset = flags & 0x000001;
     const hasSampleDescriptionIndex = flags & 0x000002;
@@ -30,22 +30,22 @@ export default {
       "default-base-is-moof": !!defaultBaseIsMOOF,
     };
 
-    ret.track_ID = r.bytesToInt(4);
+    ret.track_ID = r.readUint(4);
 
     if (hasBaseDataOffset) {
-      ret.base_data_offset = r.bytesToUint64BigInt();
+      ret.base_data_offset = r.readUint64();
     }
     if (hasSampleDescriptionIndex) {
-      ret.sample_description_index = r.bytesToInt(4);
+      ret.sample_description_index = r.readUint(4);
     }
     if (hasDefaultSampleDuration) {
-      ret.default_sample_duration = r.bytesToInt(4);
+      ret.default_sample_duration = r.readUint(4);
     }
     if (hasDefaultSampleSize) {
-      ret.default_sample_size = r.bytesToInt(4);
+      ret.default_sample_size = r.readUint(4);
     }
     if (hasDefaultSampleFlags) {
-      ret.default_sample_flags = r.bytesToInt(4);
+      ret.default_sample_flags = r.readUint(4);
     }
 
     return ret;

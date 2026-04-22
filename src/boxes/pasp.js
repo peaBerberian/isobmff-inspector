@@ -4,7 +4,7 @@
  * @property {number} vSpacing
  */
 
-/** @type {import("../types.js").BoxDefinition<PixelAspectRatioBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<PixelAspectRatioBoxContent>} */
 export default {
   name: "Pixel Aspect Ratio Box",
   description:

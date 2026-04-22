@@ -1,4 +1,4 @@
-/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
+/** @type {import("./types.js").BoxDefinition<{ [k: string]: unknown }>} */
 export default {
   name: "Sample Auxiliary Information Offsets",
   description:
@@ -8,15 +8,15 @@ export default {
     // TODO: To new reader API
     /** @type Partial<Record<string, unknown>> */
     const ret = {};
-    ret.version = r.bytesToInt(1);
-    ret.flags = r.bytesToInt(3);
+    ret.version = r.readUint(1);
+    ret.flags = r.readUint(3);
 
     if (ret.flags === 1) {
-      ret.aux_info_type = r.bytesToInt(4);
-      ret.aux_info_type_parameter = r.bytesToInt(4);
+      ret.aux_info_type = r.readUint(4);
+      ret.aux_info_type_parameter = r.readUint(4);
     }
 
-    const entry_count = r.bytesToInt(4);
+    const entry_count = r.readUint(4);
     ret.entry_count = entry_count;
 
     /** @type {Array.<number>} */
@@ -24,7 +24,7 @@ export default {
     ret.offset = offset;
     let i = entry_count;
     while (i--) {
-      offset.push(r.bytesToInt(ret.version === 0 ? 4 : 8));
+      offset.push(r.readUint(ret.version === 0 ? 4 : 8));
     }
 
     return ret;

@@ -1,6 +1,6 @@
 import { parseAudioSampleEntry } from "./helpers.js";
 
-/** @type {import("../types.js").BoxDefinition<import("./helpers.js").AudioSampleEntry>} */
+/** @type {import("./types.js").BoxDefinition<import("./helpers.js").AudioSampleEntry>} */
 export default {
   name: "Opus Sample Entry",
   description:

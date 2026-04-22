@@ -5,7 +5,7 @@
  * @property {number|bigint} baseMediaDecodeTime
  */
 
-/** @type {import("../types.js").BoxDefinition<TrackFragmentDecodeTimeBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<TrackFragmentDecodeTimeBoxContent>} */
 export default {
   name: "Track Fragment Decode Time",
   description:
@@ -13,11 +13,11 @@ export default {
     "the first sample in decode order in the track fragment",
   parser(r) {
     // TODO: To new reader API
-    const version = r.bytesToInt(1);
+    const version = r.readUint(1);
     return {
       version,
-      flags: r.bytesToInt(3),
-      baseMediaDecodeTime: version ? r.bytesToUint64BigInt() : r.bytesToInt(4),
+      flags: r.readUint(3),
+      baseMediaDecodeTime: version ? r.readUint64() : r.readUint(4),
     };
   },
 };

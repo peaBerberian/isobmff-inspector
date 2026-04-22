@@ -13,29 +13,27 @@ import { macDateField, parsedBoxValue, structField } from "../fields.js";
  * @property {number} pre_defined
  */
 
-/** @type {import("../types.js").BoxDefinition<MediaHeaderBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<MediaHeaderBoxContent>} */
 export default {
   name: "Media Header Box",
   description: "Timing and language metadata for one track's media.",
   parser(r) {
     // TODO: To new reader API
-    const version = r.bytesToInt(1);
-    const flags = r.bytesToInt(3);
-    const creation_time = version ? r.bytesToUint64BigInt() : r.bytesToInt(4);
-    const modification_time = version
-      ? r.bytesToUint64BigInt()
-      : r.bytesToInt(4);
-    const timescale = r.bytesToInt(4);
-    const duration = version ? r.bytesToUint64BigInt() : r.bytesToInt(4);
+    const version = r.readUint(1);
+    const flags = r.readUint(3);
+    const creation_time = version ? r.readUint64() : r.readUint(4);
+    const modification_time = version ? r.readUint64() : r.readUint(4);
+    const timescale = r.readUint(4);
+    const duration = version ? r.readUint64() : r.readUint(4);
 
-    const next2Bytes = r.bytesToInt(2);
+    const next2Bytes = r.readUint(2);
     const pad = (next2Bytes >> 15) & 0x01;
     const language = [
       String.fromCharCode(((next2Bytes >> 10) & 0x1f) + 0x60),
       String.fromCharCode(((next2Bytes >> 5) & 0x1f) + 0x60),
       String.fromCharCode((next2Bytes & 0x1f) + 0x60),
     ].join("");
-    const pre_defined = r.bytesToInt(2);
+    const pre_defined = r.readUint(2);
     return {
       version,
       flags,

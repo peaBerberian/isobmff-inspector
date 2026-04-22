@@ -6,7 +6,7 @@
  * @property {number} initial_delay
  */
 
-/** @type {import("../types.js").BoxDefinition<ProgressiveDownloadInformationBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<ProgressiveDownloadInformationBoxContent>} */
 export default {
   name: "Progressive Download Information Box",
   description:

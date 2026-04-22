@@ -3,7 +3,7 @@
  * @property {string} original_format
  */
 
-/** @type {import("../types.js").BoxDefinition<OriginalFormatBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<OriginalFormatBoxContent>} */
 export default {
   name: "Original Format Box",
   description: "Identifies the coding format before protection was applied.",

@@ -16,7 +16,7 @@
  * @property {LevelAssignment[]} levels
  */
 
-/** @type {import("../types.js").BoxDefinition<LevelAssignmentBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<LevelAssignmentBoxContent>} */
 export default {
   name: "Level Assignment Box",
   description:
@@ -38,21 +38,21 @@ export default {
     for (let i = 0; i < level_count; i++) {
       /** @type {LevelAssignment} */
       const assignment = {
-        track_id: reader.bytesToInt(4),
+        track_id: reader.readUint(4),
         padding_flag: false,
         assignment_type: 0,
       };
-      const assignmentByte = reader.bytesToInt(1);
+      const assignmentByte = reader.readUint(1);
       assignment.padding_flag = !!(assignmentByte & 0x80);
       assignment.assignment_type = assignmentByte & 0x7f;
 
       if (assignment.assignment_type === 0) {
-        assignment.grouping_type = reader.bytesToInt(4);
+        assignment.grouping_type = reader.readUint(4);
       } else if (assignment.assignment_type === 1) {
-        assignment.grouping_type = reader.bytesToInt(4);
-        assignment.grouping_type_parameter = reader.bytesToInt(4);
+        assignment.grouping_type = reader.readUint(4);
+        assignment.grouping_type_parameter = reader.readUint(4);
       } else if (assignment.assignment_type === 4) {
-        assignment.sub_track_id = reader.bytesToInt(4);
+        assignment.sub_track_id = reader.readUint(4);
       } else if (
         assignment.assignment_type !== 2 &&
         assignment.assignment_type !== 3

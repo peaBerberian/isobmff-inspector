@@ -6,7 +6,7 @@
  * @property {number} [sample_composition_time_offset]
  */
 
-/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
+/** @type {import("./types.js").BoxDefinition<{ [k: string]: unknown }>} */
 export default {
   name: "Track Fragment Run Box",
   description:
@@ -16,9 +16,9 @@ export default {
     // TODO: To new reader API
     /** @type Partial<Record<string, unknown>> */
     const ret = {};
-    ret.version = r.bytesToInt(1);
+    ret.version = r.readUint(1);
 
-    const flags = r.bytesToInt(3);
+    const flags = r.readUint(3);
 
     const hasDataOffset = flags & 0x000001;
     const hasFirstSampleFlags = flags & 0x000004;
@@ -36,16 +36,16 @@ export default {
       "sample-composition-time-offset-present": !!hasSampleCompositionOffset,
     };
 
-    const sample_count = r.bytesToInt(4);
+    const sample_count = r.readUint(4);
     ret.sample_count = sample_count;
 
     // two's complement
     if (hasDataOffset) {
-      ret.data_offset = ~~r.bytesToInt(4);
+      ret.data_offset = ~~r.readUint(4);
     }
 
     if (hasFirstSampleFlags) {
-      ret.first_sample_flags = r.bytesToInt(4);
+      ret.first_sample_flags = r.readUint(4);
     }
 
     let i = sample_count;
@@ -57,17 +57,17 @@ export default {
       const sample = {};
 
       if (hasSampleDuration) {
-        sample.sample_duration = r.bytesToInt(4);
+        sample.sample_duration = r.readUint(4);
       }
       if (hasSampleSize) {
-        sample.sample_size = r.bytesToInt(4);
+        sample.sample_size = r.readUint(4);
       }
       if (hasSampleFlags) {
-        sample.sample_flags = r.bytesToInt(4);
+        sample.sample_flags = r.readUint(4);
       }
       if (hasSampleCompositionOffset) {
         sample.sample_composition_time_offset =
-          ret.version === 0 ? r.bytesToInt(4) : ~~r.bytesToInt(4);
+          ret.version === 0 ? r.readUint(4) : ~~r.readUint(4);
       }
       samples.push(sample);
     }

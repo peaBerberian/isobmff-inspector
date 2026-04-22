@@ -23,7 +23,7 @@ const SYSTEM_IDS = {
   F239E769EFA348509C16A903C6932EFB: "PrimeTime",
 };
 
-/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
+/** @type {import("./types.js").BoxDefinition<{ [k: string]: unknown }>} */
 export default {
   name: "Protection System Specific Header",
   description:
@@ -32,14 +32,14 @@ export default {
     // TODO: To new reader API
     /** @type Partial<Record<string, unknown>> */
     const ret = {};
-    const version = reader.bytesToInt(1);
+    const version = reader.readUint(1);
     ret.version = version;
     if (version > 1) {
       throw new Error("invalid version");
     }
 
-    ret.flags = reader.bytesToInt(3);
-    const systemID = reader.bytesToHex(16);
+    ret.flags = reader.readUint(3);
+    const systemID = reader.readHex(16);
     ret.systemID = systemID;
 
     const systemIDName = SYSTEM_IDS[systemID];
@@ -48,7 +48,7 @@ export default {
     }
 
     if (ret.version === 1) {
-      const KID_count = reader.bytesToInt(4);
+      const KID_count = reader.readUint(4);
       ret.KID_count = KID_count;
 
       /** @type {Array<[string]>} */
@@ -57,13 +57,13 @@ export default {
 
       let i = KID_count;
       while (i--) {
-        KIDs.push([reader.bytesToHex(16)]);
+        KIDs.push([reader.readHex(16)]);
       }
     }
 
-    const data_length = reader.bytesToInt(4);
+    const data_length = reader.readUint(4);
     ret.data_length = data_length;
-    ret.data = reader.bytesToHex(data_length);
+    ret.data = reader.readHex(data_length);
     return ret;
   },
 };

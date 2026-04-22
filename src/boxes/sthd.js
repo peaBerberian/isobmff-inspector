@@ -1,4 +1,4 @@
-/** @type {import("../types.js").BoxDefinition<{ version: number, flags: number }>} */
+/** @type {import("./types.js").BoxDefinition<{ version: number, flags: number }>} */
 export default {
   name: "Subtitle Media Header Box",
   description:

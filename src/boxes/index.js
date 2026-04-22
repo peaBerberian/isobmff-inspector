@@ -87,7 +87,9 @@ import urn_ from "./urn .js";
 import uuid from "./uuid.js";
 import vmhd from "./vmhd.js";
 
-/** @type {import("../types.js").BoxDefinitionsMap} */
+/**
+ * @type {Record<string, import("./types.js").BoxDefinition<{ [key: string]: unknown }>>}
+ */
 export default {
   "ac-3": ac3,
   ID32,

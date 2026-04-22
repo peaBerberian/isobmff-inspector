@@ -7,7 +7,7 @@ function readerFor(entries) {
   const pending = [...entries];
 
   return {
-    bytesToInt(nbBytes) {
+    readUint(nbBytes) {
       const next = pending.shift();
       assert.ok(next, `unexpected ${nbBytes}-byte read`);
       assert.equal(nbBytes, next[0]);

@@ -17,7 +17,7 @@ import { parseTransformationMatrix } from "./helpers.js";
  * @property {number} next_track_ID
  */
 
-/** @type {import("../types.js").BoxDefinition<MovieHeaderBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<MovieHeaderBoxContent>} */
 export default {
   name: "Movie Header Box",
   description:

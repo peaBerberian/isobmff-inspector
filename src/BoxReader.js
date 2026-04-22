@@ -12,41 +12,281 @@ import {
   be3toi,
   be4toi,
   be5toi,
-  be8toi,
   bytesToHex,
   utf8ToStr,
 } from "./utils/bytes.js";
 
+export { BoxReader };
+
 /**
  * Create a field-aware box reader.
  *
- * It intentionally keeps the BufferReader read-only methods so existing box
- * parsers can migrate incrementally. read* methods consume input without
- * emitting fields. field* methods consume input and append public fields.
- * addField() appends a derived field without consuming input. Emitted fields
- * are available even if parsing later throws.
+ * The idea is to instanciate the `BoxReader` with a buffer that is already
+ * bounded to a box's content start (after its size and name) and ending at its
+ * content's end.
  *
- * TODO: To class instead
+ * The `BoxReader` has methods allowing to define the fields of the current box
+ * or just to parse the next N bytes into the wanted format.
  *
- * @param {Uint8Array} buffer
+ * The BoxReader is generic over the struct associated to a box's data. Methods
+ * properly typecheck that added fields respect that type.
+ *
  * @template {{ [k: string]: unknown }} T
- * @returns {import("./types.js").BoxReader<T>}
  */
-export default function createBoxReader(buffer) {
-  const reader = createBufferReader(buffer);
+export default class BoxReader {
+  /** @type {Uint8Array} */
+  #buffer;
   /** @type {import("./types.js").ParsedBoxValue[]} */
-  const values = [];
+  #values = [];
   /** @type {import("./types.js").ParsedBoxIssue[]} */
-  const issues = [];
+  #issues = [];
+  /**
+   * Current byte position in #buffer, starting at 0 and ending at
+   * `#buffer.length`.
+   *
+   * Each read operation will advance this cursor in #buffer.
+   */
+  #currentOffset = 0;
 
   /**
-   * @param {string} key
-   * @param {unknown} value
-   * @param {string | import("./types.js").ParsedBoxFieldMetadata=} meta
-   * @returns {unknown}
+   * @param {Uint8Array} buffer
    */
-  function addField(key, value, meta) {
-    values.push(parsedBoxValue(key, value, getDescription(meta)));
+  constructor(buffer) {
+    this.#buffer = buffer;
+  }
+
+  /**
+   * Get the number of bytes that are not yet read.
+   * @returns {number}
+   */
+  getRemainingLength() {
+    return Math.max(0, this.#buffer.length - this.#currentOffset);
+  }
+
+  /**
+   * If `true`, the current box is already fully parsed.
+   * @returns {boolean}
+   */
+  isFinished() {
+    return this.#buffer.length <= this.#currentOffset;
+  }
+
+  /**
+   * Returns the total length of the current box in bytes.
+   * @returns {number}
+   */
+  getTotalLength() {
+    return this.#buffer.length;
+  }
+
+  /**
+   * Read the next `nbBytes` bytes, convert it into the corresponding
+   * unsigned integer and store it as a field named `key` for the current box.
+   *
+   * Throws if less that `nbBytes` bytes remain in the current box.
+   *
+   * Throws if 8 bytes or more is read. If you need to read 8 bytes, use
+   * `fieldUint64` (which creates a bigint).
+   *
+   * @template {NumberKeys<T>} K
+   * @param {K} key
+   * @param {number} nbBytes
+   * @param {string|ParsedBoxFieldMetadata} [meta]
+   * @returns {number}
+   */
+  fieldUint(key, nbBytes, meta) {
+    return this.addField(key, this.#bytesToInt(nbBytes), meta);
+  }
+
+  /**
+   * Read the next 8 bytes, convert it into the corresponding
+   * unsigned bigint and store it as a field named `key` for the current box.
+   *
+   * Throws if less that 8 bytes remain in the current box.
+   *
+   * @template {BigIntKeys<T>} K
+   * @param {K} key
+   * @param {string|ParsedBoxFieldMetadata} [meta]
+   * @returns {bigint}
+   */
+  fieldUint64(key, meta) {
+    return this.addField(key, this.#bytesToUint64BigInt(), meta);
+  }
+
+  /**
+   * Read the next 8 bytes, convert it into the corresponding
+   * **signed** bigint and store it as a field named `key` for the current box.
+   *
+   * Throws if less that 8 bytes remain in the current box.
+   *
+   * @template {BigIntKeys<T>} K
+   * @param {K} key
+   * @param {string|ParsedBoxFieldMetadata} [meta]
+   * @returns {bigint}
+   */
+  fieldInt64(key, meta) {
+    return this.addField(key, this.#bytesToInt64BigInt(), meta);
+  }
+
+  /**
+   * TODO: bits probably just could be very easily derived from nbBytes!!!!
+   * @template {NumberKeys<T>} K
+   * @param {K} key
+   * @param {number} nbBytes
+   * @param {number} bits
+   * @param {string|ParsedBoxFieldMetadata} [meta]
+   * @returns {number}
+   */
+  fieldSignedInt(key, nbBytes, bits, meta) {
+    return this.addField(
+      key,
+      toSignedInt(this.#bytesToInt(nbBytes), bits),
+      meta,
+    );
+  }
+
+  /**
+   * @template {StringKeys<T>} K
+   * @param {K} key
+   * @param {number} nbBytes
+   * @param {string|ParsedBoxFieldMetadata} [meta]
+   * @returns {string}
+   */
+  fieldHex(key, nbBytes, meta) {
+    return this.addField(key, this.#bytesToHex(nbBytes), meta);
+  }
+
+  /**
+   * @template {StringKeys<T>} K
+   * @param {K} key
+   * @param {string|ParsedBoxFieldMetadata} [meta]
+   * @returns {string}
+   */
+  fieldNullTerminatedAscii(key, meta) {
+    return this.addField(key, this.#parseNullTerminatedAscii(), meta);
+  }
+
+  /**
+   * @template {StringKeys<T>} K
+   * @param {K} key
+   * @param {string|ParsedBoxFieldMetadata} [meta]
+   * @returns {string}
+   */
+  fieldNullTerminatedUtf8(key, meta) {
+    return this.addField(key, this.#parseNullTerminatedUtf8(), meta);
+  }
+
+  /**
+   * Decode the next 4 bytes into a string if printable ASCII, or the
+   * corresponding 32 bit integer if not, and set it as a field named
+   * `key` on the current box.
+   *
+   * Throws if less than 4 are remaining in the buffer.
+   *
+   * @template {StringKeys<T>} K
+   * @param {K} key
+   * @param {string|ParsedBoxFieldMetadata} [meta]
+   * @returns {string|number}
+   */
+  fieldFourCc(key, meta) {
+    return this.addField(key, this.#readFourCc(), meta);
+  }
+
+  /**
+   * @template {FixedPointKeys<T>} K
+   * @param {K} key
+   * @param {number} nbBytes
+   * @param {number} fractionalBits
+   * @param {string} format
+   * @param {string|ParsedBoxFieldMetadata} [meta]
+   * @returns {import("./types.js").ParsedFixedPointField}
+   */
+  fieldFixedPoint(key, nbBytes, fractionalBits, format, meta) {
+    const value = fixedPointField(
+      this.#bytesToInt(nbBytes),
+      nbBytes * 8,
+      fractionalBits,
+      format,
+    );
+    this.addField(key, value, meta);
+    return value;
+  }
+
+  /**
+   * @template {FixedPointKeys<T>} K
+   * @param {K} key
+   * @param {number} nbBytes
+   * @param {number} bits
+   * @param {number} fractionalBits
+   * @param {string} format
+   * @param {string|ParsedBoxFieldMetadata} [meta]
+   * @returns {import("./types.js").ParsedFixedPointField}
+   */
+  fieldSignedFixedPoint(key, nbBytes, bits, fractionalBits, format, meta) {
+    const value = signedFixedPointField(
+      this.#bytesToInt(nbBytes),
+      bits,
+      fractionalBits,
+      format,
+    );
+    this.addField(key, value, meta);
+    return value;
+  }
+
+  /**
+   * @template {DateKeys<T>} K
+   * @param {K} key
+   * @param {number} nbBytes
+   * @param {string|ParsedBoxFieldMetadata} [meta]
+   * @returns {import("./types.js").ParsedDateField}
+   */
+  fieldMacDate(key, nbBytes, meta) {
+    const raw =
+      nbBytes === 8 ? this.#bytesToUint64BigInt() : this.#bytesToInt(nbBytes);
+    const value = macDateField(raw);
+    this.addField(key, value, meta);
+    return value;
+  }
+
+  /**
+   * @template {BitsKeys<T>} K
+   * @param {K} key
+   * @param {number} nbBytes
+   * @param {import("./types.js").ParsedBitsFieldPartDefinition[]} parts
+   * @param {string|ParsedBoxFieldMetadata} [meta]
+   * @returns {number}
+   */
+  fieldBits(key, nbBytes, parts, meta) {
+    const value = bitsField(this.#bytesToInt(nbBytes), nbBytes * 8, parts);
+    this.addField(key, value, meta);
+    return value.value;
+  }
+
+  /**
+   * @template {FlagsKeys<T>} K
+   * @param {K} key
+   * @param {number} nbBytes
+   * @param {Record<string, number>} flags
+   * @param {string|ParsedBoxFieldMetadata} [meta]
+   * @returns {number}
+   */
+  fieldFlags(key, nbBytes, flags, meta) {
+    const value = flagsField(this.#bytesToInt(nbBytes), nbBytes * 8, flags);
+    this.addField(key, value, meta);
+    return value.value;
+  }
+
+  /**
+   * @template V
+   * @template {KeysForValue<T, V>} K
+   * @param {K} key
+   * @param {V} value
+   * @param {string | ParsedBoxFieldMetadata=} [meta]
+   * @returns {V}
+   */
+  addField(key, value, meta) {
+    const description = typeof meta === "string" ? meta : meta?.description;
+    this.#values.push(parsedBoxValue(key, value, description));
     return value;
   }
 
@@ -55,365 +295,307 @@ export default function createBoxReader(buffer) {
    * @param {string} message
    * @returns {void}
    */
-  function addIssue(severity, message) {
-    issues.push({ severity, message });
+  addIssue(severity, message) {
+    this.#issues.push({ severity, message });
   }
-
-  return /** @type {import("./types.js").BoxReader<T>} */ ({
-    ...reader,
-
-    addField,
-    addIssue,
-
-    readUint: reader.bytesToInt,
-    readUint64: reader.bytesToUint64BigInt,
-    readInt64: reader.bytesToInt64BigInt,
-    readHex: reader.bytesToHex,
-    readAsUtf8: reader.readAsUtf8,
-    readFourCc: reader.readFourCc,
-
-    fieldUint(key, nbBytes, meta) {
-      return /** @type {number} */ (
-        addField(key, reader.bytesToInt(nbBytes), meta)
-      );
-    },
-
-    fieldUint64(key, meta) {
-      return /** @type {bigint} */ (
-        addField(key, reader.bytesToUint64BigInt(), meta)
-      );
-    },
-
-    fieldInt64(key, meta) {
-      return /** @type {bigint} */ (
-        addField(key, reader.bytesToInt64BigInt(), meta)
-      );
-    },
-
-    // TODO: bits probably just could be very easily derived from nbBytes!!!!
-    fieldSignedInt(key, nbBytes, bits, meta) {
-      return /** @type {number} */ (
-        addField(key, toSignedInt(reader.bytesToInt(nbBytes), bits), meta)
-      );
-    },
-
-    fieldHex(key, nbBytes, meta) {
-      return /** @type {string} */ (
-        addField(key, reader.bytesToHex(nbBytes), meta)
-      );
-    },
-
-    fieldNullTerminatedAscii(key, meta) {
-      return /** @type {string} */ (
-        addField(key, parseNullTerminatedAscii(reader), meta)
-      );
-    },
-
-    fieldNullTerminatedUtf8(key, meta) {
-      return /** @type {string} */ (
-        addField(key, parseNullTerminatedUtf8(reader), meta)
-      );
-    },
-
-    fieldFourCc(key, meta) {
-      return /** @type {string} */ (addField(key, reader.readFourCc(), meta));
-    },
-
-    fieldFixedPoint(key, nbBytes, fractionalBits, format, meta) {
-      const value = fixedPointField(
-        reader.bytesToInt(nbBytes),
-        nbBytes * 8,
-        fractionalBits,
-        format,
-      );
-      addField(key, value, meta);
-      return value;
-    },
-
-    fieldSignedFixedPoint(key, nbBytes, bits, fractionalBits, format, meta) {
-      const value = signedFixedPointField(
-        reader.bytesToInt(nbBytes),
-        bits,
-        fractionalBits,
-        format,
-      );
-      addField(key, value, meta);
-      return value;
-    },
-
-    fieldMacDate(key, nbBytes, meta) {
-      const raw =
-        nbBytes === 8
-          ? reader.bytesToUint64BigInt()
-          : reader.bytesToInt(nbBytes);
-      const value = macDateField(raw);
-      addField(key, value, meta);
-      return value;
-    },
-
-    fieldBits(key, nbBytes, parts, meta) {
-      const value = bitsField(reader.bytesToInt(nbBytes), nbBytes * 8, parts);
-      addField(key, value, meta);
-      return value.value;
-    },
-
-    fieldFlags(key, nbBytes, flags, meta) {
-      const value = flagsField(reader.bytesToInt(nbBytes), nbBytes * 8, flags);
-      addField(key, value, meta);
-      return value.value;
-    },
-
-    getValues() {
-      return values.slice();
-    },
-
-    getIssues() {
-      return issues.slice();
-    },
-  });
-}
-
-/**
- * @param {string | import("./types.js").ParsedBoxFieldMetadata | undefined} meta
- * @returns {string | undefined}
- */
-function getDescription(meta) {
-  if (typeof meta === "string") {
-    return meta;
-  }
-  return meta?.description;
-}
-
-/**
- * @param {BufferReader} reader
- * @returns {string}
- */
-function parseNullTerminatedAscii(reader) {
-  const bytes = [];
-  while (!reader.isFinished()) {
-    const value = reader.bytesToInt(1);
-    if (value === 0) {
-      break;
-    }
-    bytes.push(value);
-  }
-  // 128-255 become latin-1. Good enough for now
-  return String.fromCharCode.apply(null, bytes);
-}
-
-/**
- * @param {BufferReader} reader
- * @returns {string}
- */
-function parseNullTerminatedUtf8(reader) {
-  const bytes = [];
-  while (!reader.isFinished()) {
-    const value = reader.bytesToInt(1);
-    if (value === 0) {
-      break;
-    }
-    bytes.push(value);
-  }
-  return utf8ToStr(new Uint8Array(bytes));
-}
-
-/**
- * Create object allowing to easily parse an ISOBMFF box.
- *
- * The BufferReader saves in its state the current offset after each method
- * call, allowing to easily parse contiguous bytes in box parsers.
- *
- * @param {Uint8Array} buffer
- * @returns {BufferReader}
- */
-function createBufferReader(buffer) {
-  let currentOffset = 0;
 
   /**
-   * @param {string} hex
+   * Read the next `nbBytes` bytes and returns the corresponding
+   * unsigned integer.
+   *
+   * Throws if less that `nbBytes` bytes remain in the current box.
+   *
+   * Throws if 8 bytes or more is read. If you need to read 8 bytes, use
+   * `fieldUint64` (which creates a bigint).
+   * @param {number} nbBytes
+   * @returns {number}
+   */
+  readUint(nbBytes) {
+    return this.#bytesToInt(nbBytes);
+  }
+
+  /**
+   * Read the next 8 bytes and returns the corresponding bigint.
+   *
+   * Throws if less that 8 bytes remain in the current box.
+   *
    * @returns {bigint}
    */
-  function hexToBigInt(hex) {
-    return BigInt(`0x${hex}`);
+  readUint64() {
+    return this.#bytesToUint64BigInt();
   }
+
+  /**
+   * Parse the next 4 bytes as a **signed** (two's complement) 64-bit integer
+   * into a bigint.
+   *
+   * Throws if less than 8 bytes are remaining in the buffer.
+   *
+   * @returns {bigint}
+   */
+  readInt64() {
+    return this.#bytesToInt64BigInt();
+  }
+
+  /**
+   * Encode the next `nbBytes` into the corresponding hexstring.
+   *
+   * Throws if less than `nbBytes` bytes are remaining in the buffer.
+   *
+   * @param {number} nbBytes
+   * @returns {string}
+   */
+  readHex(nbBytes) {
+    return this.#bytesToHex(nbBytes);
+  }
+
+  /**
+   * Decode the next `nbBytes` as UTF-8 text.
+   *
+   * Throws if less than `nbBytes` bytes are remaining in the buffer.
+   *
+   * @param {number} nbBytes
+   * @returns {string}
+   */
+  readAsUtf8(nbBytes) {
+    return this.#readAsUtf8(nbBytes);
+  }
+
+  /**
+   * Decode the next 4 bytes into a string if printable ASCII, or the
+   * corresponding 32 bit integer if not.
+   *
+   * Throws if less than 4 are remaining in the buffer.
+   *
+   * @returns {string|number}
+   */
+  readFourCc() {
+    return this.#readFourCc();
+  }
+
+  /** @returns {import("./types.js").ParsedBoxValue[]} */
+  getValues() {
+    return this.#values.slice();
+  }
+
+  /** @returns {import("./types.js").ParsedBoxIssue[]} */
+  getIssues() {
+    return this.#issues.slice();
+  }
+
+  // Now, private methods implementing the logic
 
   /**
    * @param {number} nbBytes
    * @returns {void}
    */
-  function ensureAvailable(nbBytes) {
+  #ensureAvailable(nbBytes) {
     if (!Number.isInteger(nbBytes) || nbBytes < 0) {
       throw new Error(`Cannot read an invalid byte length: ${nbBytes}.`);
     }
 
-    const remaining = buffer.length - currentOffset;
+    const remaining = this.#buffer.length - this.#currentOffset;
     if (remaining < nbBytes) {
       throw new Error(
-        `Cannot read ${nbBytes} byte(s) at offset ${currentOffset}: ` +
+        `Cannot read ${nbBytes} byte(s) at offset ${this.#currentOffset}: ` +
           `only ${Math.max(0, remaining)} byte(s) remaining.`,
       );
     }
   }
 
-  return {
-    /**
-     * Returns the N next bytes, as a single number.
-     *
-     * /!\ only work for now for 1, 2, 3, 4, 5 or 8 bytes.
-     *
-     * /!\ Depending on the size of the number, it may be larger than JS'
-     * limit.
-     *
-     * @param {number} nbBytes
-     * @returns {number}
-     */
-    bytesToInt(nbBytes) {
-      ensureAvailable(nbBytes);
-      let res;
-      switch (nbBytes) {
-        case 1:
-          res = buffer[currentOffset];
-          break;
-        case 2:
-          res = be2toi(buffer, currentOffset);
-          break;
-        case 3:
-          res = be3toi(buffer, currentOffset);
-          break;
-        case 4:
-          res = be4toi(buffer, currentOffset);
-          break;
-        case 5:
-          res = be5toi(buffer, currentOffset);
-          break;
-        case 8:
-          res = be8toi(buffer, currentOffset);
-          break;
-        default:
-          throw new Error("not implemented yet.");
+  /**
+   * Returns the N next bytes, as a single number.
+   *
+   * /!\ only work for now for 1, 2, 3, 4, 5 or 8 bytes.
+   *
+   * /!\ Depending on the size of the number, it may be larger than JS'
+   * limit.
+   *
+   * @param {number} nbBytes
+   * @returns {number}
+   */
+  #bytesToInt(nbBytes) {
+    this.#ensureAvailable(nbBytes);
+    let res;
+    switch (nbBytes) {
+      case 1:
+        res = this.#buffer[this.#currentOffset];
+        break;
+      case 2:
+        res = be2toi(this.#buffer, this.#currentOffset);
+        break;
+      case 3:
+        res = be3toi(this.#buffer, this.#currentOffset);
+        break;
+      case 4:
+        res = be4toi(this.#buffer, this.#currentOffset);
+        break;
+      case 5:
+        res = be5toi(this.#buffer, this.#currentOffset);
+        break;
+      default:
+        throw new Error("not implemented yet.");
+    }
+
+    this.#currentOffset += nbBytes;
+    return res;
+  }
+
+  /**
+   * Returns the N next bytes into a string of Hexadecimal values.
+   * @param {number} nbBytes
+   * @returns {string}
+   */
+  #bytesToHex(nbBytes) {
+    this.#ensureAvailable(nbBytes);
+    const res = bytesToHex(this.#buffer, this.#currentOffset, nbBytes);
+    this.#currentOffset += nbBytes;
+    return res;
+  }
+
+  /**
+   * Returns the next 8 bytes as an exact unsigned 64-bit bigint.
+   * @returns {bigint}
+   */
+  #bytesToUint64BigInt() {
+    this.#ensureAvailable(8);
+    const hex = bytesToHex(this.#buffer, this.#currentOffset, 8);
+    this.#currentOffset += 8;
+    return hexToBigInt(hex);
+  }
+
+  /**
+   * Returns the next 8 bytes as an exact signed 64-bit bigint.
+   * @returns {bigint}
+   */
+  #bytesToInt64BigInt() {
+    this.#ensureAvailable(8);
+    const hex = bytesToHex(this.#buffer, this.#currentOffset, 8);
+    this.#currentOffset += 8;
+    return BigInt.asIntN(64, hexToBigInt(hex));
+  }
+
+  /**
+   * Returns the N next bytes into a string.
+   * @param {number} nbBytes
+   * @returns {string}
+   */
+  #readAsUtf8(nbBytes) {
+    this.#ensureAvailable(nbBytes);
+    const res = utf8ToStr(this.#buffer, this.#currentOffset, nbBytes);
+    this.#currentOffset += nbBytes;
+    return res;
+  }
+  #readFourCc() {
+    this.#ensureAvailable(4);
+
+    // Check if all bytes are printable ASCII
+    let isPrintable = true;
+    for (let i = this.#currentOffset; i < this.#currentOffset + 4; i++) {
+      const b = this.#buffer[i];
+      if (b < 0x20 || b > 0x7e) {
+        isPrintable = false;
+        break;
       }
+    }
+    this.#currentOffset += 4;
 
-      currentOffset += nbBytes;
-      return res;
-    },
+    if (isPrintable) {
+      // Convert to string, same codes as UTF-16's lower byte
+      return String.fromCharCode(
+        this.#buffer[this.#currentOffset - 4],
+        this.#buffer[this.#currentOffset - 3],
+        this.#buffer[this.#currentOffset - 2],
+        this.#buffer[this.#currentOffset - 1],
+      );
+    }
 
-    /**
-     * Returns the N next bytes into a string of Hexadecimal values.
-     * @param {number} nbBytes
-     * @returns {string}
-     */
-    bytesToHex(nbBytes) {
-      ensureAvailable(nbBytes);
-      const res = bytesToHex(buffer, currentOffset, nbBytes);
-      currentOffset += nbBytes;
-      return res;
-    },
+    // Fallback: return unsigned 32-bit number (big-endian)
+    return be4toi(this.#buffer, this.#currentOffset - 4);
+  }
 
-    /**
-     * Returns the next 8 bytes as an exact unsigned 64-bit bigint.
-     * @returns {bigint}
-     */
-    bytesToUint64BigInt() {
-      ensureAvailable(8);
-      const hex = bytesToHex(buffer, currentOffset, 8);
-      currentOffset += 8;
-      return hexToBigInt(hex);
-    },
-
-    /**
-     * Returns the next 8 bytes as an exact signed 64-bit bigint.
-     * @returns {bigint}
-     */
-    bytesToInt64BigInt() {
-      ensureAvailable(8);
-      const hex = bytesToHex(buffer, currentOffset, 8);
-      currentOffset += 8;
-      return BigInt.asIntN(64, hexToBigInt(hex));
-    },
-
-    /**
-     * Returns the N next bytes into a string.
-     * @param {number} nbBytes
-     * @returns {string}
-     */
-    readAsUtf8(nbBytes) {
-      ensureAvailable(nbBytes);
-      const res = utf8ToStr(buffer, currentOffset, nbBytes);
-      currentOffset += nbBytes;
-      return res;
-    },
-
-    /**
-     * Convert a FourCC (4-byte code) into a readable representation.
-     *
-     * If all bytes are printable ASCII (0x20–0x7E), returns a string.
-     * Otherwise, returns a number (unsigned 32-bit integer).
-     * @returns {string|number}
-     * Printable ASCII string OR unsigned 32-bit integer.
-     */
-    readFourCc() {
-      ensureAvailable(4);
-
-      // Check if all bytes are printable ASCII
-      let isPrintable = true;
-      for (let i = currentOffset; i < currentOffset + 4; i++) {
-        const b = buffer[i];
-        if (b < 0x20 || b > 0x7e) {
-          isPrintable = false;
-          break;
-        }
+  /**
+   * @returns {string}
+   */
+  #parseNullTerminatedAscii() {
+    const bytes = [];
+    while (!this.isFinished()) {
+      const value = this.readUint(1);
+      if (value === 0) {
+        break;
       }
-      currentOffset += 4;
+      bytes.push(value);
+    }
+    // 128-255 become latin-1. Good enough for now
+    return String.fromCharCode.apply(null, bytes);
+  }
 
-      if (isPrintable) {
-        // Convert to string, same codes as UTF-16's lower byte
-        return String.fromCharCode(
-          buffer[currentOffset - 4],
-          buffer[currentOffset - 3],
-          buffer[currentOffset - 2],
-          buffer[currentOffset - 1],
-        );
+  /**
+   * @returns {string}
+   */
+  #parseNullTerminatedUtf8() {
+    const bytes = [];
+    while (!this.isFinished()) {
+      const value = this.readUint(1);
+      if (value === 0) {
+        break;
       }
-
-      // Fallback: return unsigned 32-bit number (big-endian)
-      return be4toi(buffer, currentOffset - 4);
-    },
-
-    /**
-     * Returns the total length of the buffer
-     * @returns {number}
-     */
-    getTotalLength() {
-      return buffer.length;
-    },
-
-    /**
-     * Returns the length of the buffer which is not yet parsed.
-     * @returns {number}
-     */
-    getRemainingLength() {
-      return Math.max(0, buffer.length - currentOffset);
-    },
-
-    /**
-     * Returns true if this buffer is entirely parsed.
-     * @returns {boolean}
-     */
-    isFinished() {
-      return buffer.length <= currentOffset;
-    },
-  };
+      bytes.push(value);
+    }
+    return utf8ToStr(new Uint8Array(bytes));
+  }
 }
 
 /**
- * @typedef {object} BufferReader
- * @property {(nbBytes: number) => number} bytesToInt
- * @property {(nbBytes: number) => string} bytesToHex
- * @property {() => bigint} bytesToUint64BigInt
- * @property {() => bigint} bytesToInt64BigInt
- * @property {(nbBytes: number) => string} readAsUtf8
- * @property {() => number|string} readFourCc
- * @property {() => number} getTotalLength
- * @property {() => number} getRemainingLength
- * @property {() => boolean} isFinished
+ * @param {string} hex
+ * @returns {bigint}
+ */
+function hexToBigInt(hex) {
+  return BigInt(`0x${hex}`);
+}
+
+/**
+ * @typedef {object} ParsedBoxFieldMetadata
+ * @property {string=} description
+ */
+
+/**
+ * @template T
+ * @template V
+ * @typedef {{ [K in Extract<keyof T, string>]: V extends T[K] ? K : never }[Extract<keyof T, string>]} KeysForValue
+ */
+
+/**
+ * @template T
+ * @typedef {{ [K in Extract<keyof T, string>]: number extends T[K] ? K : never }[Extract<keyof T, string>]} NumberKeys
+ */
+
+/**
+ * @template T
+ * @typedef {{ [K in Extract<keyof T, string>]: bigint extends T[K] ? K : never }[Extract<keyof T, string>]} BigIntKeys
+ */
+
+/**
+ * @template T
+ * @typedef {{ [K in Extract<keyof T, string>]: string extends T[K] ? K : never }[Extract<keyof T, string>]} StringKeys
+ */
+
+/**
+ * @template T
+ * @typedef {{ [K in Extract<keyof T, string>]: import("./types.js").ParsedFixedPointField extends T[K] ? K : never }[Extract<keyof T, string>]} FixedPointKeys
+ */
+
+/**
+ * @template T
+ * @typedef {{ [K in Extract<keyof T, string>]: import("./types.js").ParsedDateField extends T[K] ? K : never }[Extract<keyof T, string>]} DateKeys
+ */
+
+/**
+ * @template T
+ * @typedef {{ [K in Extract<keyof T, string>]: import("./types.js").ParsedBitsField extends T[K] ? K : never }[Extract<keyof T, string>]} BitsKeys
+ */
+
+/**
+ * @template T
+ * @typedef {{ [K in Extract<keyof T, string>]: import("./types.js").ParsedFlagsField extends T[K] ? K : never }[Extract<keyof T, string>]} FlagsKeys
  */

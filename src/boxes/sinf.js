@@ -1,4 +1,4 @@
-/** @type {import("../types.js").BoxDefinition<never>} */
+/** @type {import("./types.js").BoxDefinition<never>} */
 export default {
   name: "Protection Scheme Information Box",
   description:

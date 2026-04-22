@@ -8,7 +8,7 @@
  * @property {string=} ICC_profile
  */
 
-/** @type {import("../types.js").BoxDefinition<ColorInformationBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<ColorInformationBoxContent>} */
 export default {
   name: "Colour Information Box",
   description: "Signals the colour representation used by visual samples.",

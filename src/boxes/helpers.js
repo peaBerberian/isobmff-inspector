@@ -10,7 +10,7 @@ import {
 
 /**
  * @template {{ [k: string]: unknown }} T
- * @param {import("../types").BoxReader<T>} r
+ * @param {import("../BoxReader.js").BoxReader<T>} r
  * @returns {import("../types.js").ParsedStructField}
  */
 function parseTransformationMatrix(r) {
@@ -18,40 +18,31 @@ function parseTransformationMatrix(r) {
     [
       parsedBoxValue(
         "a",
-        signedFixedPointField(r.bytesToInt(4), 32, 16, "16.16"),
+        signedFixedPointField(r.readUint(4), 32, 16, "16.16"),
       ),
       parsedBoxValue(
         "b",
-        signedFixedPointField(r.bytesToInt(4), 32, 16, "16.16"),
+        signedFixedPointField(r.readUint(4), 32, 16, "16.16"),
       ),
-      parsedBoxValue(
-        "u",
-        signedFixedPointField(r.bytesToInt(4), 32, 30, "2.30"),
-      ),
+      parsedBoxValue("u", signedFixedPointField(r.readUint(4), 32, 30, "2.30")),
       parsedBoxValue(
         "c",
-        signedFixedPointField(r.bytesToInt(4), 32, 16, "16.16"),
+        signedFixedPointField(r.readUint(4), 32, 16, "16.16"),
       ),
       parsedBoxValue(
         "d",
-        signedFixedPointField(r.bytesToInt(4), 32, 16, "16.16"),
+        signedFixedPointField(r.readUint(4), 32, 16, "16.16"),
       ),
-      parsedBoxValue(
-        "v",
-        signedFixedPointField(r.bytesToInt(4), 32, 30, "2.30"),
-      ),
+      parsedBoxValue("v", signedFixedPointField(r.readUint(4), 32, 30, "2.30")),
       parsedBoxValue(
         "x",
-        signedFixedPointField(r.bytesToInt(4), 32, 16, "16.16"),
+        signedFixedPointField(r.readUint(4), 32, 16, "16.16"),
       ),
       parsedBoxValue(
         "y",
-        signedFixedPointField(r.bytesToInt(4), 32, 16, "16.16"),
+        signedFixedPointField(r.readUint(4), 32, 16, "16.16"),
       ),
-      parsedBoxValue(
-        "w",
-        signedFixedPointField(r.bytesToInt(4), 32, 30, "2.30"),
-      ),
+      parsedBoxValue("w", signedFixedPointField(r.readUint(4), 32, 30, "2.30")),
     ],
     "matrix-3x3",
   );
@@ -59,16 +50,16 @@ function parseTransformationMatrix(r) {
 
 /**
  * @template {{ [k: string]: unknown }} T
- * @param {import("../types").BoxReader<T>} r
+ * @param {import("../BoxReader.js").BoxReader<T>} r
  * @param {number} length
  * @returns {string}
  */
 function parsePascalAsciiString(r, length) {
-  const stringLength = Math.min(r.bytesToInt(1), length - 1);
+  const stringLength = Math.min(r.readUint(1), length - 1);
 
   let value = "";
   for (let i = 0; i < stringLength; i++) {
-    const byte = r.bytesToInt(1); // Read the next byte
+    const byte = r.readUint(1); // Read the next byte
 
     // Check if the byte is a printable ASCII character (0x20 to 0x7E)
     if (byte < 0x20 || byte > 0x7e) {
@@ -82,7 +73,7 @@ function parsePascalAsciiString(r, length) {
   // Handle padding (read and discard extra bytes)
   const paddingLength = length - 1 - stringLength;
   if (paddingLength > 0) {
-    r.bytesToHex(paddingLength); // Discard the padding bytes
+    r.readHex(paddingLength); // Discard the padding bytes
   }
   return value;
 }
@@ -106,22 +97,24 @@ function parsePascalAsciiString(r, length) {
  */
 
 /**
- * @param {import("../types").BoxReader<VisualSampleEntry>} reader
+ * @param {import("../BoxReader.js").BoxReader<VisualSampleEntry>} reader
  */
 function readVisualSampleEntry(reader) {
   const reserved = [];
   for (let i = 0; i < 6; i++) {
-    reserved.push(reader.bytesToInt(1));
+    reserved.push(reader.readUint(1));
   }
   reader.addField("reserved", reserved);
   reader.fieldUint("data_reference_index", 2);
   reader.fieldUint("pre_defined", 2);
   reader.fieldUint("reserved_1", 2);
-  reader.addField("pre_defined_1", [
-    reader.bytesToInt(4),
-    reader.bytesToInt(4),
-    reader.bytesToInt(4),
-  ]);
+  /** @type {[number, number, number]} */
+  const preDefined1 = [
+    reader.readUint(4),
+    reader.readUint(4),
+    reader.readUint(4),
+  ];
+  reader.addField("pre_defined_1", preDefined1);
   reader.fieldUint("width", 2);
   reader.fieldUint("height", 2);
   reader.fieldFixedPoint("horizresolution", 4, 16, "16.16");
@@ -174,49 +167,49 @@ function readVisualSampleEntry(reader) {
  */
 
 /**
- * @param {import("../types").BoxReader<AudioSampleEntry>} r
+ * @param {import("../BoxReader.js").BoxReader<AudioSampleEntry>} r
  * @returns {AudioSampleEntry}
  */
 function parseAudioSampleEntry(r) {
   // TODO: To new reader API
   const reserved = [];
   for (let i = 0; i < 6; i++) {
-    reserved.push(r.bytesToInt(1));
+    reserved.push(r.readUint(1));
   }
 
   const base = {
     reserved,
-    data_reference_index: r.bytesToInt(2),
-    version: r.bytesToInt(2),
-    revision_level: r.bytesToInt(2),
-    vendor: r.bytesToInt(4),
-    channelcount: r.bytesToInt(2),
-    samplesize: r.bytesToInt(2),
-    compression_id: r.bytesToInt(2),
-    packet_size: r.bytesToInt(2),
-    samplerate: fixedPointField(r.bytesToInt(4), 32, 16, "16.16"),
+    data_reference_index: r.readUint(2),
+    version: r.readUint(2),
+    revision_level: r.readUint(2),
+    vendor: r.readUint(4),
+    channelcount: r.readUint(2),
+    samplesize: r.readUint(2),
+    compression_id: r.readUint(2),
+    packet_size: r.readUint(2),
+    samplerate: fixedPointField(r.readUint(4), 32, 16, "16.16"),
   };
 
   if (base.version === 1) {
     const result = {
       ...base,
-      samples_per_packet: r.bytesToInt(4),
-      bytes_per_packet: r.bytesToInt(4),
-      bytes_per_frame: r.bytesToInt(4),
-      bytes_per_sample: r.bytesToInt(4),
+      samples_per_packet: r.readUint(4),
+      bytes_per_packet: r.readUint(4),
+      bytes_per_frame: r.readUint(4),
+      bytes_per_sample: r.readUint(4),
     };
     return /** @type {AudioSampleEntryV1} */ (result);
   } else if (base.version === 2) {
     const result = {
       ...base,
-      struct_size: r.bytesToInt(4),
-      sample_rate: fixedPointField(r.bytesToInt(4), 32, 16, "16.16"),
-      channel_count: r.bytesToInt(4),
-      reserved_1: r.bytesToInt(4),
-      bits_per_channel: r.bytesToInt(4),
-      format_specific_flags: r.bytesToInt(4),
-      bytes_per_audio_packet: r.bytesToInt(4),
-      LPCM_frames_per_audio_packet: r.bytesToInt(4),
+      struct_size: r.readUint(4),
+      sample_rate: fixedPointField(r.readUint(4), 32, 16, "16.16"),
+      channel_count: r.readUint(4),
+      reserved_1: r.readUint(4),
+      bits_per_channel: r.readUint(4),
+      format_specific_flags: r.readUint(4),
+      bytes_per_audio_packet: r.readUint(4),
+      LPCM_frames_per_audio_packet: r.readUint(4),
     };
     return /** @type {AudioSampleEntryV2} */ (result);
   }
@@ -226,7 +219,7 @@ function parseAudioSampleEntry(r) {
 
 /**
  * @template {{ [k: string]: unknown }} T
- * @param {import("../types").BoxReader<T>} r
+ * @param {import("../BoxReader.js").BoxReader<T>} r
  * @returns {{ length: number; size: number }}
  */
 function parseDescriptorLength(r) {
@@ -234,7 +227,7 @@ function parseDescriptorLength(r) {
   let size = 0;
 
   while (size < 4) {
-    const currentByte = r.bytesToInt(1);
+    const currentByte = r.readUint(1);
     size += 1;
     length = (length << 7) | (currentByte & 0x7f);
     if ((currentByte & 0x80) === 0) {
@@ -250,7 +243,7 @@ function parseDescriptorLength(r) {
 
 /**
  * @template {{ [k: string]: unknown }} T
- * @param {import("../types").BoxReader<T>} r
+ * @param {import("../BoxReader.js").BoxReader<T>} r
  * @param {number} size
  * @returns {Array.<unknown>}
  */
@@ -275,15 +268,15 @@ function parseNestedDescriptors(r, size) {
 
 /**
  * @template {{ [k: string]: unknown }} T
- * @param {import("../types").BoxReader<T>} r
+ * @param {import("../BoxReader.js").BoxReader<T>} r
  * @param {number} tag
  * @param {number} size
  * @returns {unknown}
  */
 function parseDescriptorPayload(r, tag, size) {
   if (tag === 0x03) {
-    const es_id = r.bytesToInt(2);
-    const flags = r.bytesToInt(1);
+    const es_id = r.readUint(2);
+    const flags = r.readUint(1);
     /** @type {Partial<Record<string, unknown>>} */
     const ret = {
       es_id,
@@ -295,17 +288,17 @@ function parseDescriptorPayload(r, tag, size) {
 
     let consumed = 3;
     if (ret.stream_dependence_flag) {
-      ret.depends_on_es_id = r.bytesToInt(2);
+      ret.depends_on_es_id = r.readUint(2);
       consumed += 2;
     }
     if (ret.URL_flag) {
-      const urlLength = r.bytesToInt(1);
+      const urlLength = r.readUint(1);
       ret.URL_length = urlLength;
       ret.URL_string = urlLength > 0 ? r.readAsUtf8(urlLength) : "";
       consumed += 1 + urlLength;
     }
     if (ret.OCRstream_flag) {
-      ret.ocr_es_id = r.bytesToInt(2);
+      ret.ocr_es_id = r.readUint(2);
       consumed += 2;
     }
     if (size > consumed) {
@@ -315,17 +308,17 @@ function parseDescriptorPayload(r, tag, size) {
   }
 
   if (tag === 0x04) {
-    const objectTypeIndication = r.bytesToInt(1);
-    const streamByte = r.bytesToInt(1);
+    const objectTypeIndication = r.readUint(1);
+    const streamByte = r.readUint(1);
     /** @type {Partial<Record<string, unknown>>} */
     const ret = {
       object_type_indication: objectTypeIndication,
       stream_type: (streamByte >> 2) & 0x3f,
       up_stream: !!((streamByte >> 1) & 0x01),
       reserved: streamByte & 0x01,
-      buffer_size_db: r.bytesToInt(3),
-      max_bitrate: r.bytesToInt(4),
-      avg_bitrate: r.bytesToInt(4),
+      buffer_size_db: r.readUint(3),
+      max_bitrate: r.readUint(4),
+      avg_bitrate: r.readUint(4),
     };
 
     if (size > 13) {
@@ -336,19 +329,19 @@ function parseDescriptorPayload(r, tag, size) {
 
   if (tag === 0x05) {
     return {
-      decoder_specific_info: size > 0 ? r.bytesToHex(size) : "",
+      decoder_specific_info: size > 0 ? r.readHex(size) : "",
     };
   }
 
   if (tag === 0x06) {
     return {
-      predefined: r.bytesToInt(1),
-      remaining_payload: size > 1 ? r.bytesToHex(size - 1) : "",
+      predefined: r.readUint(1),
+      remaining_payload: size > 1 ? r.readHex(size - 1) : "",
     };
   }
 
   return {
-    data: size > 0 ? r.bytesToHex(size) : "",
+    data: size > 0 ? r.readHex(size) : "",
   };
 }
 
@@ -362,11 +355,11 @@ function parseDescriptorPayload(r, tag, size) {
 
 /**
  * @template {{ [k: string]: unknown }} T
- * @param {import("../types").BoxReader<T>} r
+ * @param {import("../BoxReader.js").BoxReader<T>} r
  * @returns {Descriptor}
  */
 function parseDescriptor(r) {
-  const tag = r.bytesToInt(1);
+  const tag = r.readUint(1);
   const { length, size } = parseDescriptorLength(r);
   return {
     tag,

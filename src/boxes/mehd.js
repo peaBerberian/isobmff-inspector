@@ -5,7 +5,7 @@
  * @property {number|bigint} fragment_duration
  */
 
-/** @type {import("../types.js").BoxDefinition<MovieHeaderBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<MovieHeaderBoxContent>} */
 export default {
   name: "Movie Extends Header Box",
   description:

@@ -21,28 +21,28 @@
  * @property {SegmentIndexReference[]} items
  */
 
-/** @type {import("../types.js").BoxDefinition<SegmentIndexBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<SegmentIndexBoxContent>} */
 export default {
   name: "Segment Index Box",
   description: "Index of the media stream",
 
   parser(r) {
     // TODO: To new reader API
-    const version = r.bytesToInt(1);
-    const flags = r.bytesToInt(3);
-    const reference_ID = r.bytesToInt(4);
-    const timescale = r.bytesToInt(4);
-    const earliest_presentation_time = r.bytesToInt(version === 0 ? 4 : 8);
-    const first_offset = r.bytesToInt(version === 0 ? 4 : 8);
-    const reserved = r.bytesToInt(2);
-    const reference_count = r.bytesToInt(2);
+    const version = r.readUint(1);
+    const flags = r.readUint(3);
+    const reference_ID = r.readUint(4);
+    const timescale = r.readUint(4);
+    const earliest_presentation_time = r.readUint(version === 0 ? 4 : 8);
+    const first_offset = r.readUint(version === 0 ? 4 : 8);
+    const reserved = r.readUint(2);
+    const reference_count = r.readUint(2);
 
     const items = [];
     let i = reference_count;
     while (i--) {
-      const first4Bytes = r.bytesToInt(4);
-      const second4Bytes = r.bytesToInt(4);
-      const third4Bytes = r.bytesToInt(4);
+      const first4Bytes = r.readUint(4);
+      const second4Bytes = r.readUint(4);
+      const third4Bytes = r.readUint(4);
       items.push({
         reference_type: (first4Bytes >> 31) & 0x01,
         referenced_size: first4Bytes & 0x7fffffff,

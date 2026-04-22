@@ -18,7 +18,7 @@
  * @property {string=} ext
  */
 
-/** @type {import("../types.js").BoxDefinition<AvcDecoderConfigurationRecordContent>} */
+/** @type {import("./types.js").BoxDefinition<AvcDecoderConfigurationRecordContent>} */
 export default {
   name: "AVC Decoder Configuration Record",
   description:

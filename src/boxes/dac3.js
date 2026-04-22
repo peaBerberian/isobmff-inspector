@@ -5,7 +5,7 @@ const BIT_RATE_TABLE = [
   576, 640,
 ];
 
-/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
+/** @type {import("./types.js").BoxDefinition<{ [k: string]: unknown }>} */
 export default {
   name: "AC-3 Specific Box",
   description:

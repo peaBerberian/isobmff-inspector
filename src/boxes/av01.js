@@ -1,6 +1,6 @@
 import { readVisualSampleEntry } from "./helpers.js";
 
-/** @type {import("../types.js").BoxDefinition<import("./helpers.js").VisualSampleEntry>} */
+/** @type {import("./types.js").BoxDefinition<import("./helpers.js").VisualSampleEntry>} */
 export default {
   name: "AV1 Sample Entry",
   description:

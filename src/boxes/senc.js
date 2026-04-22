@@ -1,7 +1,8 @@
 import { parsedBoxValue, structField } from "../fields.js";
 
 /**
- * @param {import("../types.js").BoxReader<{ [k: string]: unknown }>} reader
+ * @template {{ [k: string]: unknown }} T
+ * @param {import("../BoxReader.js").BoxReader<T>} reader
  * @param {number} ivSize
  * @param {boolean} useSubsamples
  * @returns {import("../types.js").ParsedStructField}
@@ -32,7 +33,7 @@ function readSampleEncryptionEntry(reader, ivSize, useSubsamples) {
   return structField(fields);
 }
 
-/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
+/** @type {import("./types.js").BoxDefinition<{ [k: string]: unknown }>} */
 export default {
   name: "Sample Encryption Box",
   description:

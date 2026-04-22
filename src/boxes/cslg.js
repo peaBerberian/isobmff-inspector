@@ -9,7 +9,7 @@
  * @property {number|bigint} compositionEndTime
  */
 
-/** @type {import("../types.js").BoxDefinition<CompositionToDecodeBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<CompositionToDecodeBoxContent>} */
 export default {
   name: "Composition To Decode Box",
   description:

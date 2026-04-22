@@ -12,7 +12,7 @@
  * @property {number} sample_offset
  */
 
-/** @type {import("../types.js").BoxDefinition<CompositionTimeToSampleBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<CompositionTimeToSampleBoxContent>} */
 export default {
   name: "Composition Time to Sample Box",
   description:
@@ -32,9 +32,9 @@ export default {
     const entries = [];
     for (let i = 0; i < entry_count; i++) {
       entries.push({
-        sample_count: reader.bytesToInt(4),
+        sample_count: reader.readUint(4),
         sample_offset:
-          version === 0 ? reader.bytesToInt(4) : ~~reader.bytesToInt(4),
+          version === 0 ? reader.readUint(4) : ~~reader.readUint(4),
       });
     }
     reader.addField("entries", entries);

@@ -16,7 +16,7 @@ import { parsedBoxValue, structField } from "../fields.js";
  * @property {string=} default_constant_IV
  */
 
-/** @type {import("../types.js").BoxDefinition<TrackEncryptionBoxContent>} */
+/** @type {import("./types.js").BoxDefinition<TrackEncryptionBoxContent>} */
 export default {
   name: "Track Encryption Box",
   description:
@@ -24,23 +24,23 @@ export default {
 
   parser(r) {
     // TODO: To new reader API
-    const version = r.bytesToInt(1);
+    const version = r.readUint(1);
     if (version > 1) {
       throw new Error("invalid version");
     }
 
-    const flags = r.bytesToInt(3);
+    const flags = r.readUint(3);
     /** @type {Partial<TrackEncryptionBoxContent>} */
     const ret = {
       version,
       flags,
     };
 
-    ret.reserved = r.bytesToInt(1);
+    ret.reserved = r.readUint(1);
     if (version === 0) {
-      ret.reserved_1 = r.bytesToInt(1);
+      ret.reserved_1 = r.readUint(1);
     } else {
-      const blocks = r.bytesToInt(1);
+      const blocks = r.readUint(1);
       ret.default_crypt_byte_block = (blocks >> 4) & 0x0f;
       ret.default_skip_byte_block = blocks & 0x0f;
       ret.default_pattern = structField(
@@ -53,14 +53,14 @@ export default {
       );
     }
 
-    ret.default_IsProtected = r.bytesToInt(1);
-    ret.default_Per_Sample_IV_Size = r.bytesToInt(1);
-    ret.default_KID = r.bytesToHex(16);
+    ret.default_IsProtected = r.readUint(1);
+    ret.default_Per_Sample_IV_Size = r.readUint(1);
+    ret.default_KID = r.readHex(16);
 
     if (ret.default_Per_Sample_IV_Size === 0 && !r.isFinished()) {
-      const default_constant_IV_size = r.bytesToInt(1);
+      const default_constant_IV_size = r.readUint(1);
       ret.default_constant_IV_size = default_constant_IV_size;
-      ret.default_constant_IV = r.bytesToHex(default_constant_IV_size);
+      ret.default_constant_IV = r.readHex(default_constant_IV_size);
     }
 
     return /** @type {TrackEncryptionBoxContent} */ (ret);
