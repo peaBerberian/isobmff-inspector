@@ -27,6 +27,7 @@ export default {
   description: "Index of the media stream",
 
   parser(r) {
+    // TODO: To new reader API
     const version = r.bytesToInt(1);
     const flags = r.bytesToInt(3);
     const reference_ID = r.bytesToInt(4);

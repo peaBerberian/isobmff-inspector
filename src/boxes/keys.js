@@ -7,8 +7,8 @@ export default {
     "Maps integer metadata item keys to string identifiers, typically in the mdta namespace.",
 
   parser(reader) {
-    const version = reader.fieldUint("version", 1);
-    const flags = reader.fieldUint("flags", 3);
+    reader.fieldUint("version", 1);
+    reader.fieldUint("flags", 3);
     const entry_count = reader.fieldUint("entry_count", 4);
 
     /** @type {import("../types.js").ParsedStructField[]} */
@@ -26,12 +26,6 @@ export default {
         ]),
       );
     }
-
-    return {
-      version,
-      flags,
-      entry_count,
-      entries,
-    };
+    reader.addField("entries", entries);
   },
 };

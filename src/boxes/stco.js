@@ -4,6 +4,7 @@ export default {
   description: "Maps each media chunk to its 32-bit byte offset in the file.",
 
   parser(r) {
+    // TODO: To new reader API
     /** @type Partial<Record<string, unknown>> */
     const ret = {};
     ret.version = r.bytesToInt(1);

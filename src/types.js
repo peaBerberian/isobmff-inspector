@@ -92,13 +92,6 @@
  */
 
 /**
- * @typedef {object} BoxContentEntry
- * @property {string} key
- * @property {string=} name
- * @property {string=} description
- */
-
-/**
  * @typedef {{ [key: string]: unknown, __data__?: unknown }} BoxParserFields
  */
 
@@ -217,7 +210,6 @@
  * @typedef {object} BoxDefinition
  * @property {string=} name
  * @property {string=} description
- * @property {BoxContentEntry[]=} content
  * @property {boolean=} container
  * @property {(reader: BoxReader<T>) => T | void=} parser
  */

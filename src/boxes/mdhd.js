@@ -18,6 +18,7 @@ export default {
   name: "Media Header Box",
   description: "Timing and language metadata for one track's media.",
   parser(r) {
+    // TODO: To new reader API
     const version = r.bytesToInt(1);
     const flags = r.bytesToInt(3);
     const creation_time = version ? r.bytesToUint64BigInt() : r.bytesToInt(4);

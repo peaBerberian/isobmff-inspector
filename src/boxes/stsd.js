@@ -4,13 +4,9 @@ export default {
   description: "Information about the coding type used",
 
   parser(r) {
-    /** @type Partial<Record<string, unknown>> */
-    const ret = {};
-    ret.version = r.bytesToInt(1);
-    ret.flags = r.bytesToInt(3);
-
-    ret.entry_count = r.bytesToInt(4);
-    return ret;
+    r.fieldUint("version", 1, "stsd box version");
+    r.fieldUint("flags", 3, "stsd box flags");
+    r.fieldUint("entry_count", 4, "Number of entries inside that box");
   },
   container: true,
 };

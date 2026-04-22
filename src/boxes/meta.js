@@ -11,14 +11,10 @@ export default {
   container: true,
 
   parser(r) {
-    const version = r.bytesToInt(1);
+    const version = r.fieldUint("version", 1);
     if (version !== 0) {
       throw new Error("invalid version");
     }
-
-    return {
-      version,
-      flags: r.bytesToInt(3),
-    };
+    r.fieldUint("flags", 3);
   },
 };

@@ -13,6 +13,7 @@ export default {
     "Lists sample records and optional per-sample data for a track fragment.",
 
   parser(r) {
+    // TODO: To new reader API
     /** @type Partial<Record<string, unknown>> */
     const ret = {};
     ret.version = r.bytesToInt(1);

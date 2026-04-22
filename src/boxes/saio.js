@@ -5,6 +5,7 @@ export default {
     "Gives file offsets for auxiliary sample information such as encryption data.",
 
   parser(r) {
+    // TODO: To new reader API
     /** @type Partial<Record<string, unknown>> */
     const ret = {};
     ret.version = r.bytesToInt(1);

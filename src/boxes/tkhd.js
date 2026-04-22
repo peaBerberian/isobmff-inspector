@@ -26,6 +26,7 @@ export default {
   description: "Characteristics of a single track.",
 
   parser(r) {
+    // TODO: To new reader API
     const version = r.bytesToInt(1);
     const flags = r.bytesToInt(3);
     const creation_time = version ? r.bytesToUint64BigInt() : r.bytesToInt(4);

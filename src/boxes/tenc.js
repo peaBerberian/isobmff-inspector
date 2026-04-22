@@ -23,6 +23,7 @@ export default {
     "Defines default encryption parameters for samples in a protected track.",
 
   parser(r) {
+    // TODO: To new reader API
     const version = r.bytesToInt(1);
     if (version > 1) {
       throw new Error("invalid version");

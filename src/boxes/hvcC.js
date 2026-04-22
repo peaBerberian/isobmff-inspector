@@ -5,6 +5,7 @@ export default {
     "Stores HEVC decoder configuration, including profile data and NAL arrays.",
 
   parser(r) {
+    // TODO: To new reader API
     const configurationVersion = r.bytesToInt(1);
     const generalProfileByte = r.bytesToInt(1);
     const generalCompatibilityFlagsUpper = r.bytesToInt(4);

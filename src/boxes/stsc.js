@@ -12,6 +12,7 @@ export default {
     "Maps chunks to the number and description index of their samples.",
 
   parser(r) {
+    // TODO: To new reader API
     /** @type Partial<Record<string, unknown>> */
     const ret = {};
     ret.version = r.bytesToInt(1);

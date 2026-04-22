@@ -24,16 +24,14 @@ export default {
       reader.fieldSignedInt("greatestDecodeToDisplayDelta", 4, 32);
       reader.fieldSignedInt("compositionStartTime", 4, 32);
       reader.fieldSignedInt("compositionEndTime", 4, 32);
-      return;
-    }
-    if (version === 1) {
+    } else if (version === 1) {
       reader.fieldInt64("compositionToDTSShift");
       reader.fieldInt64("leastDecodeToDisplayDelta");
       reader.fieldInt64("greatestDecodeToDisplayDelta");
       reader.fieldInt64("compositionStartTime");
       reader.fieldInt64("compositionEndTime");
-      return;
+    } else {
+      throw new Error("invalid version");
     }
-    throw new Error("invalid version");
   },
 };

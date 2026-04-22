@@ -14,20 +14,15 @@ export default {
     "be computed by examining each fragment.",
 
   parser(reader) {
-    const version = reader.bytesToInt(1);
+    const version = reader.fieldUint("version", 1, "mehd box version");
     if (version > 1) {
       throw new Error("invalid version");
     }
-
-    const flags = reader.bytesToInt(3);
-
-    const fragmentDuration =
-      version === 1 ? reader.bytesToUint64BigInt() : reader.bytesToInt(4);
-
-    return {
-      version,
-      flags,
-      fragment_duration: fragmentDuration,
-    };
+    reader.fieldUint("version", 3, "mehd box flags. Should be 0.");
+    if (version === 1) {
+      reader.fieldUint64("fragment_duration");
+    } else {
+      reader.fieldUint("fragment_duration", 4);
+    }
   },
 };

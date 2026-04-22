@@ -13,10 +13,12 @@ export default {
   container: true,
 
   parser(r) {
-    return {
-      version: r.bytesToInt(1),
-      flags: r.bytesToInt(3),
-      track_ID: r.bytesToInt(4),
-    };
+    r.fieldUint("version", 1, "trep box version. Should be `0`.");
+    r.fieldUint("flags", 3, "trep box flags. Should be `0`.");
+    r.fieldUint(
+      "track_ID",
+      4,
+      "The track ID concerned by this box and its children.",
+    );
   },
 };

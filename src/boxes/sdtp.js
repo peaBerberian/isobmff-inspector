@@ -4,6 +4,7 @@ export default {
   description: "Records dependency flags for samples in decoding order.",
 
   parser(r) {
+    // TODO: To new reader API
     /** @type Partial<Record<string, unknown>> */
     const ret = {
       version: r.bytesToInt(1),

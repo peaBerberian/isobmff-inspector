@@ -4,6 +4,5 @@ import ftypBox from "./ftyp.js";
 export default {
   name: "Segment Type Box",
   description: "Identifies the brands and compatibility of a media segment.",
-  content: ftypBox.content,
   parser: ftypBox.parser,
 };

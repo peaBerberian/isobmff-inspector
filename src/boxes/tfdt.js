@@ -12,6 +12,7 @@ export default {
     "The absolute decode time, measured on the media timeline, of " +
     "the first sample in decode order in the track fragment",
   parser(r) {
+    // TODO: To new reader API
     const version = r.bytesToInt(1);
     return {
       version,

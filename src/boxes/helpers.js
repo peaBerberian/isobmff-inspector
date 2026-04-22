@@ -176,6 +176,7 @@ function readVisualSampleEntry(reader) {
  * @returns {AudioSampleEntry}
  */
 function parseAudioSampleEntry(r) {
+  // TODO: To new reader API
   const reserved = [];
   for (let i = 0; i < 6; i++) {
     reserved.push(r.bytesToInt(1));

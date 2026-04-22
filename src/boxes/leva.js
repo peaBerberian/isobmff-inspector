@@ -23,15 +23,18 @@ export default {
     "Assigns media data to levels for partial presentation selection.",
 
   parser(reader) {
-    const version = reader.bytesToInt(1);
+    const version = reader.fieldUint(
+      "version",
+      1,
+      "leva box version. Should be 0.",
+    );
     if (version !== 0) {
       throw new Error("invalid version");
     }
 
-    const flags = reader.bytesToInt(3);
-    const level_count = reader.bytesToInt(1);
+    reader.fieldUint("flags", 3, "leva box flags. Should be 0.");
+    const level_count = reader.fieldUint("level_count", 1);
     const levels = [];
-
     for (let i = 0; i < level_count; i++) {
       /** @type {LevelAssignment} */
       const assignment = {
@@ -59,12 +62,6 @@ export default {
 
       levels.push(assignment);
     }
-
-    return {
-      version,
-      flags,
-      level_count,
-      levels,
-    };
+    reader.addField("levels", levels);
   },
 };

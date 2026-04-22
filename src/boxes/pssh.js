@@ -29,6 +29,7 @@ export default {
   description:
     "Carries DRM system identifiers and system-specific protection data.",
   parser(reader) {
+    // TODO: To new reader API
     /** @type Partial<Record<string, unknown>> */
     const ret = {};
     const version = reader.bytesToInt(1);

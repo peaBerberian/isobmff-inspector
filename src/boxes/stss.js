@@ -12,6 +12,7 @@ export default {
   description: "Lists samples that can be used as random access points.",
 
   parser(r) {
+    // TODO: To new reader API
     const version = r.bytesToInt(1);
     if (version !== 0) {
       throw new Error("invalid version");

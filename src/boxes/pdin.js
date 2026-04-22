@@ -3,7 +3,7 @@
  * @property {number} version
  * @property {number} flags
  * @property {number} rate
- * @property {number} delay
+ * @property {number} initial_delay
  */
 
 /** @type {import("../types.js").BoxDefinition<ProgressiveDownloadInformationBoxContent>} */
@@ -11,41 +11,20 @@ export default {
   name: "Progressive Download Information Box",
   description:
     "Provides rate and startup-delay hints for progressive download playback.",
-  content: [
-    {
-      name: "version",
-      description: "pdin version",
-      key: "version",
-    },
-    {
-      name: "flags",
-      description: "pdin flags",
-      key: "flags",
-    },
-    {
-      name: "rate",
-      description: "Download rate expressed in bytes/second",
-      key: "rate",
-    },
-    {
-      name: "initial_delay",
-      description:
-        "Suggested startup delay for playback at the stated download rate.",
-      key: "delay",
-    },
-  ],
 
   parser(reader) {
-    const version = reader.bytesToInt(1);
+    const version = reader.fieldUint("version", 1, "pdin box version");
     if (version !== 0) {
       throw new Error("invalid version");
     }
-
-    return {
-      version,
-      flags: reader.bytesToInt(3),
-      rate: reader.bytesToInt(4),
-      delay: reader.bytesToInt(4),
-    };
+    reader.fieldUint("flags", 3, "pdin box flags");
+    while (!reader.isFinished()) {
+      reader.fieldUint("rate", 4, "download rate in bytes/second");
+      reader.fieldUint(
+        "initial_delay",
+        4,
+        "suggested delay to prevent rebuffering",
+      );
+    }
   },
 };

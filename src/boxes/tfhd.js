@@ -5,6 +5,7 @@ export default {
     "Sets track-wide defaults and addressing for samples in a fragment.",
 
   parser(r) {
+    // TODO: To new reader API
     /** @type Partial<Record<string, unknown>> */
     const ret = {};
 

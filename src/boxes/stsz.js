@@ -4,6 +4,7 @@ export default {
   description: "Stores the default sample size or a table of per-sample sizes.",
 
   parser(r) {
+    // TODO: To new reader API
     /** @type Partial<Record<string, unknown>> */
     const ret = {};
     ret.version = r.bytesToInt(1);

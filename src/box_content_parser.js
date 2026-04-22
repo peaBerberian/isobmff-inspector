@@ -65,22 +65,6 @@ export function parseBoxContent(
     return;
   }
 
-  const contentInfos = config.content
-    ? config.content.reduce(
-        /**
-         * @param {Record<string, { description?: string }>} acc
-         * @param {import("./types.js").BoxContentEntry} el
-         */
-        (acc, el) => {
-          acc[el.key] = {
-            description: el.description || undefined,
-          };
-          return acc;
-        },
-        {},
-      )
-    : /** @type {Record<string, { description?: string }>} */ ({});
-
   if (config.name) {
     atomObject.name = config.name;
   }
@@ -123,11 +107,7 @@ export function parseBoxContent(
       if (result !== undefined) {
         delete result.__data__;
         Object.keys(result).forEach((key) => {
-          const infos = contentInfos[key] || {};
-
-          atomObject.values.push(
-            parsedBoxValue(key, result[key], infos.description),
-          );
+          atomObject.values.push(parsedBoxValue(key, result[key]));
         });
       }
     } catch (e) {

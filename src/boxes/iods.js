@@ -12,22 +12,16 @@ export default {
   name: "Initial Object Descriptor Box",
   description: "Container for MPEG-4 object descriptor information.",
   parser(r) {
-    const version = r.bytesToInt(1);
+    const version = r.fieldUint("version", 1, "iods box version");
     if (version !== 0) {
       throw new Error("invalid version");
     }
 
-    const flags = r.bytesToInt(3);
+    r.fieldUint("version", 3, "iods box flags");
     const descriptors = [];
-
     while (!r.isFinished()) {
       descriptors.push(parseDescriptor(r));
     }
-
-    return {
-      version,
-      flags,
-      descriptors,
-    };
+    r.addField("descriptors", descriptors);
   },
 };

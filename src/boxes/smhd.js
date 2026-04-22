@@ -14,6 +14,7 @@ export default {
   description: "Stores audio presentation information for a sound track.",
 
   parser(r) {
+    // TODO: To new reader API
     const version = r.bytesToInt(1);
     if (version !== 0) {
       throw new Error("invalid version");

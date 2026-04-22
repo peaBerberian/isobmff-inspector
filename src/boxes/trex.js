@@ -18,6 +18,7 @@ export default {
     "in each Track Fragment Box",
 
   parser(reader) {
+    // TODO: To new reader API
     return {
       version: reader.bytesToInt(1),
       flags: reader.bytesToInt(3),
