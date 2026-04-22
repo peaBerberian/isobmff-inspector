@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Features
+
+- add parsing of boxes: `enca`
+- improve parsing of `colr` by parsing more colour types' information
+- be more resilient to `vmhd` boxes which wrongly do not have their mvhd flag to `1` (just emit a warning)
+
 ## v0.3.0 (2026-04-20)
 
 ### Changes
