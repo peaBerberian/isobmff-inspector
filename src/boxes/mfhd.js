@@ -12,10 +12,12 @@ export default {
     "This box contains just a sequence number (usually starting at 1), as a safety check.",
 
   parser(r) {
-    return {
-      version: r.bytesToInt(1),
-      flags: r.bytesToInt(3),
-      sequence_number: r.bytesToInt(4),
-    };
+    r.fieldUint("version", 1, "mfhd box version");
+    r.fieldUint("flags", 3, "mfhd box flags");
+    r.fieldUint(
+      "sequence_number",
+      4,
+      "sequence number associated with the current fragment",
+    );
   },
 };

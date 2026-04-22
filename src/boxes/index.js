@@ -8,6 +8,8 @@ import co64 from "./co64.js";
 import colr from "./colr.js";
 import cslg from "./cslg.js";
 import ctts from "./ctts.js";
+import dac3 from "./dac3.js";
+import dec3 from "./dec3.js";
 import dinf from "./dinf.js";
 import dOps from "./dOps.js";
 import dref from "./dref.js";
@@ -43,6 +45,7 @@ import moov from "./moov.js";
 import mp4a from "./mp4a.js";
 import mvex from "./mvex.js";
 import mvhd from "./mvhd.js";
+import nmhd from "./nmhd.js";
 import Opus from "./Opus.js";
 import pasp from "./pasp.js";
 import pdin from "./pdin.js";
@@ -50,9 +53,12 @@ import prft from "./prft.js";
 import pssh from "./pssh.js";
 import saio from "./saio.js";
 import saiz from "./saiz.js";
+import sbgp from "./sbgp.js";
 import schi from "./schi.js";
 import schm from "./schm.js";
 import sdtp from "./sdtp.js";
+import senc from "./senc.js";
+import sgpd from "./sgpd.js";
 import sidx from "./sidx.js";
 import sinf from "./sinf.js";
 import skip from "./skip.js";
@@ -95,7 +101,9 @@ export default {
   co64,
   cslg,
   ctts,
+  dac3,
   dOps,
+  dec3,
   dinf,
   dref,
   edts,
@@ -129,6 +137,7 @@ export default {
   mp4a,
   mvex,
   mvhd,
+  nmhd,
   pasp,
   pdin,
   pssh,
@@ -137,7 +146,10 @@ export default {
   saiz,
   schi,
   schm,
+  sbgp,
+  senc,
   sdtp,
+  sgpd,
   sidx,
   sinf,
   smhd,

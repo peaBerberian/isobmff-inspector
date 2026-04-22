@@ -4,7 +4,7 @@
 
 ### Features
 
-- add parsing for boxes: `enca`, `ac-3`, `av01`, `ec-3`, `cslg`, `elng`, `emsg`, `keys`, `prft`, `sthd`, `Opus`, and `dOps`
+- add parsing for boxes: `enca`, `ac-3`, `av01`, `cslg`, `dac3`, `dec3`, `dOps`, `ec-3`, `elng`, `emsg`, `keys`, `nmhd`, `Opus`, `prft`, `sbgp`, `senc`, `sgpd`, and `sthd`
 - improve parsing of `colr` by parsing more colour types' information
 - be more resilient to `vmhd` boxes which wrongly do not have their mvhd flag to `1` (just emit a warning)
 

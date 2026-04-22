@@ -552,6 +552,8 @@ The inspector only parses the following ISOBMFF boxes for now:
   - colr
   - cslg
   - ctts
+  - dac3
+  - dec3
   - dOps
   - dinf
   - dref
@@ -587,6 +589,7 @@ The inspector only parses the following ISOBMFF boxes for now:
   - mp4a
   - mvex
   - mvhd
+  - nmhd
   - Opus
   - pasp
   - pdin
@@ -594,9 +597,12 @@ The inspector only parses the following ISOBMFF boxes for now:
   - pssh
   - saio
   - saiz
+  - sbgp
   - schi
   - schm
   - sdtp
+  - senc
+  - sgpd
   - sidx
   - sinf
   - skip

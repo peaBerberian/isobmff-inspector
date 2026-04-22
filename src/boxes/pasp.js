@@ -11,9 +11,7 @@ export default {
     "Specifies the horizontal and vertical spacing that define pixel aspect ratio.",
 
   parser(r) {
-    return {
-      hSpacing: r.bytesToInt(4),
-      vSpacing: r.bytesToInt(4),
-    };
+    r.fieldUint("hSpacing", 4, "Relative width of a pixel");
+    r.fieldUint("vSpacing", 4, "Relative height of a pixel");
   },
 };

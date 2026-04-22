@@ -16,16 +16,9 @@ export default {
   description: "Carries ID3 metadata with a language code and raw ID3 payload.",
 
   parser(r) {
-    const version = r.bytesToInt(1);
-    const flags = r.bytesToInt(3);
-    const languageCode = r.bytesToInt(2);
-    const data = r.bytesToHex(r.getRemainingLength());
-
-    return {
-      version,
-      flags,
-      language: decodeIso639Language(languageCode),
-      data,
-    };
+    r.fieldUint("version", 1, "id32 box version");
+    r.fieldUint("flags", 3, "id32 box flags");
+    r.addField("languageCode", decodeIso639Language(r.readUint(2)));
+    r.fieldHex("data", r.getRemainingLength());
   },
 };

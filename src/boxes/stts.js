@@ -1,25 +1,29 @@
 /**
+ * @typedef {object} DecodingTimeToSampleBoxContent
+ * @property {number} version
+ * @property {number} flags
+ * @property {number} entry_count
+ * @property {Array<SttsEntry>} entries
+ */
+
+/**
  * @typedef {object} SttsEntry
  * @property {number} sample_count
  * @property {number} sample_delta
  */
 
-/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
+/** @type {import("../types.js").BoxDefinition<DecodingTimeToSampleBoxContent>} */
 export default {
   name: "Decoding Time to Sample",
   description: "Maps consecutive samples to their decoding-time deltas.",
 
   parser(r) {
-    /** @type Partial<Record<string, unknown>> */
-    const ret = {};
-    ret.version = r.bytesToInt(1);
-    ret.flags = r.bytesToInt(3);
-    const entry_count = r.bytesToInt(4);
-    ret.entry_count = entry_count;
+    r.fieldUint("version", 1, "stts box version");
+    r.fieldUint("flags", 3, "stts box flags");
+    const entry_count = r.fieldUint("entry_count", 4);
 
     /** @type {Array.<SttsEntry>} */
     const entries = [];
-    ret.entries = entries;
     let i = entry_count;
     while (i--) {
       entries.push({
@@ -27,6 +31,6 @@ export default {
         sample_delta: r.bytesToInt(4),
       });
     }
-    return ret;
+    r.addField("entries", entries);
   },
 };
