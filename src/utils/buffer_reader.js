@@ -4,8 +4,8 @@ import {
   be4toi,
   be5toi,
   be8toi,
-  betoa,
   bytesToHex,
+  utf8ToStr,
 } from "./bytes.js";
 
 /**
@@ -127,12 +127,47 @@ export default function createBufferReader(buffer) {
      * @param {number} nbBytes
      * @returns {string}
      */
-    bytesToASCII(nbBytes) {
+    readAsUtf8(nbBytes) {
       ensureAvailable(nbBytes);
-      const res = betoa(buffer, currentOffset, nbBytes);
-
+      const res = utf8ToStr(buffer, currentOffset, nbBytes);
       currentOffset += nbBytes;
       return res;
+    },
+
+    /**
+     * Convert a FourCC (4-byte code) into a readable representation.
+     *
+     * If all bytes are printable ASCII (0x20–0x7E), returns a string.
+     * Otherwise, returns a number (unsigned 32-bit integer).
+     * @returns {string|number}
+     * Printable ASCII string OR unsigned 32-bit integer.
+     */
+    readFourCc() {
+      ensureAvailable(4);
+
+      // Check if all bytes are printable ASCII
+      let isPrintable = true;
+      for (let i = currentOffset; i < currentOffset + 4; i++) {
+        const b = buffer[i];
+        if (b < 0x20 || b > 0x7e) {
+          isPrintable = false;
+          break;
+        }
+      }
+      currentOffset += 4;
+
+      if (isPrintable) {
+        // Convert to string, same codes as UTF-16's lower byte
+        return String.fromCharCode(
+          buffer[currentOffset - 4],
+          buffer[currentOffset - 3],
+          buffer[currentOffset - 2],
+          buffer[currentOffset - 1],
+        );
+      }
+
+      // Fallback: return unsigned 32-bit number (big-endian)
+      return be4toi(buffer, currentOffset - 4);
     },
 
     /**

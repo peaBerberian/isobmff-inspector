@@ -12,7 +12,7 @@ import {
   isBufferSource,
 } from "./progressive_source.js";
 import { formatParsedBoxes } from "./simple_format.js";
-import { be4toi, be8toi, betoa, bytesToHex } from "./utils/bytes.js";
+import { be4toi, be8toi, bytesToHex, utf8ToStr } from "./utils/bytes.js";
 
 /**
  * @typedef {import("./types.js").ParsedBox} ParsedBox
@@ -69,7 +69,8 @@ function recursiveParseBoxes(arr, baseOffset = 0) {
     let size = be4toi(arr, currentOffset);
     currentOffset += 4;
 
-    const name = betoa(arr, currentOffset, 4);
+    // TODO: Should we throw if not valid fourCC?
+    const name = utf8ToStr(arr, currentOffset, 4);
     currentOffset += 4;
     /** @type {"size" | "largeSize" | "extendsToEnd"} */
     let sizeField = "size";
@@ -207,7 +208,8 @@ async function parseProgressive(source) {
     }
 
     let size = be4toi(header, 0);
-    const name = betoa(header, 4, 4);
+    // TODO: Should we throw if not valid fourCC?
+    const name = utf8ToStr(header, 4, 4);
     let headerSize = MIN_BOX_HEADER_SIZE;
     /** @type {"size" | "largeSize" | "extendsToEnd"} */
     let sizeField = "size";

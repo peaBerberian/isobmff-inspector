@@ -61,12 +61,26 @@ function parseTransformationMatrix(r) {
  * @param {number} length
  * @returns {string}
  */
-function parsePascalString(r, length) {
+function parsePascalAsciiString(r, length) {
   const stringLength = Math.min(r.bytesToInt(1), length - 1);
-  const value = stringLength > 0 ? r.bytesToASCII(stringLength) : "";
+
+  let value = "";
+  for (let i = 0; i < stringLength; i++) {
+    const byte = r.bytesToInt(1); // Read the next byte
+
+    // Check if the byte is a printable ASCII character (0x20 to 0x7E)
+    if (byte < 0x20 || byte > 0x7e) {
+      throw new Error(
+        `Non-printable ASCII character found: 0x${byte.toString(16).toUpperCase()}`,
+      );
+    }
+    value += String.fromCharCode(byte); // Convert byte to ASCII character
+  }
+
+  // Handle padding (read and discard extra bytes)
   const paddingLength = length - 1 - stringLength;
   if (paddingLength > 0) {
-    r.bytesToHex(paddingLength);
+    r.bytesToHex(paddingLength); // Discard the padding bytes
   }
   return value;
 }
@@ -112,7 +126,7 @@ function readVisualSampleEntry(reader) {
   reader.fieldFixedPoint("vertresolution", 4, 16, "16.16");
   reader.fieldUint("reserved_2", 4);
   reader.fieldUint("frame_count", 2);
-  reader.addField("compressorname", parsePascalString(reader, 32));
+  reader.addField("compressorname", parsePascalAsciiString(reader, 32));
   reader.fieldUint("depth", 2);
   reader.fieldUint("pre_defined", 2);
 }
@@ -281,7 +295,7 @@ function parseDescriptorPayload(r, tag, size) {
     if (ret.URL_flag) {
       const urlLength = r.bytesToInt(1);
       ret.URL_length = urlLength;
-      ret.URL_string = urlLength > 0 ? r.bytesToASCII(urlLength) : "";
+      ret.URL_string = urlLength > 0 ? r.readAsUtf8(urlLength) : "";
       consumed += 1 + urlLength;
     }
     if (ret.OCRstream_flag) {

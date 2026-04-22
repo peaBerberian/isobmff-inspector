@@ -12,7 +12,7 @@ import {
   getProgressiveSource,
   isBufferSource,
 } from "./progressive_source.js";
-import { be4toi, be8toi, betoa, bytesToHex } from "./utils/bytes.js";
+import { be4toi, be8toi, bytesToHex, utf8ToStr } from "./utils/bytes.js";
 
 const MIN_BOX_HEADER_SIZE = 8;
 const LARGE_BOX_SIZE_BYTES = 8;
@@ -104,7 +104,8 @@ async function* parseBoxEventsFromReader(
     }
 
     let size = be4toi(header, 0);
-    const name = betoa(header, 4, 4);
+    // TODO: Should we throw if not valid fourCC?
+    const name = utf8ToStr(header, 4, 4);
     const path = parentPath.concat(name);
     let headerSize = MIN_BOX_HEADER_SIZE;
     /** @type {"size" | "largeSize" | "extendsToEnd"} */

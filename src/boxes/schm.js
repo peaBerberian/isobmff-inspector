@@ -5,26 +5,18 @@ export default {
     "Identifies the protection or restriction scheme and its version.",
 
   parser(r) {
-    const version = r.bytesToInt(1);
+    const version = r.fieldUint("version", 1, "schm box version, should be 0.");
     if (version !== 0) {
       throw new Error("invalid version");
     }
-
-    const flags = r.bytesToInt(3);
-    /** @type Partial<Record<string, unknown>> */
-    const ret = {
-      version,
-      flags,
-      scheme_type: r.bytesToASCII(4),
-      scheme_version: r.bytesToInt(4),
-    };
-
+    const flags = r.fieldUint("flags", 3, "schm box flags");
+    r.fieldFourCc(
+      "scheme_type",
+      "Code linked to the protection/restriction scheme",
+    );
+    r.fieldUint("scheme_version", 4, "Version of the scheme");
     if (flags & 0x000001) {
-      ret.scheme_uri = r
-        .bytesToASCII(r.getRemainingLength())
-        .replace(/\0+$/, "");
+      r.fieldNullTerminatedUtf8("scheme_uri");
     }
-
-    return ret;
   },
 };

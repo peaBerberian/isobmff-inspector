@@ -1,3 +1,5 @@
+const textDecoder = new TextDecoder();
+
 /**
  * Translate groups of 2 big-endian bytes to Integer (from 0 up to 65535).
  * @param {ArrayLike<number>} bytes
@@ -95,17 +97,24 @@ function bytesToHex(uint8arr, off, nbBytes) {
 
 /**
  * @param {Uint8Array} uint8arr
- * @param {number} off
- * @param {number} nbBytes
+ * @param {number} [off = 0]
+ * @param {number} [nbBytes]
  * @returns {string}
  */
-function betoa(uint8arr, off, nbBytes) {
+function utf8ToStr(uint8arr, off = 0, nbBytes) {
   if (!uint8arr) {
     return "";
   }
 
+  if (nbBytes === undefined) {
+    if (off === 0) {
+      return textDecoder.decode(uint8arr);
+    }
+    return textDecoder.decode(uint8arr.slice(off));
+  }
+
   const arr = uint8arr.slice(off, nbBytes + off);
-  return String.fromCharCode(...arr);
+  return textDecoder.decode(arr);
 }
 
-export { be2toi, be3toi, be4toi, be5toi, be8toi, betoa, bytesToHex };
+export { be2toi, be3toi, be4toi, be5toi, be8toi, bytesToHex, utf8ToStr };

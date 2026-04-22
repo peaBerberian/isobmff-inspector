@@ -294,7 +294,8 @@ Applications should switch on `kind` when reading fields:
   `value` is a JavaScript `number`.
 - `bigint`: Used for 64-bit integer fields.
   `value` is a JavaScript `bigint`.
-- `string`: Used for ASCII fields, hexadecimal fields, and derived display strings.
+- `string`: Used for string fields, hexadecimal fields, and derived display
+   strings.
   `value` is a JavaScript `string`.
 - `boolean`: `value` is a JavaScript boolean.
 - `null`: `value` is a parsed null value.
@@ -637,7 +638,7 @@ They can parse the associated box either:
   function, whose keys are in the same order than the fields in the source
   ISOBMFF, where each key corresponds to a different box field, and whose value
   is the corresponding parsed value in the most expected format (e.g. `number`
-  for integers, `string` for ASCII etc.)
+  for integers, `string` for ASCII/UTF-8 etc.)
 
 - Or by declaring directly all fields with the given `BoxReader` without having
   to return any object.

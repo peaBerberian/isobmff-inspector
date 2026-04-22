@@ -14,7 +14,7 @@ export default {
   description: "Signals the colour representation used by visual samples.",
 
   parser(reader) {
-    const colour_type = reader.fieldAscii("colour_type", 4);
+    const colour_type = reader.fieldFourCc("colour_type");
     if (colour_type === "nclx") {
       reader.fieldUint("colour_primaries", 2);
       reader.fieldUint("transfer_characteristics", 2);

@@ -24,6 +24,6 @@ export default {
       reader.bytesToInt(4),
       reader.bytesToInt(4),
     ]);
-    reader.fieldAscii("name", reader.getRemainingLength());
+    reader.fieldNullTerminatedUtf8("name");
   },
 };

@@ -11,14 +11,14 @@ export default {
   description: "File type and compatibility",
   parser(reader) {
     const len = reader.getTotalLength();
-    reader.fieldAscii("major_brand", 4, { description: "Brand identifier" });
+    reader.fieldFourCc("major_brand", { description: "Brand identifier" });
     reader.fieldUint("minor_version", 4, {
       description:
         "Informative integer for the minor version of the major brand",
     });
     const compatArr = [];
     for (let i = 8; i < len; i += 4) {
-      compatArr.push(reader.bytesToASCII(4));
+      compatArr.push(reader.readFourCc());
     }
     reader.addField("compatible_brands", compatArr.join(", "), {
       description: "List of brands",

@@ -9,6 +9,6 @@ export default {
   description: "Identifies the coding format before protection was applied.",
 
   parser(reader) {
-    reader.fieldAscii("original_format", 4);
+    reader.fieldFourCc("original_format");
   },
 };

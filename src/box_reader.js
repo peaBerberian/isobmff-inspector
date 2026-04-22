@@ -8,6 +8,7 @@ import {
   toSignedInt,
 } from "./fields.js";
 import BufferReader from "./utils/buffer_reader.js";
+import { utf8ToStr } from "./utils/bytes.js";
 
 /**
  * @param {string | import("./types.js").ParsedBoxFieldMetadata | undefined} meta
@@ -70,7 +71,8 @@ export default function createBoxReader(buffer) {
     readUint64: reader.bytesToUint64BigInt,
     readInt64: reader.bytesToInt64BigInt,
     readHex: reader.bytesToHex,
-    readAscii: reader.bytesToASCII,
+    readAsUtf8: reader.readAsUtf8,
+    readFourCc: reader.readFourCc,
 
     fieldUint(key, nbBytes, meta) {
       return /** @type {number} */ (
@@ -103,10 +105,20 @@ export default function createBoxReader(buffer) {
       );
     },
 
-    fieldAscii(key, nbBytes, meta) {
+    fieldNullTerminatedAscii(key, meta) {
       return /** @type {string} */ (
-        addField(key, reader.bytesToASCII(nbBytes), meta)
+        addField(key, parseNullTerminatedAscii(reader), meta)
       );
+    },
+
+    fieldNullTerminatedUtf8(key, meta) {
+      return /** @type {string} */ (
+        addField(key, parseNullTerminatedUtf8(reader), meta)
+      );
+    },
+
+    fieldFourCc(key, meta) {
+      return /** @type {string} */ (addField(key, reader.readFourCc(), meta));
     },
 
     fieldFixedPoint(key, nbBytes, fractionalBits, format, meta) {
@@ -161,4 +173,37 @@ export default function createBoxReader(buffer) {
       return issues.slice();
     },
   });
+}
+
+/**
+ * @param {import("./types.js").BufferReader} reader
+ * @returns {string}
+ */
+function parseNullTerminatedAscii(reader) {
+  const bytes = [];
+  while (!reader.isFinished()) {
+    const value = reader.bytesToInt(1);
+    if (value === 0) {
+      break;
+    }
+    bytes.push(value);
+  }
+  // 128-255 become latin-1. Good enough for now
+  return String.fromCharCode.apply(null, bytes);
+}
+
+/**
+ * @param {import("./types.js").BufferReader} reader
+ * @returns {string}
+ */
+function parseNullTerminatedUtf8(reader) {
+  const bytes = [];
+  while (!reader.isFinished()) {
+    const value = reader.bytesToInt(1);
+    if (value === 0) {
+      break;
+    }
+    bytes.push(value);
+  }
+  return utf8ToStr(new Uint8Array(bytes));
 }
