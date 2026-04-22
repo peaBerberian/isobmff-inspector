@@ -9,6 +9,7 @@ import dinf from "./dinf.js";
 import dref from "./dref.js";
 import edts from "./edts.js";
 import elst from "./elst.js";
+import enca from "./enca.js";
 import encv from "./encv.js";
 import esds from "./esds.js";
 import free from "./free.js";
@@ -83,6 +84,7 @@ export default {
   dref,
   edts,
   elst,
+  enca,
   encv,
   esds,
   free,

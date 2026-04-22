@@ -371,6 +371,10 @@ const FIELD_CHECKS = {
     }
   },
 
+  enca(dumpNode, actualNode) {
+    FIELD_CHECKS.mp4a(dumpNode, actualNode);
+  },
+
   encv(dumpNode, actualNode) {
     FIELD_CHECKS.avc1(dumpNode, actualNode);
   },

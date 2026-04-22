@@ -552,6 +552,7 @@ The inspector only parses the following ISOBMFF boxes for now:
   - dref
   - edts
   - elst
+  - enca
   - encv
   - esds
   - free
