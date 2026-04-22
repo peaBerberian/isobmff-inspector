@@ -1,4 +1,4 @@
-import { parseVisualSampleEntry } from "./helpers.js";
+import { readVisualSampleEntry } from "./helpers.js";
 
 /** @type {import("../types.js").BoxDefinition<import("./helpers.js").VisualSampleEntry>} */
 export default {
@@ -7,7 +7,7 @@ export default {
     "Describes AVC video samples whose parameter sets are stored in this entry.",
   container: true,
 
-  parser(r) {
-    return parseVisualSampleEntry(r);
+  parser(reader) {
+    readVisualSampleEntry(reader);
   },
 };

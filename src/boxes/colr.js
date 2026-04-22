@@ -1,25 +1,30 @@
-/** @type {import("../types.js").BoxDefinition<{ [k: string]: unknown }>} */
+/**
+ * @typedef {Object} ColorInformationBoxContent
+ * @property {string} colour_type
+ * @property {number=} colour_primaries
+ * @property {number=} transfer_characteristics
+ * @property {number=} matrix_coefficients
+ * @property {boolean=} full_range_flag
+ * @property {string=} data
+ */
+
+/** @type {import("../types.js").BoxDefinition<ColorInformationBoxContent>} */
 export default {
   name: "Colour Information Box",
   description: "Signals the colour representation used by visual samples.",
 
-  parser(r) {
-    const colour_type = r.bytesToASCII(4);
-    /** @type Partial<Record<string, unknown>> */
-    const ret = { colour_type };
-
+  parser(reader) {
+    const colour_type = reader.fieldAscii("colour_type", 4);
     if (colour_type === "nclx" || colour_type === "nclc") {
-      ret.colour_primaries = r.bytesToInt(2);
-      ret.transfer_characteristics = r.bytesToInt(2);
-      ret.matrix_coefficients = r.bytesToInt(2);
-
-      if (!r.isFinished()) {
-        ret.full_range_flag = !!(r.bytesToInt(1) & 0x80);
+      reader.fieldUint("colour_primaries", 2);
+      reader.fieldUint("transfer_characteristics", 2);
+      reader.fieldUint("matrix_coefficients", 2);
+      if (!reader.isFinished()) {
+        // XXX TODO:
+        ret.full_range_flag = !!(reader.bytesToInt(1) & 0x80);
       }
-    } else if (!r.isFinished()) {
-      ret.data = r.bytesToHex(r.getRemainingLength());
+    } else if (!reader.isFinished()) {
+      reader.fieldHex("data", reader.getRemainingLength());
     }
-
-    return ret;
   },
 };

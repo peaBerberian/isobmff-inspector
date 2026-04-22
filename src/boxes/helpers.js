@@ -90,30 +90,31 @@ function parsePascalString(r, length) {
  */
 
 /**
- * @param {import("../types").BufferReader} r
- * @returns {VisualSampleEntry}
+ * @param {import("../types").BoxReader<VisualSampleEntry>} reader
  */
-function parseVisualSampleEntry(r) {
+function readVisualSampleEntry(reader) {
   const reserved = [];
   for (let i = 0; i < 6; i++) {
-    reserved.push(r.bytesToInt(1));
+    reserved.push(reader.bytesToInt(1));
   }
-  return {
-    reserved,
-    data_reference_index: r.bytesToInt(2),
-    pre_defined: r.bytesToInt(2),
-    reserved_1: r.bytesToInt(2),
-    pre_defined_1: [r.bytesToInt(4), r.bytesToInt(4), r.bytesToInt(4)],
-    width: r.bytesToInt(2),
-    height: r.bytesToInt(2),
-    horizresolution: fixedPointField(r.bytesToInt(4), 32, 16, "16.16"),
-    vertresolution: fixedPointField(r.bytesToInt(4), 32, 16, "16.16"),
-    reserved_2: r.bytesToInt(4),
-    frame_count: r.bytesToInt(2),
-    compressorname: parsePascalString(r, 32),
-    depth: r.bytesToInt(2),
-    pre_defined_2: r.bytesToInt(2),
-  };
+  reader.addField("reserved", reserved);
+  reader.fieldUint("data_reference_index", 2);
+  reader.fieldUint("pre_defined", 2);
+  reader.fieldUint("reserved_1", 2);
+  reader.addField("pre_defined_1", [
+    reader.bytesToInt(4),
+    reader.bytesToInt(4),
+    reader.bytesToInt(4),
+  ]);
+  reader.fieldUint("width", 2);
+  reader.fieldUint("height", 2);
+  reader.fieldFixedPoint("horizresolution", 4, 16, "16.16");
+  reader.fieldFixedPoint("vertresolution", 4, 16, "16.16");
+  reader.fieldUint("reserved_2", 4);
+  reader.fieldUint("frame_count", 2);
+  reader.addField("compressorname", parsePascalString(reader, 32));
+  reader.fieldUint("depth", 2);
+  reader.fieldUint("pre_defined", 2);
 }
 
 /**
@@ -360,6 +361,6 @@ export {
   parseAudioSampleEntry,
   parseDescriptor,
   parseTransformationMatrix,
-  parseVisualSampleEntry,
+  readVisualSampleEntry,
   toSignedInt,
 };

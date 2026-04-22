@@ -1,4 +1,4 @@
-import { parseVisualSampleEntry } from "./helpers.js";
+import { readVisualSampleEntry } from "./helpers.js";
 
 /** @type {import("../types.js").BoxDefinition<import("./helpers.js").VisualSampleEntry>} */
 export default {
@@ -8,6 +8,6 @@ export default {
   container: true,
 
   parser(r) {
-    return parseVisualSampleEntry(r);
+    readVisualSampleEntry(r);
   },
 };
