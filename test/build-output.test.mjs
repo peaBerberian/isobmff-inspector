@@ -65,12 +65,19 @@ test("built bundle exposes the public API through the browser global", (t) => {
   skipIfNoBundle(t);
 
   const code = fs.readFileSync(BUNDLE_URL, "utf8");
-  const context = {};
+  const context = {
+    // Globals expected
+    TextDecoder,
+    TextEncoder,
+    ArrayBuffer,
+    Uint8Array,
+    console,
+    setTimeout,
+    clearTimeout,
+  };
   context.globalThis = context;
   context.self = context;
-
   vm.runInNewContext(code, context);
-
   assertPublicApi(context.inspectISOBMFF);
 });
 

@@ -13,7 +13,9 @@ import dOps from "./dOps.js";
 import dref from "./dref.js";
 import ec3 from "./ec-3.js";
 import edts from "./edts.js";
+import elng from "./elng.js";
 import elst from "./elst.js";
+import emsg from "./emsg.js";
 import enca from "./enca.js";
 import encv from "./encv.js";
 import esds from "./esds.js";
@@ -27,6 +29,7 @@ import hvcC from "./hvcC.js";
 import ID32 from "./ID32.js";
 import ilst from "./ilst.js";
 import iods from "./iods.js";
+import keys from "./keys.js";
 import leva from "./leva.js";
 import mdat from "./mdat.js";
 import mdhd from "./mdhd.js";
@@ -43,6 +46,7 @@ import mvhd from "./mvhd.js";
 import Opus from "./Opus.js";
 import pasp from "./pasp.js";
 import pdin from "./pdin.js";
+import prft from "./prft.js";
 import pssh from "./pssh.js";
 import saio from "./saio.js";
 import saiz from "./saiz.js";
@@ -55,6 +59,7 @@ import skip from "./skip.js";
 import smhd from "./smhd.js";
 import stbl from "./stbl.js";
 import stco from "./stco.js";
+import sthd from "./sthd.js";
 import stsc from "./stsc.js";
 import stsd from "./stsd.js";
 import stss from "./stss.js";
@@ -95,7 +100,9 @@ export default {
   dref,
   edts,
   "ec-3": ec3,
+  elng,
   elst,
+  emsg,
   enca,
   encv,
   esds,
@@ -108,6 +115,7 @@ export default {
   hvcC,
   iods,
   ilst,
+  keys,
   leva,
   mdat,
   mdhd,
@@ -124,6 +132,7 @@ export default {
   pasp,
   pdin,
   pssh,
+  prft,
   saio,
   saiz,
   schi,
@@ -133,6 +142,7 @@ export default {
   sinf,
   smhd,
   skip,
+  sthd,
   stbl,
   stco,
   stsc,

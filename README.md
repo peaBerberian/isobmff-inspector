@@ -557,7 +557,9 @@ The inspector only parses the following ISOBMFF boxes for now:
   - dref
   - ec-3
   - edts
+  - elng
   - elst
+  - emsg
   - enca
   - encv
   - esds
@@ -568,6 +570,7 @@ The inspector only parses the following ISOBMFF boxes for now:
   - hev1
   - hvc1
   - hvcC
+  - keys
   - ID32
   - ilst
   - iods
@@ -587,6 +590,7 @@ The inspector only parses the following ISOBMFF boxes for now:
   - Opus
   - pasp
   - pdin
+  - prft
   - pssh
   - saio
   - saiz
@@ -599,6 +603,7 @@ The inspector only parses the following ISOBMFF boxes for now:
   - smhd
   - stbl
   - stco
+  - sthd
   - stsc
   - stsd
   - stss
