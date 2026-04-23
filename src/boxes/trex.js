@@ -18,15 +18,12 @@ export default {
     "in each Track Fragment Box",
 
   parser(reader) {
-    // TODO: To new reader API
-    return {
-      version: reader.readUint(1),
-      flags: reader.readUint(3),
-      track_ID: reader.readUint(4),
-      default_sample_description_index: reader.readUint(4),
-      default_sample_duration: reader.readUint(4),
-      default_sample_size: reader.readUint(4),
-      default_sample_flags: reader.readUint(4),
-    };
+    reader.fieldUint("version", 1, "trex box version");
+    reader.fieldUint("flags", 3, "trex box flags");
+    reader.fieldUint("track_ID", 4, "track ID to which those settings apply");
+    reader.fieldUint("default_sample_description_index", 4);
+    reader.fieldUint("default_sample_duration", 4);
+    reader.fieldUint("default_sample_size", 4);
+    reader.fieldUint("default_sample_flags", 4);
   },
 };
