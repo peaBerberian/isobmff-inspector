@@ -77,7 +77,7 @@ export default {
     }
 
     if (!reader.isFinished()) {
-      reader.fieldHex("trailing_bytes", reader.getRemainingLength());
+      reader.fieldBytes("trailing_bytes", reader.getRemainingLength());
     }
   },
 };

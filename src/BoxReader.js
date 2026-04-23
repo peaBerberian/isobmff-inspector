@@ -1,5 +1,6 @@
 import {
   bitsField,
+  bytesField,
   fixedPointField,
   flagsField,
   macDateField,
@@ -144,14 +145,26 @@ export default class BoxReader {
   }
 
   /**
-   * @template {StringKeys<T>} K
+   * @template {BytesKeys<T>} K
    * @param {K} key
    * @param {number} nbBytes
    * @param {string|ParsedBoxFieldMetadata} [meta]
-   * @returns {string}
+   * @returns {Uint8Array}
    */
-  fieldHex(key, nbBytes, meta) {
-    return this.addField(key, this.#bytesToHex(nbBytes), meta);
+  fieldBytes(key, nbBytes, meta) {
+    this.#ensureAvailable(nbBytes);
+    const offset = this.#currentOffset;
+    const value = this.#buffer.slice(offset, offset + nbBytes);
+    const description = typeof meta === "string" ? meta : meta?.description;
+    this.#values.push(
+      parsedBoxValue(
+        key,
+        bytesField(this.#buffer, offset, nbBytes),
+        description,
+      ),
+    );
+    this.#currentOffset += nbBytes;
+    return value;
   }
 
   /**
@@ -336,15 +349,21 @@ export default class BoxReader {
   }
 
   /**
-   * Encode the next `nbBytes` into the corresponding hexstring.
+   * Read the next bytes and return it as an Uint8Array.
    *
    * Throws if less than `nbBytes` bytes are remaining in the buffer.
    *
    * @param {number} nbBytes
-   * @returns {string}
+   * @returns {Uint8Array}
    */
-  readHex(nbBytes) {
-    return this.#bytesToHex(nbBytes);
+  readBytes(nbBytes) {
+    this.#ensureAvailable(nbBytes);
+    const res = this.#buffer.slice(
+      this.#currentOffset,
+      this.#currentOffset + nbBytes,
+    );
+    this.#currentOffset += nbBytes;
+    return res;
   }
 
   /**
@@ -440,26 +459,15 @@ export default class BoxReader {
   }
 
   /**
-   * Returns the N next bytes into a string of Hexadecimal values.
-   * @param {number} nbBytes
-   * @returns {string}
-   */
-  #bytesToHex(nbBytes) {
-    this.#ensureAvailable(nbBytes);
-    const res = bytesToHex(this.#buffer, this.#currentOffset, nbBytes);
-    this.#currentOffset += nbBytes;
-    return res;
-  }
-
-  /**
    * Returns the next 8 bytes as an exact unsigned 64-bit bigint.
    * @returns {bigint}
    */
   #bytesToUint64BigInt() {
     this.#ensureAvailable(8);
     const hex = bytesToHex(this.#buffer, this.#currentOffset, 8);
+    const toBigint = hexToBigInt(hex);
     this.#currentOffset += 8;
-    return hexToBigInt(hex);
+    return toBigint;
   }
 
   /**
@@ -469,8 +477,10 @@ export default class BoxReader {
   #bytesToInt64BigInt() {
     this.#ensureAvailable(8);
     const hex = bytesToHex(this.#buffer, this.#currentOffset, 8);
+
+    const toBigInt = BigInt.asIntN(64, hexToBigInt(hex));
     this.#currentOffset += 8;
-    return BigInt.asIntN(64, hexToBigInt(hex));
+    return toBigInt;
   }
 
   /**
@@ -496,20 +506,20 @@ export default class BoxReader {
         break;
       }
     }
+
+    const res = isPrintable
+      ? // Convert to string, same codes as UTF-16's lower byte
+        String.fromCharCode(
+          this.#buffer[this.#currentOffset],
+          this.#buffer[this.#currentOffset + 1],
+          this.#buffer[this.#currentOffset + 2],
+          this.#buffer[this.#currentOffset + 3],
+        )
+      : // Fallback: return unsigned 32-bit number (big-endian)
+        be4toi(this.#buffer, this.#currentOffset);
+
     this.#currentOffset += 4;
-
-    if (isPrintable) {
-      // Convert to string, same codes as UTF-16's lower byte
-      return String.fromCharCode(
-        this.#buffer[this.#currentOffset - 4],
-        this.#buffer[this.#currentOffset - 3],
-        this.#buffer[this.#currentOffset - 2],
-        this.#buffer[this.#currentOffset - 1],
-      );
-    }
-
-    // Fallback: return unsigned 32-bit number (big-endian)
-    return be4toi(this.#buffer, this.#currentOffset - 4);
+    return res;
   }
 
   /**
@@ -576,6 +586,11 @@ function hexToBigInt(hex) {
 /**
  * @template T
  * @typedef {{ [K in Extract<keyof T, string>]: string extends T[K] ? K : never }[Extract<keyof T, string>]} StringKeys
+ */
+
+/**
+ * @template T
+ * @typedef {{ [K in Extract<keyof T, string>]: Uint8Array extends T[K] ? K : never }[Extract<keyof T, string>]} BytesKeys
  */
 
 /**

@@ -10,7 +10,7 @@ import { parsedBoxValue, structField } from "../fields.js";
 function readSampleEncryptionEntry(reader, ivSize, useSubsamples) {
   const fields = [];
   if (ivSize > 0) {
-    fields.push(parsedBoxValue("iv", reader.readHex(ivSize)));
+    fields.push(parsedBoxValue("iv", reader.readBytes(ivSize)));
   }
 
   if (useSubsamples) {
@@ -52,7 +52,7 @@ export default {
     if (overrideTrackDefaults) {
       reader.fieldUint("algorithm_id", 3);
       perSampleIvSize = reader.fieldUint("per_sample_iv_size", 1);
-      reader.fieldHex("kid", 16);
+      reader.fieldBytes("kid", 16);
     }
 
     const sample_count = reader.fieldUint("sample_count", 4);
@@ -63,7 +63,10 @@ export default {
           "warning",
           "senc entry layout depends on tenc/seig context when track defaults are not overridden; remaining payload kept opaque.",
         );
-        reader.fieldHex("sample_encryption_data", reader.getRemainingLength());
+        reader.fieldBytes(
+          "sample_encryption_data",
+          reader.getRemainingLength(),
+        );
       }
       return;
     }
@@ -78,7 +81,7 @@ export default {
     reader.addField("entries", entries);
 
     if (!reader.isFinished()) {
-      reader.fieldHex("trailing_bytes", reader.getRemainingLength());
+      reader.fieldBytes("trailing_bytes", reader.getRemainingLength());
     }
   },
 };

@@ -5,7 +5,7 @@
  * @property {number=} transfer_characteristics
  * @property {number=} matrix_coefficients
  * @property {import("../types.js").ParsedBitsField=} full_range_flag
- * @property {string=} ICC_profile
+ * @property {Uint8Array=} ICC_profile
  */
 
 /** @type {import("./types.js").BoxDefinition<ColorInformationBoxContent>} */
@@ -33,9 +33,9 @@ export default {
       (colour_type === "rICC" || colour_type === "prof") &&
       !reader.isFinished()
     ) {
-      reader.fieldHex("ICC_profile", reader.getRemainingLength());
+      reader.fieldBytes("ICC_profile", reader.getRemainingLength());
     } else if (!reader.isFinished()) {
-      reader.fieldHex("ICC_profile", reader.getRemainingLength());
+      reader.fieldBytes("ICC_profile", reader.getRemainingLength());
     }
   },
 };

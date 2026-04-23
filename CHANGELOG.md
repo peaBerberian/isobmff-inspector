@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changes
+
+- Fields that are semantically binary data (e.g. `pssh` payload) now have the `"bytes"` kind, not the `"string"` kind, and are only upper-case hexa-encoded binary data
+
 ### Features
 
 - add parsing for boxes: `enca`, `ac-3`, `av01`, `cslg`, `dac3`, `dec3`, `dOps`, `ec-3`, `elng`, `emsg`, `keys`, `nmhd`, `Opus`, `prft`, `sbgp`, `senc`, `sgpd`, and `sthd`

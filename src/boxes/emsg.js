@@ -28,7 +28,7 @@ export default {
     }
 
     if (!reader.isFinished()) {
-      reader.fieldHex("message_data", reader.getRemainingLength());
+      reader.fieldBytes("message_data", reader.getRemainingLength());
     }
   },
 };

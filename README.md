@@ -294,9 +294,11 @@ Applications should switch on `kind` when reading fields:
   `value` is a JavaScript `number`.
 - `bigint`: Used for 64-bit integer fields.
   `value` is a JavaScript `bigint`.
-- `string`: Used for string fields, hexadecimal fields, and derived display
-   strings.
+- `string`: Used for string fields.
   `value` is a JavaScript `string`.
+- `bytes`: Used for binary data fields.
+  `value` is a JavaScript `string` of its hex-encoded value (uppercase, with no
+  prefix).
 - `boolean`: `value` is a JavaScript boolean.
 - `null`: `value` is a parsed null value.
 - `fixed-point`: For most ISOBMFF floating numbers.

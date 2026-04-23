@@ -31,7 +31,7 @@ export default {
         const nalUnitLength = r.readUint(2);
         nalus.push({
           length: nalUnitLength,
-          data: r.readHex(nalUnitLength),
+          data: r.readBytes(nalUnitLength),
         });
       }
 

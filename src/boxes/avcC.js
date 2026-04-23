@@ -1,7 +1,7 @@
 /**
  * @typedef {Object} AvcParameterSet
  * @property {number} length
- * @property {string} data
+ * @property {Uint8Array} data
  */
 
 /**
@@ -15,7 +15,7 @@
  * @property {AvcParameterSet[]} sequenceParameterSets
  * @property {number} numOfPictureParameterSets
  * @property {AvcParameterSet[]} pictureParameterSets
- * @property {string=} ext
+ * @property {Uint8Array=} ext
  */
 
 /** @type {import("./types.js").BoxDefinition<AvcDecoderConfigurationRecordContent>} */
@@ -47,7 +47,7 @@ export default {
       const sequenceParameterSetLength = reader.readUint(2);
       sequenceParameterSets.push({
         length: sequenceParameterSetLength,
-        data: reader.readHex(sequenceParameterSetLength),
+        data: reader.readBytes(sequenceParameterSetLength),
       });
     }
     reader.addField("sequenceParameterSets", sequenceParameterSets);
@@ -61,12 +61,12 @@ export default {
       const pictureParameterSetLength = reader.readUint(2);
       pictureParameterSets.push({
         length: pictureParameterSetLength,
-        data: reader.readHex(pictureParameterSetLength),
+        data: reader.readBytes(pictureParameterSetLength),
       });
     }
     reader.addField("pictureParameterSets", pictureParameterSets);
     if (!reader.isFinished()) {
-      reader.fieldHex("ext", reader.getRemainingLength());
+      reader.fieldBytes("ext", reader.getRemainingLength());
     }
   },
 };

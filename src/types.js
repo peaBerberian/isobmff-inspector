@@ -19,6 +19,12 @@
  */
 
 /**
+ * @typedef {object} ParsedBytesField
+ * @property {"bytes"} kind
+ * @property {string} value
+ */
+
+/**
  * @typedef {object} ParsedBooleanField
  * @property {"boolean"} kind
  * @property {boolean} value
@@ -103,7 +109,7 @@
  */
 
 /**
- * @typedef {ParsedNumberField | ParsedBigIntField | ParsedStringField | ParsedBooleanField | ParsedNullField | ParsedFixedPointField | ParsedDateField | ParsedBitsField | ParsedFlagsField | ParsedArrayField | ParsedStructField} ParsedField
+ * @typedef {ParsedNumberField | ParsedBigIntField | ParsedStringField | ParsedBytesField | ParsedBooleanField | ParsedNullField | ParsedFixedPointField | ParsedDateField | ParsedBitsField | ParsedFlagsField | ParsedArrayField | ParsedStructField} ParsedField
  */
 
 /**

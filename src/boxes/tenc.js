@@ -11,9 +11,9 @@ import { parsedBoxValue, structField } from "../fields.js";
  * @property {number=} default_skip_byte_block
  * @property {number} default_IsProtected
  * @property {number} default_Per_Sample_IV_Size
- * @property {string} default_KID
+ * @property {Uint8Array} default_KID
  * @property {number=} default_constant_IV_size
- * @property {string=} default_constant_IV
+ * @property {Uint8Array=} default_constant_IV
  */
 
 /** @type {import("./types.js").BoxDefinition<TrackEncryptionBoxContent>} */
@@ -55,12 +55,12 @@ export default {
 
     ret.default_IsProtected = r.readUint(1);
     ret.default_Per_Sample_IV_Size = r.readUint(1);
-    ret.default_KID = r.readHex(16);
+    ret.default_KID = r.readBytes(16);
 
     if (ret.default_Per_Sample_IV_Size === 0 && !r.isFinished()) {
       const default_constant_IV_size = r.readUint(1);
       ret.default_constant_IV_size = default_constant_IV_size;
-      ret.default_constant_IV = r.readHex(default_constant_IV_size);
+      ret.default_constant_IV = r.readBytes(default_constant_IV_size);
     }
 
     return /** @type {TrackEncryptionBoxContent} */ (ret);

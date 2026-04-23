@@ -73,7 +73,7 @@ function parsePascalAsciiString(r, length) {
   // Handle padding (read and discard extra bytes)
   const paddingLength = length - 1 - stringLength;
   if (paddingLength > 0) {
-    r.readHex(paddingLength); // Discard the padding bytes
+    r.readBytes(paddingLength); // Discard the padding bytes
   }
   return value;
 }
@@ -329,19 +329,19 @@ function parseDescriptorPayload(r, tag, size) {
 
   if (tag === 0x05) {
     return {
-      decoder_specific_info: size > 0 ? r.readHex(size) : "",
+      decoder_specific_info: size > 0 ? r.readBytes(size) : "",
     };
   }
 
   if (tag === 0x06) {
     return {
       predefined: r.readUint(1),
-      remaining_payload: size > 1 ? r.readHex(size - 1) : "",
+      remaining_payload: size > 1 ? r.readBytes(size - 1) : "",
     };
   }
 
   return {
-    data: size > 0 ? r.readHex(size) : "",
+    data: size > 0 ? r.readBytes(size) : "",
   };
 }
 

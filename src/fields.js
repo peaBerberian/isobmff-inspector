@@ -1,3 +1,5 @@
+import { bytesToHex } from "./utils/bytes.js";
+
 const MAC_EPOCH_TO_UNIX_EPOCH_SECONDS = 2082844800;
 
 /**
@@ -28,6 +30,16 @@ function toSignedInt(value, bits) {
  */
 function decodeSignedFixedPoint(value, bits, fractionalBits) {
   return decodeFixedPoint(toSignedInt(value, bits), fractionalBits);
+}
+
+/**
+ * @param {Uint8Array} value
+ * @param {number} offset
+ * @param {number} nbBytes
+ * @returns {import("./types.js").ParsedBytesField}
+ */
+function bytesField(value, offset, nbBytes) {
+  return { kind: "bytes", value: bytesToHex(value, offset, nbBytes) };
 }
 
 /**
@@ -233,6 +245,12 @@ function normalizeField(value) {
     };
   }
   if (value && typeof value === "object") {
+    if (value instanceof Uint8Array) {
+      return {
+        kind: "bytes",
+        value: bytesToHex(value, 0, value.byteLength),
+      };
+    }
     return structField(
       Object.entries(value).map(([key, fieldValue]) =>
         parsedBoxValue(key, fieldValue),
@@ -247,6 +265,7 @@ function normalizeField(value) {
 
 export {
   bitsField,
+  bytesField,
   decodeFixedPoint,
   decodeSignedFixedPoint,
   fixedPointField,

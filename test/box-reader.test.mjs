@@ -23,7 +23,7 @@ test("box parsers can emit ordered fields through the reader", () => {
     parser(r) {
       const first = r.fieldUint("first", 1, "first byte");
       r.addField("derived", first + 1, "derived value");
-      r.fieldHex("tail", 2);
+      r.fieldBytes("tail", 2);
     },
   };
 
@@ -121,7 +121,7 @@ test("read aliases consume bytes without emitting fields", () => {
   definitions.TST4 = {
     parser(r) {
       const skipped = r.readUint(1);
-      r.addField("value", r.readHex(2), `skipped ${skipped}`);
+      r.addField("value", r.readBytes(2), `skipped ${skipped}`);
     },
   };
 

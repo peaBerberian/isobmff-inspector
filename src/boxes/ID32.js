@@ -19,6 +19,6 @@ export default {
     r.fieldUint("version", 1, "id32 box version");
     r.fieldUint("flags", 3, "id32 box flags");
     r.addField("languageCode", decodeIso639Language(r.readUint(2)));
-    r.fieldHex("data", r.getRemainingLength());
+    r.fieldBytes("data", r.getRemainingLength());
   },
 };
