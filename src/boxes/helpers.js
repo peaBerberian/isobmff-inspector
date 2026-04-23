@@ -9,6 +9,34 @@ import {
 } from "../fields.js";
 
 /**
+ * @param {string} name
+ * @param {string} description
+ * @returns {import("./types.js").BoxDefinition<{
+ *   track_IDs: Array<number>,
+ *   trailing_bytes?: Uint8Array,
+ * }>}
+ */
+function createTrackReferenceTypeBox(name, description) {
+  return {
+    name,
+    description,
+
+    parser(reader) {
+      /** @type {Array<number>} */
+      const track_IDs = [];
+      while (reader.getRemainingLength() >= 4) {
+        track_IDs.push(reader.readUint(4));
+      }
+      reader.addField("track_IDs", track_IDs);
+
+      if (!reader.isFinished()) {
+        reader.fieldBytes("trailing_bytes", reader.getRemainingLength());
+      }
+    },
+  };
+}
+
+/**
  * @template {{ [k: string]: unknown }} T
  * @param {import("../BoxReader.js").BoxReader<T>} r
  * @returns {import("../types.js").ParsedStructField}
@@ -370,6 +398,7 @@ function parseDescriptor(r) {
 }
 
 export {
+  createTrackReferenceTypeBox,
   decodeFixedPoint,
   decodeSignedFixedPoint,
   parseAudioSampleEntry,

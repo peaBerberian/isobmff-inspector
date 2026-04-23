@@ -8,7 +8,7 @@
 
 ### Features
 
-- add parsing for boxes: `enca`, `ac-3`, `av01`, `cslg`, `dac3`, `dec3`, `dOps`, `ec-3`, `elng`, `emsg`, `keys`, `mfra`, `nmhd`, `Opus`, `prft`, `sbgp`, `senc`, `sgpd`, and `sthd`
+- add parsing for boxes: `enca`, `ac-3`, `av01`, `cdsc`, `cslg`, `dac3`, `dec3`, `dOps`, `ec-3`, `elng`, `emsg`, `font`, `hind`, `hint`, `hmhd`, `keys`, `mfra`, `mfro`, `nmhd`, `Opus`, `padb`, `prft`, `sbgp`, `senc`, `sgpd`, `stdp`, `sthd`, `stsh`, `stz2`, `subt`, `tfra`, `tref`, `vdep` and `vplx`
 - improve parsing of `colr` by parsing more colour types' information
 - be more resilient to `vmhd` boxes which wrongly do not have their mvhd flag to `1` (just emit a warning)
 

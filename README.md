@@ -550,6 +550,7 @@ The inspector only parses the following ISOBMFF boxes for now:
   - avc3
   - avcC
   - btrt
+  - cdsc
   - co64
   - colr
   - cslg
@@ -567,11 +568,15 @@ The inspector only parses the following ISOBMFF boxes for now:
   - enca
   - encv
   - esds
+  - font
   - free
   - frma
   - ftyp
   - hdlr
   - hev1
+  - hind
+  - hint
+  - hmhd
   - hvc1
   - hvcC
   - keys
@@ -586,6 +591,7 @@ The inspector only parses the following ISOBMFF boxes for now:
   - meta
   - mfhd
   - mfra
+  - mfro
   - minf
   - moof
   - moov
@@ -594,6 +600,7 @@ The inspector only parses the following ISOBMFF boxes for now:
   - mvhd
   - nmhd
   - Opus
+  - padb
   - pasp
   - pdin
   - prft
@@ -612,19 +619,25 @@ The inspector only parses the following ISOBMFF boxes for now:
   - smhd
   - stbl
   - stco
+  - stdp
   - sthd
   - stsc
   - stsd
+  - stsh
   - stss
+  - stz2
   - stsz
   - stts
   - styp
+  - subt
   - tenc
   - tfdt
   - tfhd
+  - tfra
   - tkhd
   - traf
   - trak
+  - tref
   - trep
   - trex
   - trun
@@ -632,7 +645,9 @@ The inspector only parses the following ISOBMFF boxes for now:
   - url 
   - urn 
   - uuid
+  - vdep
   - vmhd
+  - vplx
 
 I plan to support each one of them but UUIDs (I may add support for some of them
 in the future, for example for Smooth Streaming ones).
