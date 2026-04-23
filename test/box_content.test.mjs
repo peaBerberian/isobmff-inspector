@@ -17,6 +17,82 @@ function box(type, payload) {
   ]);
 }
 
+test("ilst treats arbitrary Apple item types as metadata item containers", () => {
+  const parsed = parseBuffer(
+    box(
+      "ilst",
+      box(
+        "©too",
+        box(
+          "data",
+          [
+            0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x4c, 0x61, 0x76,
+            0x66,
+          ],
+        ),
+      ),
+    ),
+  );
+
+  assert.equal(parsed[0].type, "ilst");
+  assert.equal(parsed[0].children?.[0]?.type, "©too");
+  assert.equal(parsed[0].children?.[0]?.name, "Encoder Metadata Item");
+  assert.equal(parsed[0].children?.[0]?.children?.[0]?.type, "data");
+  const dataValues = Object.fromEntries(
+    parsed[0].children?.[0]?.children?.[0]?.values.map((value) => [
+      value.key,
+      value.value,
+    ]) ?? [],
+  );
+  assert.equal(dataValues.type_set, 0);
+  assert.equal(dataValues.type_code, 1);
+  assert.equal(dataValues.locale, 0);
+  assert.equal(dataValues.value, "Lavf");
+});
+
+test("data keeps nonstandard wide integer payloads as bytes with a warning", () => {
+  const parsed = parseBuffer(
+    box(
+      "data",
+      [
+        0x00, 0x00, 0x00, 0x15, 0x00, 0x00, 0x00, 0x00, 0x01, 0x23, 0x45, 0x67,
+        0x89, 0xab, 0xcd, 0xef,
+      ],
+    ),
+  );
+
+  const values = Object.fromEntries(
+    parsed[0].values.map((value) => [value.key, value.value]),
+  );
+  assert.equal(values.type_set, 0);
+  assert.equal(values.type_code, 21);
+  assert.equal(values.locale, 0);
+  assert.equal(values.value, "0123456789ABCDEF");
+  assert.equal(parsed[0].issues[0]?.severity, "warning");
+  assert.match(
+    parsed[0].issues[0]?.message ?? "",
+    /defined for 1 to 4 byte payloads/,
+  );
+});
+
+test("data parses signed and unsigned integer metadata values", () => {
+  const signedParsed = parseBuffer(
+    box("data", [0x00, 0x00, 0x00, 0x15, 0x00, 0x00, 0x00, 0x00, 0xff, 0xfe]),
+  );
+  const unsignedParsed = parseBuffer(
+    box("data", [0x00, 0x00, 0x00, 0x16, 0x00, 0x00, 0x00, 0x00, 0xff, 0xfe]),
+  );
+
+  const signedValues = Object.fromEntries(
+    signedParsed[0].values.map((value) => [value.key, value.value]),
+  );
+  const unsignedValues = Object.fromEntries(
+    unsignedParsed[0].values.map((value) => [value.key, value.value]),
+  );
+  assert.equal(signedValues.value, -2);
+  assert.equal(unsignedValues.value, 65534);
+});
+
 test("cslg version 0 parses signed timing fields", () => {
   const parsed = parseBuffer(
     box(

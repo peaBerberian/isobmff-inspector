@@ -219,6 +219,38 @@ test("event parser progressively emits nested box metadata", async () => {
   assert.equal(moovComplete?.box.children?.[0]?.type, "free");
 });
 
+test("event parser treats ilst entries as nested metadata item boxes", async () => {
+  const bytes = new Uint8Array([
+    0x00, 0x00, 0x00, 0x24, 0x69, 0x6c, 0x73, 0x74, 0x00, 0x00, 0x00, 0x1c,
+    0xa9, 0x74, 0x6f, 0x6f, 0x00, 0x00, 0x00, 0x14, 0x64, 0x61, 0x74, 0x61,
+    0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x4c, 0x61, 0x76, 0x66,
+  ]);
+
+  const events = [];
+  for await (const event of parseEvents(chunkBytes(bytes, 3))) {
+    events.push(event);
+  }
+
+  assert.deepEqual(
+    events.map((event) => [event.event, event.path.join("/")]),
+    [
+      ["box-start", "ilst"],
+      ["box-start", "ilst/©too"],
+      ["box-start", "ilst/©too/data"],
+      ["box-complete", "ilst/©too/data"],
+      ["box-complete", "ilst/©too"],
+      ["box-complete", "ilst"],
+    ],
+  );
+
+  const itemComplete = events.find(
+    (event) =>
+      event.event === "box-complete" && event.path.join("/") === "ilst/©too",
+  );
+  assert.equal(itemComplete?.box.name, "Encoder Metadata Item");
+  assert.equal(itemComplete?.box.children?.[0]?.type, "data");
+});
+
 test("event parser emits the same events for buffer inputs", async () => {
   const bytes = fs.readFileSync(SAMPLE_MP4);
   const events = [];

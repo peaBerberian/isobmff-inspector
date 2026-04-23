@@ -556,6 +556,7 @@ The inspector only parses the following ISOBMFF boxes for now:
   - cslg
   - ctts
   - dac3
+  - data
   - dec3
   - dOps
   - dinf
@@ -563,7 +564,7 @@ The inspector only parses the following ISOBMFF boxes for now:
   - ec-3
   - edts
   - elng
-  - elst
+  - elst (and sub-boxes)
   - emsg
   - enca
   - encv

@@ -10,6 +10,7 @@ import colr from "./colr.js";
 import cslg from "./cslg.js";
 import ctts from "./ctts.js";
 import dac3 from "./dac3.js";
+import data from "./data.js";
 import dec3 from "./dec3.js";
 import dinf from "./dinf.js";
 import dOps from "./dOps.js";
@@ -120,6 +121,7 @@ export default {
   co64,
   cslg,
   ctts,
+  data,
   dac3,
   dOps,
   dec3,
