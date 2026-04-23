@@ -23,7 +23,7 @@ export default {
     const cCount = reader.fieldUint("OutputChannelCount", 1);
     reader.fieldUint("PreSkip", 2);
     reader.fieldUint("InputSampleRate", 4);
-    reader.fieldSignedInt("OutputGain", 2, 16);
+    reader.fieldSignedInt("OutputGain", 2);
     const channelMappingFamily = reader.fieldUint("ChannelMappingFamily", 1);
     if (channelMappingFamily !== 0 && !reader.isFinished()) {
       reader.fieldUint("StreamCount", 1);

@@ -129,18 +129,16 @@ export default class BoxReader {
   }
 
   /**
-   * TODO: bits probably just could be very easily derived from nbBytes!!!!
    * @template {NumberKeys<T>} K
    * @param {K} key
    * @param {number} nbBytes
-   * @param {number} bits
    * @param {string|ParsedBoxFieldMetadata} [meta]
    * @returns {number}
    */
-  fieldSignedInt(key, nbBytes, bits, meta) {
+  fieldSignedInt(key, nbBytes, meta) {
     return this.addField(
       key,
-      toSignedInt(this.#bytesToInt(nbBytes), bits),
+      toSignedInt(this.#bytesToInt(nbBytes), nbBytes * 8),
       meta,
     );
   }

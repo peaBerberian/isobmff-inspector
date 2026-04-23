@@ -19,11 +19,11 @@ export default {
     const version = reader.fieldUint("version", 1, "cslg version");
     reader.fieldUint("flags", 3, "cslg flags, generally at 0");
     if (version === 0) {
-      reader.fieldSignedInt("compositionToDTSShift", 4, 32);
-      reader.fieldSignedInt("leastDecodeToDisplayDelta", 4, 32);
-      reader.fieldSignedInt("greatestDecodeToDisplayDelta", 4, 32);
-      reader.fieldSignedInt("compositionStartTime", 4, 32);
-      reader.fieldSignedInt("compositionEndTime", 4, 32);
+      reader.fieldSignedInt("compositionToDTSShift", 4);
+      reader.fieldSignedInt("leastDecodeToDisplayDelta", 4);
+      reader.fieldSignedInt("greatestDecodeToDisplayDelta", 4);
+      reader.fieldSignedInt("compositionStartTime", 4);
+      reader.fieldSignedInt("compositionEndTime", 4);
     } else if (version === 1) {
       reader.fieldInt64("compositionToDTSShift");
       reader.fieldInt64("leastDecodeToDisplayDelta");
