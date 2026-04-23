@@ -39,6 +39,7 @@ import mdia from "./mdia.js";
 import mehd from "./mehd.js";
 import meta from "./meta.js";
 import mfhd from "./mfhd.js";
+import mfra from "./mfra.js";
 import minf from "./minf.js";
 import moof from "./moof.js";
 import moov from "./moov.js";
@@ -133,6 +134,7 @@ export default {
   mehd,
   meta,
   mfhd,
+  mfra,
   minf,
   moof,
   moov,

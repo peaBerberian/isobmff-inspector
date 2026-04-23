@@ -585,6 +585,7 @@ The inspector only parses the following ISOBMFF boxes for now:
   - mehd
   - meta
   - mfhd
+  - mfra
   - minf
   - moof
   - moov
