@@ -6,7 +6,7 @@ import {
   bytesToHex,
   getProgressiveSource,
   isBufferSource,
-  utf8ToStr,
+  parseBoxType,
 } from "../utils/bytes.js";
 import ProgressiveByteReader from "../utils/ProgressiveByteReader.js";
 import {
@@ -57,8 +57,7 @@ function recursiveParseBoxes(arr, baseOffset = 0) {
     let size = be4toi(arr, currentOffset);
     currentOffset += 4;
 
-    // TODO: Should we throw if not valid fourCC?
-    const name = utf8ToStr(arr, currentOffset, 4);
+    const name = parseBoxType(arr, currentOffset);
     currentOffset += 4;
     /** @type {"size" | "largeSize" | "extendsToEnd"} */
     let sizeField = "size";
@@ -197,7 +196,7 @@ async function parseProgressive(source) {
 
     let size = be4toi(header, 0);
     // TODO: Should we throw if not valid fourCC?
-    const name = utf8ToStr(header, 4, 4);
+    const name = parseBoxType(header, 4);
     let headerSize = MIN_BOX_HEADER_SIZE;
     /** @type {"size" | "largeSize" | "extendsToEnd"} */
     let sizeField = "size";

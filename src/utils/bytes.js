@@ -1,6 +1,21 @@
 const textDecoder = new TextDecoder();
 
 /**
+ * ISOBMFF box types are FourCC byte sequences.
+ * @param {Uint8Array} bytes
+ * @param {number} offset
+ * @returns {string}
+ */
+export function parseBoxType(bytes, offset) {
+  return String.fromCharCode(
+    bytes[offset],
+    bytes[offset + 1],
+    bytes[offset + 2],
+    bytes[offset + 3],
+  );
+}
+
+/**
  * Translate groups of 2 big-endian bytes to Integer (from 0 up to 65535).
  * @param {ArrayLike<number>} bytes
  * @param {number} off - The offset (from the start of the given array)
