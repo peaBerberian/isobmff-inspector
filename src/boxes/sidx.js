@@ -14,8 +14,8 @@
  * @property {number} flags
  * @property {number} reference_ID
  * @property {number} timescale
- * @property {number} earliest_presentation_time
- * @property {number} first_offset
+ * @property {number|bigint} earliest_presentation_time
+ * @property {number|bigint} first_offset
  * @property {number} reserved
  * @property {number} reference_count
  * @property {SegmentIndexReference[]} items
@@ -32,8 +32,9 @@ export default {
     const flags = r.readUint(3);
     const reference_ID = r.readUint(4);
     const timescale = r.readUint(4);
-    const earliest_presentation_time = r.readUint(version === 0 ? 4 : 8);
-    const first_offset = r.readUint(version === 0 ? 4 : 8);
+    const earliest_presentation_time =
+      version === 0 ? r.readUint(4) : r.readInt64();
+    const first_offset = version === 0 ? r.readUint(4) : r.readInt64();
     const reserved = r.readUint(2);
     const reference_count = r.readUint(2);
 

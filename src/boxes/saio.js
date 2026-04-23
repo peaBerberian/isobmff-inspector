@@ -19,12 +19,12 @@ export default {
     const entry_count = r.readUint(4);
     ret.entry_count = entry_count;
 
-    /** @type {Array.<number>} */
+    /** @type {Array.<number|bigint>} */
     const offset = [];
     ret.offset = offset;
     let i = entry_count;
     while (i--) {
-      offset.push(r.readUint(ret.version === 0 ? 4 : 8));
+      offset.push(ret.version === 0 ? r.readUint(4) : r.readInt64());
     }
 
     return ret;
