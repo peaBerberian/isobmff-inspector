@@ -22,36 +22,54 @@ export function addBoxIssue(box, severity, message) {
 
 /**
  * @param {string} name
+ * @param {string=} parentType
+ * @returns {import("../boxes/types.js").BoxDefinition<{ [key: string]: unknown }> | undefined}
+ */
+export function getBoxDefinition(name, parentType) {
+  const exactDefinition = definitions[name];
+  if (exactDefinition !== undefined) {
+    return exactDefinition;
+  }
+
+  return definitions[parentType ?? ""]?.getChildDefinition?.(name);
+}
+
+/**
+ * @param {string} name
+ * @param {string=} parentType
  * @returns {boolean}
  */
-export function shouldReadContent(name) {
-  const config = definitions[name];
+export function shouldReadContent(name, parentType) {
+  const config = getBoxDefinition(name, parentType);
   return !!(config && (config.parser || config.container));
 }
 
 /**
  * @param {string} name
+ * @param {string=} parentType
  * @returns {boolean}
  */
-export function hasContentParser(name) {
-  const config = definitions[name];
+export function hasContentParser(name, parentType) {
+  const config = getBoxDefinition(name, parentType);
   return !!config?.parser;
 }
 
 /**
  * @param {string} name
+ * @param {string=} parentType
  * @returns {boolean}
  */
-export function isContainerBox(name) {
-  const config = definitions[name];
+export function isContainerBox(name, parentType) {
+  const config = getBoxDefinition(name, parentType);
   return !!config?.container;
 }
 
 /**
  * @param {import("../types.js").ParsedBox} atomObject
  * @param {Uint8Array} content
- * @param {(content: Uint8Array, offset: number) => import("../types.js").ParsedBox[]} parseChildren
+ * @param {(content: Uint8Array, offset: number, parentType?: string) => import("../types.js").ParsedBox[]} parseChildren
  * @param {number} contentOffset
+ * @param {string=} parentType
  * @returns {void}
  */
 export function parseBoxContent(
@@ -59,8 +77,9 @@ export function parseBoxContent(
   content,
   parseChildren,
   contentOffset,
+  parentType,
 ) {
-  const config = definitions[atomObject.type];
+  const config = getBoxDefinition(atomObject.type, parentType);
   if (!config) {
     return;
   }
@@ -120,6 +139,7 @@ export function parseBoxContent(
     atomObject.children = parseChildren(
       contentForChildren || content,
       contentOffset,
+      atomObject.type,
     );
   }
 }

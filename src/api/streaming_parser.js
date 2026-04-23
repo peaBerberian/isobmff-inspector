@@ -50,11 +50,12 @@ async function* emitParsedBoxEvents(boxes, parentPath) {
 
 /**
  * @param {ProgressiveByteReader} reader
- * @param {(content: Uint8Array, offset: number) => import("../types.js").ParsedBox[]} parseBuffer
+ * @param {(content: Uint8Array, offset: number, parentType?: string) => import("../types.js").ParsedBox[]} parseBuffer
  * @param {number | undefined} remainingLength
  * @param {string[]} parentPath
  * @param {((box: import("../types.js").ParsedBox) => void)=} onParsedBox
  * @param {number=} baseOffset
+ * @param {string=} parentType
  * @returns {AsyncGenerator<import("../types.js").ParsedBoxParseEvent, number, void>}
  */
 async function* parseBoxEventsFromReader(
@@ -64,6 +65,7 @@ async function* parseBoxEventsFromReader(
   parentPath,
   onParsedBox,
   baseOffset = 0,
+  parentType,
 ) {
   let consumedLength = 0;
 
@@ -213,7 +215,10 @@ async function* parseBoxEventsFromReader(
       contentSize = size - headerSize;
     }
 
-    if (isContainerBox(name) && !hasContentParser(name)) {
+    if (
+      isContainerBox(name, parentType) &&
+      !hasContentParser(name, parentType)
+    ) {
       /** @type {import("../types.js").ParsedBox[]} */
       const children = [];
       const childConsumedLength = yield* parseBoxEventsFromReader(
@@ -225,6 +230,7 @@ async function* parseBoxEventsFromReader(
           children.push(child);
         },
         boxOffset + headerSize,
+        name,
       );
       consumedLength += childConsumedLength;
       if (contentSize === undefined) {
@@ -243,6 +249,7 @@ async function* parseBoxEventsFromReader(
         new Uint8Array(0),
         () => children,
         boxOffset + headerSize,
+        parentType,
       );
       yield { event: "box-complete", path, box };
       onParsedBox?.(box);
@@ -252,7 +259,7 @@ async function* parseBoxEventsFromReader(
       continue;
     }
 
-    if (shouldReadContent(name)) {
+    if (shouldReadContent(name, parentType)) {
       const content =
         contentSize === undefined
           ? await reader.readUntilEnd()
@@ -270,7 +277,13 @@ async function* parseBoxEventsFromReader(
         );
       }
 
-      parseBoxContent(box, content, parseBuffer, boxOffset + headerSize);
+      parseBoxContent(
+        box,
+        content,
+        parseBuffer,
+        boxOffset + headerSize,
+        parentType,
+      );
       if (box.children) {
         yield* emitParsedBoxEvents(box.children, path);
         yield { event: "box-complete", path, box };
@@ -306,6 +319,7 @@ async function* parseBoxEventsFromReader(
       new Uint8Array(0),
       parseBuffer,
       boxOffset + headerSize,
+      parentType,
     );
     yield { event: "box-complete", path, box };
     onParsedBox?.(box);
@@ -321,13 +335,13 @@ async function* parseBoxEventsFromReader(
 /**
  * Progressively parse ISOBMFF data and yield metadata events as boxes are found.
  * @param {import("../types.js").ISOBMFFInput} input
- * @param {(content: Uint8Array, offset: number) => import("../types.js").ParsedBox[]} parseBuffer
+ * @param {(content: Uint8Array, offset: number, parentType?: string) => import("../types.js").ParsedBox[]} parseBuffer
  * @returns {AsyncGenerator<import("../types.js").ParsedBoxParseEvent, void, void>}
  */
 export default async function* parseBoxEvents(input, parseBuffer) {
   if (isBufferSource(input)) {
     yield* emitParsedBoxEvents(
-      parseBuffer(bufferSourceToUint8Array(input), 0),
+      parseBuffer(bufferSourceToUint8Array(input), 0, undefined),
       [],
     );
     return;
@@ -344,6 +358,7 @@ export default async function* parseBoxEvents(input, parseBuffer) {
       [],
       undefined,
       0,
+      undefined,
     );
     return;
   }

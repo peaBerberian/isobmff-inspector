@@ -25,9 +25,10 @@ const UUID_SUBTYPE_BYTES = 16;
  * Parse recursively ISOBMFF Uint8Array.
  * @param {Uint8Array} arr
  * @param {number} baseOffset
+ * @param {string=} parentType
  * @returns {import("../types.js").ParsedBox[]}
  */
-function recursiveParseBoxes(arr, baseOffset = 0) {
+function recursiveParseBoxes(arr, baseOffset = 0, parentType) {
   let i = 0;
   /** @type {import("../types.js").ParsedBox[]} */
   const returnedArray = [];
@@ -134,11 +135,12 @@ function recursiveParseBoxes(arr, baseOffset = 0) {
 
     parseBoxContent(
       atomObject,
-      shouldReadContent(name)
+      shouldReadContent(name, parentType)
         ? arr.slice(currentOffset, size + boxStartOffset)
         : new Uint8Array(0),
       recursiveParseBoxes,
       baseOffset + currentOffset,
+      parentType,
     );
     i += size;
   }
