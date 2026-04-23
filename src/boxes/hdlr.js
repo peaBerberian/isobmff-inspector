@@ -3,7 +3,7 @@
  * @property {number} version
  * @property {number} flags
  * @property {number} pre_defined
- * @property {number} handler_type
+ * @property {string|number} handler_type
  * @property {[number, number, number]} reserved
  * @property {string} name
  */
@@ -18,7 +18,7 @@ export default {
     reader.fieldUint("version", 1);
     reader.fieldUint("flags", 3);
     reader.fieldUint("pre_defined", 4);
-    reader.fieldUint("handler_type", 4);
+    reader.fieldFourCc("handler_type");
     /** @type {[number, number, number]} */
     const reserved = [
       reader.readUint(4),
