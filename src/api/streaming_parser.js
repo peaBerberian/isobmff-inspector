@@ -92,6 +92,7 @@ async function* parseBoxEventsFromReader(
         type: "",
         offset: boxOffset,
         size: header.length,
+        actualSize: header.length,
         headerSize: header.length,
         values: [],
         issues: [
@@ -131,6 +132,7 @@ async function* parseBoxEventsFromReader(
           type: name,
           offset: boxOffset,
           size: header.length + largeSizeBuffer.length,
+          actualSize: header.length + largeSizeBuffer.length,
           headerSize,
           sizeField,
           values: [],
@@ -170,6 +172,7 @@ async function* parseBoxEventsFromReader(
       type: name,
       offset: boxOffset,
       size,
+      actualSize: size === 0 ? headerSize : size,
       headerSize,
       sizeField,
       values: [],
@@ -209,7 +212,7 @@ async function* parseBoxEventsFromReader(
           ? undefined
           : remainingLength - consumedLength;
       if (contentSize !== undefined) {
-        box.size = headerSize + contentSize;
+        box.actualSize = headerSize + contentSize;
       }
     } else {
       contentSize = size - headerSize;
@@ -234,8 +237,9 @@ async function* parseBoxEventsFromReader(
       );
       consumedLength += childConsumedLength;
       if (contentSize === undefined) {
-        box.size = headerSize + childConsumedLength;
+        box.actualSize = headerSize + childConsumedLength;
       } else if (childConsumedLength < contentSize) {
+        box.actualSize = headerSize + childConsumedLength;
         addBoxIssue(
           box,
           "error",
@@ -266,8 +270,9 @@ async function* parseBoxEventsFromReader(
           : await reader.read(contentSize);
       consumedLength += content.length;
       if (contentSize === undefined) {
-        box.size = headerSize + content.length;
+        box.actualSize = headerSize + content.length;
       } else if (content.length < contentSize) {
+        box.actualSize = headerSize + content.length;
         addBoxIssue(
           box,
           "error",
@@ -304,8 +309,9 @@ async function* parseBoxEventsFromReader(
         : await reader.skip(contentSize);
     consumedLength += skippedContentSize;
     if (contentSize === undefined) {
-      box.size = headerSize + skippedContentSize;
+      box.actualSize = headerSize + skippedContentSize;
     } else if (skippedContentSize < contentSize) {
+      box.actualSize = headerSize + skippedContentSize;
       addBoxIssue(
         box,
         "error",

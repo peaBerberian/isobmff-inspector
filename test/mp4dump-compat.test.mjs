@@ -25,6 +25,8 @@ test("parse issues are returned on boxes without console warnings", () => {
     assert.equal(warnCount, 0);
     assert.equal(parsed.length, 1);
     assert.equal(parsed[0].type, "ftyp");
+    assert.equal(parsed[0].size, 16);
+    assert.equal(parsed[0].actualSize, 12);
     assert.deepEqual(
       parsed[0].issues.map((issue) => issue.severity),
       ["error", "error"],

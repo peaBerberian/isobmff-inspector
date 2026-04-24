@@ -13,6 +13,7 @@ function normalize(nodes) {
     uuid: node.uuid,
     offset: node.offset,
     size: node.size,
+    actualSize: node.actualSize,
     headerSize: node.headerSize,
     sizeField: node.sizeField,
     values: node.values,
@@ -122,13 +123,14 @@ test("progressive parser skips unparsed payload boxes before later boxes", async
       box.type,
       box.offset,
       box.size,
+      box.actualSize,
       box.headerSize,
       box.sizeField,
     ]),
     [
-      ["ftyp", 0, 16, 8, "size"],
-      ["mdat", 16, 20, 8, "size"],
-      ["free", 36, 8, 8, "size"],
+      ["ftyp", 0, 16, 16, 8, "size"],
+      ["mdat", 16, 20, 20, 8, "size"],
+      ["free", 36, 8, 8, 8, "size"],
     ],
   );
   assert.equal(parsed[1].name, "Media Data Box");
@@ -146,6 +148,7 @@ test("parsers expose uuid boxes through a hex uuid property", async () => {
     uuid: "00112233445566778899AABBCCDDEEFF",
     offset: 0,
     size: 24,
+    actualSize: 24,
     headerSize: 24,
     sizeField: "size",
   };
@@ -217,6 +220,72 @@ test("event parser progressively emits nested box metadata", async () => {
       event.event === "box-complete" && event.path.join("/") === "moov",
   );
   assert.equal(moovComplete?.box.children?.[0]?.type, "free");
+});
+
+test("extends-to-end boxes keep declared size 0 and expose actualSize separately", async () => {
+  const bytes = new Uint8Array([
+    0x00, 0x00, 0x00, 0x00, 0x66, 0x72, 0x65, 0x65, 0xaa, 0xbb, 0xcc, 0xdd,
+  ]);
+
+  assert.deepEqual(parseBuffer(bytes), [
+    {
+      type: "free",
+      offset: 0,
+      size: 0,
+      actualSize: 12,
+      headerSize: 8,
+      sizeField: "extendsToEnd",
+      name: "Free Space Box",
+      description: "This box can be completely ignored",
+      values: [],
+      issues: [],
+    },
+  ]);
+
+  assert.deepEqual(await parseBoxes(chunkBytes(bytes, 3)), [
+    {
+      type: "free",
+      offset: 0,
+      size: 0,
+      actualSize: 12,
+      headerSize: 8,
+      sizeField: "extendsToEnd",
+      name: "Free Space Box",
+      description: "This box can be completely ignored",
+      values: [],
+      issues: [],
+    },
+  ]);
+});
+
+test("event parser keeps box-start and box-complete size semantics aligned for extends-to-end boxes", async () => {
+  const bytes = new Uint8Array([
+    0x00, 0x00, 0x00, 0x00, 0x66, 0x72, 0x65, 0x65, 0xaa, 0xbb, 0xcc, 0xdd,
+  ]);
+
+  const bufferEvents = [];
+  for await (const event of parseEvents(bytes)) {
+    bufferEvents.push(event);
+  }
+
+  const progressiveEvents = [];
+  for await (const event of parseEvents(chunkBytes(bytes, 3))) {
+    progressiveEvents.push(event);
+  }
+
+  for (const events of [bufferEvents, progressiveEvents]) {
+    assert.deepEqual(
+      events.map((event) =>
+        event.event === "box-start"
+          ? [event.event, event.type, event.size, event.sizeField]
+          : [event.event, event.box.type, event.box.size, event.box.actualSize],
+      ),
+      [
+        ["box-start", "free", 0, "extendsToEnd"],
+        ["box-complete", "free", 0, 12],
+      ],
+    );
+  }
 });
 
 test("event parser treats ilst entries as nested metadata item boxes", async () => {

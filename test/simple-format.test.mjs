@@ -45,6 +45,7 @@ test("simple format exposes parsed fields as plain keyed values", () => {
         type: "SMP1",
         offset: 0,
         size: 15,
+        actualSize: 15,
         headerSize: 8,
         sizeField: "size",
         fields: {
@@ -170,6 +171,7 @@ test("simple format keeps children", async () => {
       type: "moov",
       offset: 0,
       size: 16,
+      actualSize: 16,
       headerSize: 8,
       sizeField: "size",
       fields: {},
@@ -178,6 +180,7 @@ test("simple format keeps children", async () => {
           type: "free",
           offset: 8,
           size: 8,
+          actualSize: 8,
           headerSize: 8,
           sizeField: "size",
           fields: {},

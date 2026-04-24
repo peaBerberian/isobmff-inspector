@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Features
+
+- Parsed boxes in both `"full"` and `"simple"` formats now expose `actualSize`, the number of bytes actually present in the input for that box. `size` remains the header-declared size, including `0` for `extendsToEnd` boxes.
+
+### Bug fixes
+
+- `extendsToEnd` boxes wrongly had their `size` set to their actual size where as per the API it should have been the announced size (so `0`). Now it is `0` and `actualSize` reflect its true size.
+- `hdlr`'s `handler_type` is now handled like any fourCC (`string` when printable, `number` when not) instead of always a `number`
+
 ## v0.4.0 (2026-04-23)
 
 ### Changes

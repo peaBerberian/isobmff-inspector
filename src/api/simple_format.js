@@ -16,6 +16,7 @@ function formatParsedBox(box) {
     type: box.type,
     offset: box.offset,
     size: box.size,
+    actualSize: box.actualSize,
     headerSize: box.headerSize,
     fields: formatValues(box.values),
   };

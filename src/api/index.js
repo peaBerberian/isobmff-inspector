@@ -41,6 +41,7 @@ function recursiveParseBoxes(arr, baseOffset = 0, parentType) {
         type: "",
         offset: baseOffset + currentOffset,
         size: arr.length - currentOffset,
+        actualSize: arr.length - currentOffset,
         headerSize: arr.length - currentOffset,
         values: [],
         issues: [
@@ -70,6 +71,7 @@ function recursiveParseBoxes(arr, baseOffset = 0, parentType) {
           type: name,
           offset: baseOffset + boxStartOffset,
           size: arr.length - boxStartOffset,
+          actualSize: arr.length - boxStartOffset,
           headerSize: arr.length - boxStartOffset,
           sizeField,
           values: [],
@@ -88,7 +90,6 @@ function recursiveParseBoxes(arr, baseOffset = 0, parentType) {
       currentOffset += LARGE_BOX_SIZE_BYTES;
     } else if (size === 0) {
       sizeField = "extendsToEnd";
-      size = arr.length - boxStartOffset;
     }
 
     /** @type {import("../types.js").ParsedBox} */
@@ -96,13 +97,18 @@ function recursiveParseBoxes(arr, baseOffset = 0, parentType) {
       type: name,
       offset: baseOffset + boxStartOffset,
       size,
+      actualSize:
+        size === 0
+          ? arr.length - boxStartOffset
+          : Math.min(size, arr.length - boxStartOffset),
       headerSize: currentOffset - boxStartOffset,
       sizeField,
       values: [],
       issues: [],
     };
+    const effectiveSize = size === 0 ? atomObject.actualSize : size;
 
-    if (size < currentOffset - boxStartOffset) {
+    if (size !== 0 && size < currentOffset - boxStartOffset) {
       addBoxIssue(
         atomObject,
         "error",
@@ -136,13 +142,13 @@ function recursiveParseBoxes(arr, baseOffset = 0, parentType) {
     parseBoxContent(
       atomObject,
       shouldReadContent(name, parentType)
-        ? arr.slice(currentOffset, size + boxStartOffset)
+        ? arr.slice(currentOffset, boxStartOffset + effectiveSize)
         : new Uint8Array(0),
       recursiveParseBoxes,
       baseOffset + currentOffset,
       parentType,
     );
-    i += size;
+    i += effectiveSize;
   }
 
   return returnedArray;
@@ -182,6 +188,7 @@ async function parseProgressive(source) {
         type: "",
         offset: boxOffset,
         size: header.length,
+        actualSize: header.length,
         headerSize: header.length,
         values: [],
         issues: [
@@ -213,6 +220,7 @@ async function parseProgressive(source) {
           type: name,
           offset: boxOffset,
           size: header.length + largeSizeBuffer.length,
+          actualSize: header.length + largeSizeBuffer.length,
           headerSize,
           sizeField,
           values: [],
@@ -246,6 +254,7 @@ async function parseProgressive(source) {
       type: name,
       offset: boxOffset,
       size,
+      actualSize: size === 0 ? headerSize : size,
       headerSize,
       sizeField,
       values: [],
@@ -269,7 +278,7 @@ async function parseProgressive(source) {
       if (shouldReadContent(name)) {
         const content = await reader.readUntilEnd();
         offset += content.length;
-        atomObject.size = headerSize + content.length;
+        atomObject.actualSize = headerSize + content.length;
         parseBoxContent(
           atomObject,
           content,
@@ -279,7 +288,7 @@ async function parseProgressive(source) {
       } else {
         const skippedContentSize = await reader.skipUntilEnd();
         offset += skippedContentSize;
-        atomObject.size = headerSize + skippedContentSize;
+        atomObject.actualSize = headerSize + skippedContentSize;
         parseBoxContent(
           atomObject,
           new Uint8Array(0),
@@ -295,6 +304,7 @@ async function parseProgressive(source) {
       const content = await reader.read(contentSize);
       offset += content.length;
       if (content.length < contentSize) {
+        atomObject.actualSize = headerSize + content.length;
         addBoxIssue(
           atomObject,
           "error",
@@ -316,6 +326,7 @@ async function parseProgressive(source) {
       const skippedContentSize = await reader.skip(contentSize);
       offset += skippedContentSize;
       if (skippedContentSize < contentSize) {
+        atomObject.actualSize = headerSize + skippedContentSize;
         addBoxIssue(
           atomObject,
           "error",

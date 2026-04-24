@@ -160,6 +160,10 @@ Events:
 }
 ```
 
+`box-start` events only expose metadata known from the header. The actual
+number of bytes available for a box is exposed on the final `ParsedBox` sent by
+the matching `box-complete` event.
+
 ```js
 {
   event: "box-complete",
@@ -182,7 +186,8 @@ structure:
     type: "styp", // 4-character box type
     name: "Segment Type Box", // Optional. More human-readable name for the box
     offset: 0, // offset from the beginning of the input, in bytes
-    size: 24, // size, in bytes
+    size: 24, // announced box size, in bytes; stays 0 for extends-to-end boxes
+    actualSize: 24, // bytes actually present in the input for that box
     headerSize: 8, // size of the box header, in bytes
 
     // Optional box human-readable description
@@ -255,6 +260,10 @@ structure:
 
 An `uuid` property is also present only on `uuid` boxes and contains
 the user-defined box UUID as an uppercase hexadecimal string.
+
+`actualSize` is always present on parsed boxes. It equals `size` for complete
+fixed-size boxes, is lower when the input is truncated, and carries the
+observed extent for `extendsToEnd` boxes whose declared `size` stays `0`.
 
 When possible, the inspector keeps parsing after an error to return as much
 information as it can. Parsing issues are reported on the corresponding box
@@ -474,6 +483,7 @@ const parsed = await inspectISOBMFF(input, { format: "simple" });
   type: "ftyp",
   offset: 0,
   size: 24,
+  actualSize: 24,
   headerSize: 8,
   sizeField: "size",
   fields: {
@@ -491,6 +501,7 @@ Simple boxes use the following shape:
   type: "moov",
   offset: 24,
   size: 1024,
+  actualSize: 1024,
   headerSize: 8,
   sizeField: "size",
   uuid: "001122...", // only for uuid boxes

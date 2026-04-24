@@ -127,6 +127,7 @@
  * @property {string} type
  * @property {number} offset
  * @property {number} size
+ * @property {number} actualSize
  * @property {number} headerSize
  * @property {"size" | "largeSize" | "extendsToEnd"=} sizeField
  * @property {ParsedBoxValue[]} values
@@ -147,6 +148,7 @@
  * @property {string} type
  * @property {number} offset
  * @property {number} size
+ * @property {number} actualSize
  * @property {number} headerSize
  * @property {"size" | "largeSize" | "extendsToEnd"=} sizeField
  * @property {string=} uuid
