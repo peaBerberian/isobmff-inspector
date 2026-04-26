@@ -28,12 +28,16 @@ export default {
 
     /** @type {Array<ShadowSyncSampleEntry>} */
     const entries = [];
+    const entriesOffset = reader.getCurrentOffset();
     for (let i = 0; i < entry_count; i++) {
       entries.push({
         shadowed_sample_number: reader.readUint(4),
         sync_sample_number: reader.readUint(4),
       });
     }
-    reader.addField("entries", entries);
+    reader.addField("entries", entries, {
+      offset: entriesOffset,
+      byteLength: reader.getCurrentOffset() - entriesOffset,
+    });
   },
 };

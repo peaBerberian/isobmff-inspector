@@ -27,9 +27,13 @@ export default {
       "Number of chunk offsets declared",
     );
     const chunk_offsets = [];
+    const chunkOffsetsOffset = reader.getCurrentOffset();
     for (let i = 0; i < entry_count; i++) {
       chunk_offsets.push(reader.readUint64());
     }
-    reader.addField("chunk_offsets", chunk_offsets);
+    reader.addField("chunk_offsets", chunk_offsets, {
+      offset: chunkOffsetsOffset,
+      byteLength: reader.getCurrentOffset() - chunkOffsetsOffset,
+    });
   },
 };

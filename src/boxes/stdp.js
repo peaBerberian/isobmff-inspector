@@ -21,10 +21,14 @@ export default {
 
     /** @type {Array<number>} */
     const priorities = [];
+    const prioritiesOffset = reader.getCurrentOffset();
     while (reader.getRemainingLength() >= 2) {
       priorities.push(reader.readUint(2));
     }
-    reader.addField("priorities", priorities);
+    reader.addField("priorities", priorities, {
+      offset: prioritiesOffset,
+      byteLength: reader.getCurrentOffset() - prioritiesOffset,
+    });
 
     if (!reader.isFinished()) {
       reader.fieldBytes("trailing_bytes", reader.getRemainingLength());

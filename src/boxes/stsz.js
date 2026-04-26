@@ -12,10 +12,14 @@ export default {
     if (sample_size === 0) {
       /** @type {Array.<number>} */
       const entries = [];
+      const entriesOffset = r.getCurrentOffset();
       for (let i = 0; i < sample_count; i++) {
         entries.push(r.readUint(4));
       }
-      r.addField("entries", entries);
+      r.addField("entries", entries, {
+        offset: entriesOffset,
+        byteLength: r.getCurrentOffset() - entriesOffset,
+      });
     }
   },
 };

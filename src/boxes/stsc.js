@@ -18,6 +18,7 @@ export default {
 
     /** @type {Array.<StscEntry>} */
     const entries = [];
+    const entriesOffset = r.getCurrentOffset();
     for (let i = 0; i < entry_count; i++) {
       const e = {
         first_chunk: r.readUint(4),
@@ -26,6 +27,9 @@ export default {
       };
       entries.push(e);
     }
-    r.addField("entries", entries);
+    r.addField("entries", entries, {
+      offset: entriesOffset,
+      byteLength: r.getCurrentOffset() - entriesOffset,
+    });
   },
 };

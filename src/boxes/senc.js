@@ -73,12 +73,16 @@ export default {
 
     /** @type {import("../types.js").ParsedStructField[]} */
     const entries = [];
+    const entriesOffset = reader.getCurrentOffset();
     for (let i = 0; i < sample_count && !reader.isFinished(); i++) {
       entries.push(
         readSampleEncryptionEntry(reader, perSampleIvSize, useSubsamples),
       );
     }
-    reader.addField("entries", entries);
+    reader.addField("entries", entries, {
+      offset: entriesOffset,
+      byteLength: reader.getCurrentOffset() - entriesOffset,
+    });
 
     if (!reader.isFinished()) {
       reader.fieldBytes("trailing_bytes", reader.getRemainingLength());

@@ -10,9 +10,13 @@ export default {
 
     /** @type {Array.<number>} */
     const chunk_offsets = [];
+    const chunkOffsetsOffset = r.getCurrentOffset();
     for (let i = 0; i < entry_count; i++) {
       chunk_offsets.push(r.readUint(4));
     }
-    r.addField("chunk_offsets", chunk_offsets);
+    r.addField("chunk_offsets", chunk_offsets, {
+      offset: chunkOffsetsOffset,
+      byteLength: r.getCurrentOffset() - chunkOffsetsOffset,
+    });
   },
 };

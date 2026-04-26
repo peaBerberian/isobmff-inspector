@@ -31,6 +31,7 @@ export default {
 
     /** @type Array<EditListBoxEntry> */
     const entries = [];
+    const entriesOffset = reader.getCurrentOffset();
     for (let i = 0; i < entry_count; i++) {
       entries.push({
         segment_duration:
@@ -40,6 +41,9 @@ export default {
         media_rate_fraction: reader.readUint(2),
       });
     }
-    reader.addField("entries", entries);
+    reader.addField("entries", entries, {
+      offset: entriesOffset,
+      byteLength: reader.getCurrentOffset() - entriesOffset,
+    });
   },
 };

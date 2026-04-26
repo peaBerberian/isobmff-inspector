@@ -20,10 +20,14 @@ export default {
     r.fieldUint("flags", 3);
     const entry_count = r.fieldUint("entry_count", 4);
     const sample_numbers = [];
+    const sampleNumbersOffset = r.getCurrentOffset();
 
     for (let i = 0; i < entry_count; i++) {
       sample_numbers.push(r.readUint(4));
     }
-    r.addField("sample_numbers", sample_numbers);
+    r.addField("sample_numbers", sample_numbers, {
+      offset: sampleNumbersOffset,
+      byteLength: r.getCurrentOffset() - sampleNumbersOffset,
+    });
   },
 };

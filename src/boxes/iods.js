@@ -19,9 +19,13 @@ export default {
 
     r.fieldUint("version", 3, "iods box flags");
     const descriptors = [];
+    const descriptorsOffset = r.getCurrentOffset();
     while (!r.isFinished()) {
       descriptors.push(parseDescriptor(r));
     }
-    r.addField("descriptors", descriptors);
+    r.addField("descriptors", descriptors, {
+      offset: descriptorsOffset,
+      byteLength: r.getCurrentOffset() - descriptorsOffset,
+    });
   },
 };

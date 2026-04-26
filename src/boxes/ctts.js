@@ -30,6 +30,7 @@ export default {
       "Number of entries in that box",
     );
     const entries = [];
+    const entriesOffset = reader.getCurrentOffset();
     for (let i = 0; i < entry_count; i++) {
       entries.push({
         sample_count: reader.readUint(4),
@@ -37,6 +38,9 @@ export default {
           version === 0 ? reader.readUint(4) : ~~reader.readUint(4),
       });
     }
-    reader.addField("entries", entries);
+    reader.addField("entries", entries, {
+      offset: entriesOffset,
+      byteLength: reader.getCurrentOffset() - entriesOffset,
+    });
   },
 };

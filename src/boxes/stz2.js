@@ -32,6 +32,7 @@ export default {
 
     /** @type {Array<number>} */
     const entries = [];
+    const entriesOffset = reader.getCurrentOffset();
     if (field_size === 4) {
       while (entries.length < sample_count) {
         const packed = bitsField(reader.readUint(1), 8, [
@@ -51,6 +52,9 @@ export default {
     } else {
       throw new Error("invalid field_size");
     }
-    reader.addField("entries", entries);
+    reader.addField("entries", entries, {
+      offset: entriesOffset,
+      byteLength: reader.getCurrentOffset() - entriesOffset,
+    });
   },
 };

@@ -19,6 +19,7 @@ export default {
 
     /** @type {import("../types.js").ParsedStructField[]} */
     const entries = [];
+    const entriesOffset = reader.getCurrentOffset();
     for (let i = 0; i < entry_count && !reader.isFinished(); i++) {
       entries.push(
         structField([
@@ -27,6 +28,9 @@ export default {
         ]),
       );
     }
-    reader.addField("entries", entries);
+    reader.addField("entries", entries, {
+      offset: entriesOffset,
+      byteLength: reader.getCurrentOffset() - entriesOffset,
+    });
   },
 };

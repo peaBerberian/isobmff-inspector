@@ -19,13 +19,17 @@ export default {
     reader.fieldUint("flags", 3);
     reader.fieldUint("pre_defined", 4);
     reader.fieldFourCc("handler_type");
+    const reservedOffset = reader.getCurrentOffset();
     /** @type {[number, number, number]} */
     const reserved = [
       reader.readUint(4),
       reader.readUint(4),
       reader.readUint(4),
     ];
-    reader.addField("reserved", reserved);
+    reader.addField("reserved", reserved, {
+      offset: reservedOffset,
+      byteLength: reader.getCurrentOffset() - reservedOffset,
+    });
     reader.fieldNullTerminatedUtf8("name");
   },
 };

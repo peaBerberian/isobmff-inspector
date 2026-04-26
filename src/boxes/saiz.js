@@ -19,10 +19,14 @@ export default {
     if (default_sample_info_size === 0) {
       /** @type {Array.<number>} */
       const sample_info_size = [];
+      const sampleInfoSizeOffset = r.getCurrentOffset();
       for (let i = 0; i < sample_count; i++) {
         sample_info_size.push(r.readUint(1));
       }
-      r.addField("sample_info_size", sample_info_size);
+      r.addField("sample_info_size", sample_info_size, {
+        offset: sampleInfoSizeOffset,
+        byteLength: r.getCurrentOffset() - sampleInfoSizeOffset,
+      });
     }
   },
 };

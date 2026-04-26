@@ -1,3 +1,4 @@
+// XXX TODO:
 import { bitsField } from "../fields.js";
 
 /** @type {import("./types.js").BoxDefinition<{ [k: string]: unknown }>} */
@@ -9,69 +10,118 @@ export default {
   parser(r) {
     r.fieldUint("configurationVersion", 1);
 
+    const generalProfileOffset = r.getCurrentOffset();
     const generalProfile = bitsField(r.readUint(1), 8, [
       { key: "general_profile_space", bits: 2 },
       { key: "general_tier_flag", bits: 1 },
       { key: "general_profile_idc", bits: 5 },
     ]);
-    r.addField("general_profile_space", generalProfile.fields[0].value);
-    r.addField("general_tier_flag", generalProfile.fields[1].value !== 0);
-    r.addField("general_profile_idc", generalProfile.fields[2].value);
+    r.addField("general_profile_space", generalProfile.fields[0].value, {
+      offset: generalProfileOffset,
+      byteLength: 1,
+    });
+    r.addField("general_tier_flag", generalProfile.fields[1].value !== 0, {
+      offset: generalProfileOffset,
+      byteLength: 1,
+    });
+    r.addField("general_profile_idc", generalProfile.fields[2].value, {
+      offset: generalProfileOffset,
+      byteLength: 1,
+    });
 
     r.fieldUint("general_profile_compatibility_flags", 4);
     r.fieldUint("general_level_idc", 1);
+    const constraintOffset = r.getCurrentOffset();
     const constraintUpper = r.readUint(4);
     const constraintLower = r.readUint(2);
     r.addField(
       "general_constraint_indicator_flags",
       constraintUpper * 0x10000 + constraintLower,
+      {
+        offset: constraintOffset,
+        byteLength: 6,
+      },
     );
 
+    const minSpatialSegmentationOffset = r.getCurrentOffset();
     const minSpatialSegmentation = bitsField(r.readUint(2), 16, [
       { key: "reserved", bits: 4 },
       { key: "value", bits: 12 },
     ]);
-    r.addField("min_spatial_segmentation_idc", minSpatialSegmentation.value);
+    r.addField("min_spatial_segmentation_idc", minSpatialSegmentation.value, {
+      offset: minSpatialSegmentationOffset,
+      byteLength: 2,
+    });
 
+    const parallelismTypeOffset = r.getCurrentOffset();
     const parallelismType = bitsField(r.readUint(1), 8, [
       { key: "reserved", bits: 6 },
       { key: "value", bits: 2 },
     ]);
-    r.addField("parallelismType", parallelismType.value);
+    r.addField("parallelismType", parallelismType.value, {
+      offset: parallelismTypeOffset,
+      byteLength: 1,
+    });
 
+    const chromaFormatOffset = r.getCurrentOffset();
     const chromaFormat = bitsField(r.readUint(1), 8, [
       { key: "reserved", bits: 6 },
       { key: "value", bits: 2 },
     ]);
-    r.addField("chromaFormat", chromaFormat.value);
+    r.addField("chromaFormat", chromaFormat.value, {
+      offset: chromaFormatOffset,
+      byteLength: 1,
+    });
 
+    const bitDepthLumaOffset = r.getCurrentOffset();
     const bitDepthLumaMinus8 = bitsField(r.readUint(1), 8, [
       { key: "reserved", bits: 5 },
       { key: "value", bits: 3 },
     ]);
-    r.addField("bitDepthLumaMinus8", bitDepthLumaMinus8.value);
+    r.addField("bitDepthLumaMinus8", bitDepthLumaMinus8.value, {
+      offset: bitDepthLumaOffset,
+      byteLength: 1,
+    });
 
+    const bitDepthChromaOffset = r.getCurrentOffset();
     const bitDepthChromaMinus8 = bitsField(r.readUint(1), 8, [
       { key: "reserved", bits: 5 },
       { key: "value", bits: 3 },
     ]);
-    r.addField("bitDepthChromaMinus8", bitDepthChromaMinus8.value);
+    r.addField("bitDepthChromaMinus8", bitDepthChromaMinus8.value, {
+      offset: bitDepthChromaOffset,
+      byteLength: 1,
+    });
 
     r.fieldUint("avgFrameRate", 2);
 
+    const miscOffset = r.getCurrentOffset();
     const misc = bitsField(r.readUint(1), 8, [
       { key: "constantFrameRate", bits: 2 },
       { key: "numTemporalLayers", bits: 3 },
       { key: "temporalIdNested", bits: 1 },
       { key: "lengthSizeMinusOne", bits: 2 },
     ]);
-    r.addField("constantFrameRate", misc.fields[0].value);
-    r.addField("numTemporalLayers", misc.fields[1].value);
-    r.addField("temporalIdNested", misc.fields[2].value !== 0);
-    r.addField("lengthSizeMinusOne", misc.fields[3].value);
+    r.addField("constantFrameRate", misc.fields[0].value, {
+      offset: miscOffset,
+      byteLength: 1,
+    });
+    r.addField("numTemporalLayers", misc.fields[1].value, {
+      offset: miscOffset,
+      byteLength: 1,
+    });
+    r.addField("temporalIdNested", misc.fields[2].value !== 0, {
+      offset: miscOffset,
+      byteLength: 1,
+    });
+    r.addField("lengthSizeMinusOne", misc.fields[3].value, {
+      offset: miscOffset,
+      byteLength: 1,
+    });
 
     const numOfArrays = r.fieldUint("numOfArrays", 1);
     const arrays = [];
+    const arraysOffset = r.getCurrentOffset();
 
     for (let i = 0; i < numOfArrays; i++) {
       const arrayCompleteness = bitsField(r.readUint(1), 8, [
@@ -98,6 +148,9 @@ export default {
         nalus,
       });
     }
-    r.addField("arrays", arrays);
+    r.addField("arrays", arrays, {
+      offset: arraysOffset,
+      byteLength: r.getCurrentOffset() - arraysOffset,
+    });
   },
 };

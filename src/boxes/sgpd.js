@@ -133,6 +133,7 @@ export default {
 
     /** @type {(import("../types.js").ParsedStructField | import("../types.js").ParsedStringField)[]} */
     const entries = [];
+    const entriesOffset = reader.getCurrentOffset();
     for (let i = 0; i < entry_count && !reader.isFinished(); i++) {
       let descriptionLength = defaultLength;
       if (version === 0) {
@@ -161,6 +162,9 @@ export default {
       entries.push(parseGroupEntry(grouping_type, bytes));
     }
 
-    reader.addField("entries", entries);
+    reader.addField("entries", entries, {
+      offset: entriesOffset,
+      byteLength: reader.getCurrentOffset() - entriesOffset,
+    });
   },
 };

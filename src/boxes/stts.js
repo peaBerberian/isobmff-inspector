@@ -24,6 +24,7 @@ export default {
 
     /** @type {Array.<SttsEntry>} */
     const entries = [];
+    const entriesOffset = r.getCurrentOffset();
     let i = entry_count;
     while (i--) {
       entries.push({
@@ -31,6 +32,9 @@ export default {
         sample_delta: r.readUint(4),
       });
     }
-    r.addField("entries", entries);
+    r.addField("entries", entries, {
+      offset: entriesOffset,
+      byteLength: r.getCurrentOffset() - entriesOffset,
+    });
   },
 };

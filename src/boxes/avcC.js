@@ -43,6 +43,7 @@ export default {
       ],
     );
     const sequenceParameterSets = [];
+    const sequenceParameterSetsOffset = reader.getCurrentOffset();
     for (let i = 0; i < numOfSequenceParameterSets; i++) {
       const sequenceParameterSetLength = reader.readUint(2);
       sequenceParameterSets.push({
@@ -50,13 +51,17 @@ export default {
         data: reader.readBytes(sequenceParameterSetLength),
       });
     }
-    reader.addField("sequenceParameterSets", sequenceParameterSets);
+    reader.addField("sequenceParameterSets", sequenceParameterSets, {
+      offset: sequenceParameterSetsOffset,
+      byteLength: reader.getCurrentOffset() - sequenceParameterSetsOffset,
+    });
 
     const numOfPictureParameterSets = reader.fieldUint(
       "numOfPictureParameterSets",
       1,
     );
     const pictureParameterSets = [];
+    const pictureParameterSetsOffset = reader.getCurrentOffset();
     for (let i = 0; i < numOfPictureParameterSets; i++) {
       const pictureParameterSetLength = reader.readUint(2);
       pictureParameterSets.push({
@@ -64,7 +69,10 @@ export default {
         data: reader.readBytes(pictureParameterSetLength),
       });
     }
-    reader.addField("pictureParameterSets", pictureParameterSets);
+    reader.addField("pictureParameterSets", pictureParameterSets, {
+      offset: pictureParameterSetsOffset,
+      byteLength: reader.getCurrentOffset() - pictureParameterSetsOffset,
+    });
     if (!reader.isFinished()) {
       reader.fieldBytes("ext", reader.getRemainingLength());
     }

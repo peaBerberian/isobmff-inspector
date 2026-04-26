@@ -33,14 +33,20 @@ export default {
     }
 
     switch (type_code) {
-      case 1:
+      case 1: {
+        const baseOffset = reader.getCurrentOffset();
         reader.addField(
           "value",
           // TODO: Add `reader.fieldUtf8(key, nbBytes)` API?
           new TextDecoder().decode(reader.readBytes(remaining)),
-          "UTF-8 metadata value.",
+          {
+            description: "UTF-8 metadata value.",
+            offset: baseOffset,
+            byteLength: remaining,
+          },
         );
         return;
+      }
 
       case 21:
         if (remaining < 1 || remaining > 4) {

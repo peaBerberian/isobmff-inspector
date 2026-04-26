@@ -16,13 +16,17 @@ export default {
 
       /** @type {Array<Uint8Array>} */
       const KIDs = [];
+      const kidsOffset = reader.getCurrentOffset();
       for (let i = 0; i < KID_count; i++) {
         KIDs.push(reader.readBytes(16));
       }
-      reader.addField("KIDs", KIDs);
+      reader.addField("KIDs", KIDs, {
+        offset: kidsOffset,
+        byteLength: reader.getCurrentOffset() - kidsOffset,
+      });
     }
 
     const data_length = reader.fieldUint("data_length", 4);
-    reader.addField("data", reader.readBytes(data_length));
+    reader.fieldBytes("data", data_length);
   },
 };

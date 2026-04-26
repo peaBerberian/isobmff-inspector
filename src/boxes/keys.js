@@ -13,6 +13,7 @@ export default {
 
     /** @type {import("../types.js").ParsedStructField[]} */
     const entries = [];
+    const entriesOffset = reader.getCurrentOffset();
     for (let i = 0; i < entry_count && !reader.isFinished(); i++) {
       const key_size = reader.readUint(4);
       const namespace = reader.readFourCc();
@@ -26,6 +27,9 @@ export default {
         ]),
       );
     }
-    reader.addField("entries", entries);
+    reader.addField("entries", entries, {
+      offset: entriesOffset,
+      byteLength: reader.getCurrentOffset() - entriesOffset,
+    });
   },
 };

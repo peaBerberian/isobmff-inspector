@@ -20,9 +20,13 @@ export default {
     }
     reader.fieldUint("flags", 3);
     const descriptors = [];
+    const descriptorsOffset = reader.getCurrentOffset();
     while (!reader.isFinished()) {
       descriptors.push(parseDescriptor(reader));
     }
-    reader.addField("descriptors", descriptors);
+    reader.addField("descriptors", descriptors, {
+      offset: descriptorsOffset,
+      byteLength: reader.getCurrentOffset() - descriptorsOffset,
+    });
   },
 };

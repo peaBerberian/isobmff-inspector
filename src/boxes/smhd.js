@@ -19,7 +19,11 @@ export default {
       throw new Error("invalid version");
     }
     r.fieldUint("flags", 3);
-    r.addField("balance", toSignedInt(r.readUint(2), 16) / 256);
+    const baseOffset = r.getCurrentOffset();
+    r.addField("balance", toSignedInt(r.readUint(2), 16) / 256, {
+      offset: baseOffset,
+      byteLength: 2,
+    });
     r.fieldUint("reserved", 2);
   },
 };

@@ -17,11 +17,14 @@ export default {
         "Informative integer for the minor version of the major brand",
     });
     const compatArr = [];
+    const compatibleBrandsOffset = reader.getCurrentOffset();
     for (let i = 8; i < len; i += 4) {
       compatArr.push(reader.readFourCc());
     }
     reader.addField("compatible_brands", compatArr, {
       description: "List of brands",
+      offset: compatibleBrandsOffset,
+      byteLength: reader.getCurrentOffset() - compatibleBrandsOffset,
     });
   },
 };

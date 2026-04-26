@@ -30,10 +30,14 @@ export default {
       reader.fieldUint("CoupledCount", 1);
       /** @type Array<number> */
       const mapping = [];
+      const mappingOffset = reader.getCurrentOffset();
       for (let i = 0; i < cCount && !reader.isFinished(); i++) {
         mapping.push(reader.readUint(1));
       }
-      reader.addField("ChannelMapping", mapping);
+      reader.addField("ChannelMapping", mapping, {
+        offset: mappingOffset,
+        byteLength: reader.getCurrentOffset() - mappingOffset,
+      });
     }
   },
 };

@@ -1,3 +1,4 @@
+// XXX TODO:
 import { parsedBoxValue, structField } from "../fields.js";
 
 /**
@@ -32,13 +33,20 @@ export default {
 
     r.fieldUint("reserved", 1);
     if (version === 0) {
-      r.addField("reserved_1", r.readUint(1));
+      r.fieldUint("reserved_1", 1);
     } else {
+      const blocksOffset = r.getCurrentOffset();
       const blocks = r.readUint(1);
       const default_crypt_byte_block = (blocks >> 4) & 0x0f;
       const default_skip_byte_block = blocks & 0x0f;
-      r.addField("default_crypt_byte_block", default_crypt_byte_block);
-      r.addField("default_skip_byte_block", default_skip_byte_block);
+      r.addField("default_crypt_byte_block", default_crypt_byte_block, {
+        offset: blocksOffset,
+        byteLength: 1,
+      });
+      r.addField("default_skip_byte_block", default_skip_byte_block, {
+        offset: blocksOffset,
+        byteLength: 1,
+      });
       r.addField(
         "default_pattern",
         structField(
@@ -49,6 +57,10 @@ export default {
           ],
           "cenc-pattern",
         ),
+        {
+          offset: blocksOffset,
+          byteLength: 1,
+        },
       );
     }
 
@@ -60,9 +72,13 @@ export default {
     r.fieldBytes("default_KID", 16);
 
     if (default_Per_Sample_IV_Size === 0 && !r.isFinished()) {
+      const constantIvSizeOffset = r.getCurrentOffset();
       const default_constant_IV_size = r.readUint(1);
-      r.addField("default_constant_IV_size", default_constant_IV_size);
-      r.addField("default_constant_IV", r.readBytes(default_constant_IV_size));
+      r.addField("default_constant_IV_size", default_constant_IV_size, {
+        offset: constantIvSizeOffset,
+        byteLength: 1,
+      });
+      r.fieldBytes("default_constant_IV", default_constant_IV_size);
     }
   },
 };

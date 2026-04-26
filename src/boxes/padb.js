@@ -32,6 +32,7 @@ export default {
 
     /** @type {Array<PaddingBitsEntry>} */
     const entries = [];
+    const entriesOffset = reader.getCurrentOffset();
     for (let i = 0; i < Math.ceil(sample_count / 2); i++) {
       const packed = bitsField(reader.readUint(1), 8, [
         { key: "reserved_1", bits: 1 },
@@ -46,6 +47,9 @@ export default {
         pad2: packed.fields[3].value,
       });
     }
-    reader.addField("entries", entries);
+    reader.addField("entries", entries, {
+      offset: entriesOffset,
+      byteLength: reader.getCurrentOffset() - entriesOffset,
+    });
   },
 };

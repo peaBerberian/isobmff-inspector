@@ -11,6 +11,7 @@ export default {
 
     /** @type Array<Partial<Record<string, unknown>>> */
     const samples = [];
+    const samplesOffset = r.getCurrentOffset();
     while (!r.isFinished()) {
       const packed = bitsField(r.readUint(1), 8, [
         { key: "is_leading", bits: 2 },
@@ -24,6 +25,9 @@ export default {
         ),
       );
     }
-    r.addField("samples", samples);
+    r.addField("samples", samples, {
+      offset: samplesOffset,
+      byteLength: r.getCurrentOffset() - samplesOffset,
+    });
   },
 };

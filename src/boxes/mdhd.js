@@ -1,3 +1,4 @@
+// XXX TODO:
 import { parsedBoxValue, structField } from "../fields.js";
 
 /**
@@ -29,8 +30,12 @@ export default {
       r.fieldUint("duration", 4);
     }
 
+    const baseOffset = r.getCurrentOffset();
     const next2Bytes = r.readUint(2);
-    r.addField("pad", (next2Bytes >> 15) & 0x01);
+    r.addField("pad", (next2Bytes >> 15) & 0x01, {
+      offset: baseOffset,
+      byteLength: 2,
+    });
     const language = [
       String.fromCharCode(((next2Bytes >> 10) & 0x1f) + 0x60),
       String.fromCharCode(((next2Bytes >> 5) & 0x1f) + 0x60),
@@ -42,6 +47,10 @@ export default {
         [parsedBoxValue("value", language), parsedBoxValue("raw", next2Bytes)],
         "iso-639-2-t",
       ),
+      {
+        offset: baseOffset,
+        byteLength: 2,
+      },
     );
     r.fieldUint("pre_defined", 2);
   },

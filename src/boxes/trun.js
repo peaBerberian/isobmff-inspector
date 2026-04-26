@@ -27,14 +27,15 @@ export default {
     const sample_count = r.fieldUint("sample_count", 4);
 
     if (flags & 0x000001) {
-      r.addField("data_offset", ~~r.readUint(4));
+      r.fieldSignedInt("data_offset", 4);
     }
     if (flags & 0x000004) {
-      r.addField("first_sample_flags", r.readUint(4));
+      r.fieldUint("first_sample_flags", 4);
     }
 
     /** @type {Array.<TrunSample>} */
     const samples = [];
+    const samplesOffset = r.getCurrentOffset();
     for (let i = 0; i < sample_count; i++) {
       /** @type {TrunSample} */
       const sample = {};
@@ -54,6 +55,9 @@ export default {
       }
       samples.push(sample);
     }
-    r.addField("samples", samples);
+    r.addField("samples", samples, {
+      offset: samplesOffset,
+      byteLength: r.getCurrentOffset() - samplesOffset,
+    });
   },
 };

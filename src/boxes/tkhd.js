@@ -1,5 +1,4 @@
-import { fixedPointField } from "../fields.js";
-import { parseTransformationMatrix, toSignedInt } from "./helpers.js";
+import { parseTransformationMatrix } from "./helpers.js";
 
 /**
  * @typedef {Object} TrackHeaderBoxContent
@@ -38,13 +37,21 @@ export default {
       r.fieldUint("duration", 4);
     }
 
-    r.addField("reserved_2", [r.readUint(4), r.readUint(4)]);
-    r.addField("layer", toSignedInt(r.readUint(2), 16));
-    r.addField("alternate_group", toSignedInt(r.readUint(2), 16));
-    r.addField("volume", fixedPointField(r.readUint(2), 16, 8, "8.8"));
+    const reserved2Offset = r.getCurrentOffset();
+    r.addField("reserved_2", [r.readUint(4), r.readUint(4)], {
+      offset: reserved2Offset,
+      byteLength: r.getCurrentOffset() - reserved2Offset,
+    });
+    r.fieldSignedInt("layer", 2);
+    r.fieldSignedInt("alternate_group", 2);
+    r.fieldFixedPoint("volume", 2, 8, "8.8");
     r.fieldUint("reserved_3", 2);
-    r.addField("matrix", parseTransformationMatrix(r));
-    r.addField("width", fixedPointField(r.readUint(4), 32, 16, "16.16"));
-    r.addField("height", fixedPointField(r.readUint(4), 32, 16, "16.16"));
+    const matrixOffset = r.getCurrentOffset();
+    r.addField("matrix", parseTransformationMatrix(r), {
+      offset: matrixOffset,
+      byteLength: r.getCurrentOffset() - matrixOffset,
+    });
+    r.fieldFixedPoint("width", 4, 16, "16.16");
+    r.fieldFixedPoint("height", 4, 16, "16.16");
   },
 };

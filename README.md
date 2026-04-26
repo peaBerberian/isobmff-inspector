@@ -363,7 +363,8 @@ parser left unread bytes.
 
 Each parsed field in `ParsedBox.values` has a stable `key`, a `kind`, and
 kind-specific data. `description` is optional and is present when the parser has
-extra human-readable context for that field.
+extra human-readable context for that field. `offset` and `byteLength` are also
+available when the parser knows which input bytes produced that field.
 
 Most scalar fields follow this shape:
 
@@ -372,6 +373,8 @@ Most scalar fields follow this shape:
   key: "sequence_number",
   kind: "number",
   value: 2,
+  offset: 12,
+  byteLength: 4,
   description: "Movie fragment sequence number." // Optional
 }
 ```
@@ -758,3 +761,6 @@ This can e.g. be done through a method like
 
 Note that each of those call advance the `BoxReader`'s internal cursor so
 consecutive calls will progress through the file.
+If a parser uses `read*` helpers plus `addField`, it can retrieve the current
+cursor through `reader.getCurrentOffset()` and pass `offset` / `byteLength`
+explicitly to `addField(...)` when that extra metadata is meaningful.

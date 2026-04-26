@@ -19,19 +19,19 @@ export default {
     r.fieldUint("track_ID", 4);
 
     if (flags & 0x000001) {
-      r.addField("base_data_offset", r.readUint64());
+      r.fieldUint64("base_data_offset");
     }
     if (flags & 0x000002) {
-      r.addField("sample_description_index", r.readUint(4));
+      r.fieldUint("sample_description_index", 4);
     }
     if (flags & 0x000008) {
-      r.addField("default_sample_duration", r.readUint(4));
+      r.fieldUint("default_sample_duration", 4);
     }
     if (flags & 0x000010) {
-      r.addField("default_sample_size", r.readUint(4));
+      r.fieldUint("default_sample_size", 4);
     }
     if (flags & 0x000020) {
-      r.addField("default_sample_flags", r.readUint(4));
+      r.fieldUint("default_sample_flags", 4);
     }
   },
 };

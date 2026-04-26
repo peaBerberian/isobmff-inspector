@@ -35,13 +35,14 @@ export default {
       r.fieldUint("earliest_presentation_time", 4);
       r.fieldUint("first_offset", 4);
     } else {
-      r.addField("earliest_presentation_time", r.readInt64());
-      r.addField("first_offset", r.readInt64());
+      r.fieldInt64("earliest_presentation_time");
+      r.fieldInt64("first_offset");
     }
     r.fieldUint("reserved", 2);
     const reference_count = r.fieldUint("reference_count", 2);
 
     const items = [];
+    const itemsOffset = r.getCurrentOffset();
     for (let i = 0; i < reference_count; i++) {
       const first4Bytes = r.readUint(4);
       const second4Bytes = r.readUint(4);
@@ -55,6 +56,9 @@ export default {
         SAP_delta_time: third4Bytes & 0x0fffffff,
       });
     }
-    r.addField("items", items);
+    r.addField("items", items, {
+      offset: itemsOffset,
+      byteLength: r.getCurrentOffset() - itemsOffset,
+    });
   },
 };

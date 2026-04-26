@@ -1,3 +1,4 @@
+// XXX TODO:
 import { bitsField, parsedBoxValue, structField } from "../fields.js";
 
 /** @type {import("./types.js").BoxDefinition<{ [k: string]: unknown }>} */
@@ -7,13 +8,17 @@ export default {
     "Packed EC-3 decoder configuration listing independent substreams and optional Atmos/JOC extension signalling.",
 
   parser(reader) {
+    const headerOffset = reader.getCurrentOffset();
     const header = bitsField(reader.readUint(2), 16, [
       { key: "data_rate", bits: 13 },
       { key: "num_ind_sub", bits: 3 },
     ]);
     let substreamCount = 1;
     for (const field of header.fields) {
-      reader.addField(field.key, field.value);
+      reader.addField(field.key, field.value, {
+        offset: headerOffset,
+        byteLength: 2,
+      });
       if (field.key === "num_ind_sub") {
         substreamCount = field.value + 1;
       }
@@ -21,6 +26,7 @@ export default {
 
     /** @type {import("../types.js").ParsedStructField[]} */
     const substreams = [];
+    const substreamsOffset = reader.getCurrentOffset();
 
     for (let i = 0; i < substreamCount && !reader.isFinished(); i++) {
       const entryHeader = bitsField(reader.readUint(3), 24, [
@@ -58,9 +64,13 @@ export default {
 
       substreams.push(structField(fields));
     }
-    reader.addField("substreams", substreams);
+    reader.addField("substreams", substreams, {
+      offset: substreamsOffset,
+      byteLength: reader.getCurrentOffset() - substreamsOffset,
+    });
 
     if (reader.getRemainingLength() >= 2) {
+      const extensionOffset = reader.getCurrentOffset();
       const extension = bitsField(reader.readUint(1), 8, [
         { key: "reserved", bits: 7 },
         { key: "flag_ec3_extension_type_a", bits: 1 },
@@ -73,6 +83,10 @@ export default {
           ),
           parsedBoxValue("complexity_index_type_a", reader.readUint(1)),
         ]),
+        {
+          offset: extensionOffset,
+          byteLength: reader.getCurrentOffset() - extensionOffset,
+        },
       );
     }
 

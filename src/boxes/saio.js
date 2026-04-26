@@ -17,9 +17,13 @@ export default {
 
     /** @type {Array.<number|bigint>} */
     const offset = [];
+    const baseOffset = r.getCurrentOffset();
     for (let i = 0; i < entry_count; i++) {
       offset.push(version === 0 ? r.readUint(4) : r.readInt64());
     }
-    r.addField("offset", offset);
+    r.addField("offset", offset, {
+      offset: baseOffset,
+      byteLength: r.getCurrentOffset() - baseOffset,
+    });
   },
 };

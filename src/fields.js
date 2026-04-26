@@ -173,16 +173,25 @@ function macDateField(value) {
 /**
  * @param {string} key
  * @param {unknown} value
- * @param {string=} description
+ * @param {string | { description?: string, offset?: number, byteLength?: number }=} meta
  * @returns {import("./types.js").ParsedBoxValue}
  */
-function parsedBoxValue(key, value, description) {
+function parsedBoxValue(key, value, meta) {
+  const metadata =
+    typeof meta === "string" ? { description: meta } : (meta ?? {});
+  /** @type {import("./types.js").ParsedBoxValue} */
   const ret = {
     key,
     ...normalizeField(value),
   };
-  if (description !== undefined) {
-    return { ...ret, description };
+  if (metadata.offset !== undefined) {
+    ret.offset = metadata.offset;
+  }
+  if (metadata.byteLength !== undefined) {
+    ret.byteLength = metadata.byteLength;
+  }
+  if (metadata.description !== undefined) {
+    ret.description = metadata.description;
   }
   return ret;
 }

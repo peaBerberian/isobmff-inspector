@@ -5,6 +5,7 @@
 ### Features
 
 - Add `options` to `parseEvents` to add the possibility to be notified of raw payload bytes when they are parsed
+- Each `field` now also have optional `offset` and `byteLength` properties to indicate where in the whole file such field was extracted exactly
 - Parsed boxes in both `"full"` and `"simple"` formats now expose `actualSize`, the number of bytes actually present in the input for that box. `size` remains the header-declared size, including `0` for `extendsToEnd` boxes.
 
 ### Bug fixes

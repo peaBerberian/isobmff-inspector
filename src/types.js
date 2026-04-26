@@ -1,58 +1,72 @@
 /** @typedef {{ [key: string]: unknown }} BoxParserFields */
 
 /**
- * @typedef {object} ParsedNumberField
- * @property {"number"} kind
- * @property {number} value
+ * @typedef {object} ParsedFieldLocation
+ * @property {number=} offset
+ * @property {number=} byteLength
  */
 
 /**
- * @typedef {object} ParsedBigIntField
- * @property {"bigint"} kind
- * @property {bigint} value
+ * @typedef {ParsedFieldLocation & {
+ *   kind: "number",
+ *   value: number,
+ * }} ParsedNumberField
  */
 
 /**
- * @typedef {object} ParsedStringField
- * @property {"string"} kind
- * @property {string} value
+ * @typedef {ParsedFieldLocation & {
+ *   kind: "bigint",
+ *   value: bigint,
+ * }} ParsedBigIntField
  */
 
 /**
- * @typedef {object} ParsedBytesField
- * @property {"bytes"} kind
- * @property {string} value
+ * @typedef {ParsedFieldLocation & {
+ *   kind: "string",
+ *   value: string,
+ * }} ParsedStringField
  */
 
 /**
- * @typedef {object} ParsedBooleanField
- * @property {"boolean"} kind
- * @property {boolean} value
+ * @typedef {ParsedFieldLocation & {
+ *   kind: "bytes",
+ *   value: string,
+ * }} ParsedBytesField
  */
 
 /**
- * @typedef {object} ParsedNullField
- * @property {"null"} kind
- * @property {null} value
+ * @typedef {ParsedFieldLocation & {
+ *   kind: "boolean",
+ *   value: boolean,
+ * }} ParsedBooleanField
  */
 
 /**
- * @typedef {object} ParsedFixedPointField
- * @property {"fixed-point"} kind
- * @property {number} value
- * @property {number} raw
- * @property {string} format
- * @property {boolean} signed
- * @property {number} bits
+ * @typedef {ParsedFieldLocation & {
+ *   kind: "null",
+ *   value: null,
+ * }} ParsedNullField
  */
 
 /**
- * @typedef {object} ParsedDateField
- * @property {"date"} kind
- * @property {number | bigint} value
- * @property {string | null} date
- * @property {string} epoch
- * @property {"seconds"} unit
+ * @typedef {ParsedFieldLocation & {
+ *   kind: "fixed-point",
+ *   value: number,
+ *   raw: number,
+ *   format: string,
+ *   signed: boolean,
+ *   bits: number,
+ * }} ParsedFixedPointField
+ */
+
+/**
+ * @typedef {ParsedFieldLocation & {
+ *   kind: "date",
+ *   value: number | bigint,
+ *   date: string | null,
+ *   epoch: string,
+ *   unit: "seconds",
+ * }} ParsedDateField
  */
 
 /**
@@ -71,12 +85,13 @@
  */
 
 /**
- * @typedef {object} ParsedBitsField
- * @property {"bits"} kind
- * @property {number} value
- * @property {number} raw
- * @property {number} bits
- * @property {ParsedBitsFieldPart[]} fields
+ * @typedef {ParsedFieldLocation & {
+ *   kind: "bits",
+ *   value: number,
+ *   raw: number,
+ *   bits: number,
+ *   fields: ParsedBitsFieldPart[],
+ * }} ParsedBitsField
  */
 
 /**
@@ -87,25 +102,28 @@
  */
 
 /**
- * @typedef {object} ParsedFlagsField
- * @property {"flags"} kind
- * @property {number} value
- * @property {number} raw
- * @property {number} bits
- * @property {ParsedFlagsFieldEntry[]} flags
+ * @typedef {ParsedFieldLocation & {
+ *   kind: "flags",
+ *   value: number,
+ *   raw: number,
+ *   bits: number,
+ *   flags: ParsedFlagsFieldEntry[],
+ * }} ParsedFlagsField
  */
 
 /**
- * @typedef {object} ParsedArrayField
- * @property {"array"} kind
- * @property {ParsedField[]} items
+ * @typedef {ParsedFieldLocation & {
+ *   kind: "array",
+ *   items: ParsedField[],
+ * }} ParsedArrayField
  */
 
 /**
- * @typedef {object} ParsedStructField
- * @property {"struct"} kind
- * @property {ParsedBoxValue[]} fields
- * @property {string=} layout
+ * @typedef {ParsedFieldLocation & {
+ *   kind: "struct",
+ *   fields: ParsedBoxValue[],
+ *   layout?: string,
+ * }} ParsedStructField
  */
 
 /**

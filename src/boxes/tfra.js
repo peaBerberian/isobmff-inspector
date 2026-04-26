@@ -1,3 +1,4 @@
+// XXX TODO:
 /**
  * @typedef {Object} TrackFragmentRandomAccessBoxContent
  * @property {number} version
@@ -39,15 +40,28 @@ export default {
       "Track ID to which this random access table applies",
     );
 
+    const lengthsOffset = reader.getCurrentOffset();
     const lengths = reader.readUint(4);
     const reserved = lengths >>> 6;
     const length_size_of_traf_num = (lengths >>> 4) & 0x3;
     const length_size_of_trun_num = (lengths >>> 2) & 0x3;
     const length_size_of_sample_num = lengths & 0x3;
-    reader.addField("reserved", reserved);
-    reader.addField("length_size_of_traf_num", length_size_of_traf_num);
-    reader.addField("length_size_of_trun_num", length_size_of_trun_num);
-    reader.addField("length_size_of_sample_num", length_size_of_sample_num);
+    reader.addField("reserved", reserved, {
+      offset: lengthsOffset,
+      byteLength: 4,
+    });
+    reader.addField("length_size_of_traf_num", length_size_of_traf_num, {
+      offset: lengthsOffset,
+      byteLength: 4,
+    });
+    reader.addField("length_size_of_trun_num", length_size_of_trun_num, {
+      offset: lengthsOffset,
+      byteLength: 4,
+    });
+    reader.addField("length_size_of_sample_num", length_size_of_sample_num, {
+      offset: lengthsOffset,
+      byteLength: 4,
+    });
 
     const number_of_entry = reader.fieldUint(
       "number_of_entry",
@@ -57,6 +71,7 @@ export default {
 
     /** @type {Array<TrackFragmentRandomAccessEntry>} */
     const entries = [];
+    const entriesOffset = reader.getCurrentOffset();
     for (let i = 0; i < number_of_entry; i++) {
       entries.push({
         time: version === 1 ? reader.readUint64() : reader.readUint(4),
@@ -66,6 +81,9 @@ export default {
         sample_number: reader.readUint(length_size_of_sample_num + 1),
       });
     }
-    reader.addField("entries", entries);
+    reader.addField("entries", entries, {
+      offset: entriesOffset,
+      byteLength: reader.getCurrentOffset() - entriesOffset,
+    });
   },
 };

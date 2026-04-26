@@ -18,7 +18,11 @@ export default {
   parser(r) {
     r.fieldUint("version", 1, "id32 box version");
     r.fieldUint("flags", 3, "id32 box flags");
-    r.addField("languageCode", decodeIso639Language(r.readUint(2)));
+    const baseOffset = r.getCurrentOffset();
+    r.addField("languageCode", decodeIso639Language(r.readUint(2)), {
+      offset: baseOffset,
+      byteLength: 2,
+    });
     r.fieldBytes("data", r.getRemainingLength());
   },
 };

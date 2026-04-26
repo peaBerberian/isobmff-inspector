@@ -35,6 +35,7 @@ export default {
     reader.fieldUint("flags", 3, "leva box flags. Should be 0.");
     const level_count = reader.fieldUint("level_count", 1);
     const levels = [];
+    const levelsOffset = reader.getCurrentOffset();
     for (let i = 0; i < level_count; i++) {
       /** @type {LevelAssignment} */
       const assignment = {
@@ -62,6 +63,9 @@ export default {
 
       levels.push(assignment);
     }
-    reader.addField("levels", levels);
+    reader.addField("levels", levels, {
+      offset: levelsOffset,
+      byteLength: reader.getCurrentOffset() - levelsOffset,
+    });
   },
 };

@@ -23,10 +23,14 @@ function createTrackReferenceTypeBox(name, description) {
     parser(reader) {
       /** @type {Array<number>} */
       const track_IDs = [];
+      const trackIdsOffset = reader.getCurrentOffset();
       while (reader.getRemainingLength() >= 4) {
         track_IDs.push(reader.readUint(4));
       }
-      reader.addField("track_IDs", track_IDs);
+      reader.addField("track_IDs", track_IDs, {
+        offset: trackIdsOffset,
+        byteLength: reader.getCurrentOffset() - trackIdsOffset,
+      });
 
       if (!reader.isFinished()) {
         reader.fieldBytes("trailing_bytes", reader.getRemainingLength());
@@ -128,27 +132,39 @@ function parsePascalAsciiString(r, length) {
  */
 function readVisualSampleEntry(reader) {
   const reserved = [];
+  const reservedOffset = reader.getCurrentOffset();
   for (let i = 0; i < 6; i++) {
     reserved.push(reader.readUint(1));
   }
-  reader.addField("reserved", reserved);
+  reader.addField("reserved", reserved, {
+    offset: reservedOffset,
+    byteLength: reader.getCurrentOffset() - reservedOffset,
+  });
   reader.fieldUint("data_reference_index", 2);
   reader.fieldUint("pre_defined", 2);
   reader.fieldUint("reserved_1", 2);
+  const preDefined1Offset = reader.getCurrentOffset();
   /** @type {[number, number, number]} */
   const preDefined1 = [
     reader.readUint(4),
     reader.readUint(4),
     reader.readUint(4),
   ];
-  reader.addField("pre_defined_1", preDefined1);
+  reader.addField("pre_defined_1", preDefined1, {
+    offset: preDefined1Offset,
+    byteLength: reader.getCurrentOffset() - preDefined1Offset,
+  });
   reader.fieldUint("width", 2);
   reader.fieldUint("height", 2);
   reader.fieldFixedPoint("horizresolution", 4, 16, "16.16");
   reader.fieldFixedPoint("vertresolution", 4, 16, "16.16");
   reader.fieldUint("reserved_2", 4);
   reader.fieldUint("frame_count", 2);
-  reader.addField("compressorname", parsePascalAsciiString(reader, 32));
+  const compressorNameOffset = reader.getCurrentOffset();
+  reader.addField("compressorname", parsePascalAsciiString(reader, 32), {
+    offset: compressorNameOffset,
+    byteLength: reader.getCurrentOffset() - compressorNameOffset,
+  });
   reader.fieldUint("depth", 2);
   reader.fieldUint("pre_defined", 2);
 }
@@ -209,10 +225,14 @@ function readVisualSampleEntry(reader) {
  */
 function parseAudioSampleEntry(r) {
   const reserved = [];
+  const reservedOffset = r.getCurrentOffset();
   for (let i = 0; i < 6; i++) {
     reserved.push(r.readUint(1));
   }
-  r.addField("reserved", reserved);
+  r.addField("reserved", reserved, {
+    offset: reservedOffset,
+    byteLength: r.getCurrentOffset() - reservedOffset,
+  });
 
   r.fieldUint("data_reference_index", 2);
   const version = r.fieldUint("version", 2);

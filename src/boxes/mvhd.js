@@ -83,16 +83,19 @@ export default {
       "Preferred playback volume as an 8.8 fixed-point value.",
     );
     reader.fieldUint("reserved_1", 2, "Reserved 16 bits");
-    reader.addField(
-      "reserved_2",
-      [reader.readUint(4), reader.readUint(4)],
-      "Reserved 2*32 bits",
-    );
-    reader.addField(
-      "matrix",
-      parseTransformationMatrix(reader),
-      "Transformation matrix used for presentation geometry.",
-    );
+    const reserved2Offset = reader.getCurrentOffset();
+    reader.addField("reserved_2", [reader.readUint(4), reader.readUint(4)], {
+      description: "Reserved 2*32 bits",
+      offset: reserved2Offset,
+      byteLength: reader.getCurrentOffset() - reserved2Offset,
+    });
+    const matrixOffset = reader.getCurrentOffset();
+    reader.addField("matrix", parseTransformationMatrix(reader), {
+      description: "Transformation matrix used for presentation geometry.",
+      offset: matrixOffset,
+      byteLength: reader.getCurrentOffset() - matrixOffset,
+    });
+    const preDefinedOffset = reader.getCurrentOffset();
     reader.addField(
       "pre_defined",
       [
@@ -103,7 +106,11 @@ export default {
         reader.readUint(4),
         reader.readUint(4),
       ],
-      "Pre-defined 32*6 bits.",
+      {
+        description: "Pre-defined 32*6 bits.",
+        offset: preDefinedOffset,
+        byteLength: reader.getCurrentOffset() - preDefinedOffset,
+      },
     );
     reader.fieldUint(
       "next_track_ID",

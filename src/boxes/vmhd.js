@@ -19,10 +19,14 @@ export default {
     }
 
     reader.fieldUint("graphicsmode", 2);
-    reader.addField("opcolor", [
-      reader.readUint(2),
-      reader.readUint(2),
-      reader.readUint(2),
-    ]);
+    const opcolorOffset = reader.getCurrentOffset();
+    reader.addField(
+      "opcolor",
+      [reader.readUint(2), reader.readUint(2), reader.readUint(2)],
+      {
+        offset: opcolorOffset,
+        byteLength: reader.getCurrentOffset() - opcolorOffset,
+      },
+    );
   },
 };
