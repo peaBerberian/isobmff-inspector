@@ -1,8 +1,8 @@
 /**
  * @typedef {Object} FileTypeBoxContent
- * @property {string} major_brand
+ * @property {string|number} major_brand
  * @property {number} minor_version
- * @property {string} compatible_brands
+ * @property {Array<string|number>} compatible_brands
  */
 
 /** @type {import("./types.js").BoxDefinition<FileTypeBoxContent>} */
@@ -20,7 +20,7 @@ export default {
     for (let i = 8; i < len; i += 4) {
       compatArr.push(reader.readFourCc());
     }
-    reader.addField("compatible_brands", compatArr.join(", "), {
+    reader.addField("compatible_brands", compatArr, {
       description: "List of brands",
     });
   },

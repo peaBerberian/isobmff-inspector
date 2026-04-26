@@ -9,9 +9,13 @@ import parse from "./api/index.js";
  * @typedef {import("./types.js").ParsedField} ParsedField
  * @typedef {import("./types.js").ParsedBoxIssue} ParsedBoxIssue
  * @typedef {import("./types.js").ParseOptions} ParseOptions
+ * @typedef {import("./types.js").ParseEventsOptions} ParseEventsOptions
+ * @typedef {import("./types.js").ParseEventsPayloadOptions} ParseEventsPayloadOptions
  * @typedef {import("./types.js").ParsedBoxParseEvent} ParsedBoxParseEvent
  * @typedef {import("./types.js").ParsedBoxStartEvent} ParsedBoxStartEvent
  * @typedef {import("./types.js").ParsedBoxCompleteEvent} ParsedBoxCompleteEvent
+ * @typedef {import("./types.js").BoxPayloadChunkInfo} BoxPayloadChunkInfo
+ * @typedef {import("./types.js").BoxPayloadChunkCallback} BoxPayloadChunkCallback
  * @typedef {import("./types.js").ISOBMFFInput} ISOBMFFInput
  * @typedef {import("./types.js").ISOBMFFByteChunk} ISOBMFFByteChunk
  * @typedef {import("./types.js").ISOBMFFProgressiveInput} ISOBMFFProgressiveInput

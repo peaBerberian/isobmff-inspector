@@ -144,6 +144,40 @@
  */
 
 /**
+ * Metadata describing a payload chunk forwarded while progressively consuming a
+ * box payload.
+ *
+ * @typedef {object} BoxPayloadChunkInfo
+ * @property {string[]} path
+ * @property {string} type
+ * @property {number} boxOffset
+ * @property {number} boxSize
+ * @property {number} headerSize
+ * @property {"size" | "largeSize" | "extendsToEnd"=} sizeField
+ * @property {string=} uuid
+ * @property {number} payloadOffset
+ * @property {number} payloadAbsoluteOffset
+ */
+
+/**
+ * @callback BoxPayloadChunkCallback
+ * @param {BoxPayloadChunkInfo} info
+ * @param {Uint8Array} chunk
+ * @returns {void | Promise<void>}
+ */
+
+/**
+ * @typedef {object} ParseEventsPayloadOptions
+ * @property {string[]} include
+ * @property {BoxPayloadChunkCallback} onChunk
+ */
+
+/**
+ * @typedef {object} ParseEventsOptions
+ * @property {ParseEventsPayloadOptions=} payloads
+ */
+
+/**
  * @typedef {object} SimpleParsedBox
  * @property {string} type
  * @property {number} offset

@@ -331,3 +331,108 @@ test("event parser emits the same events for buffer inputs", async () => {
   assert.equal(events[0], "box-start");
   assert(events.includes("box-complete"));
 });
+
+test("event parser can forward selected skipped payload chunks progressively", async () => {
+  const bytes = new Uint8Array([
+    0x00, 0x00, 0x00, 0x10, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x36,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x14, 0x6d, 0x64, 0x61, 0x74,
+    0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66,
+  ]);
+
+  const seenChunks = [];
+  for await (const _event of parseEvents(chunkBytes(bytes, 5), {
+    payloads: {
+      include: ["mdat"],
+      onChunk(info, chunk) {
+        seenChunks.push({
+          path: info.path.join("/"),
+          type: info.type,
+          boxOffset: info.boxOffset,
+          boxSize: info.boxSize,
+          headerSize: info.headerSize,
+          payloadOffset: info.payloadOffset,
+          payloadAbsoluteOffset: info.payloadAbsoluteOffset,
+          chunk: Array.from(chunk),
+        });
+      },
+    },
+  })) {
+    // Drain events while payloads are forwarded.
+  }
+
+  assert.deepEqual(seenChunks, [
+    {
+      path: "mdat",
+      type: "mdat",
+      boxOffset: 16,
+      boxSize: 20,
+      headerSize: 8,
+      payloadOffset: 0,
+      payloadAbsoluteOffset: 24,
+      chunk: [0xaa],
+    },
+    {
+      path: "mdat",
+      type: "mdat",
+      boxOffset: 16,
+      boxSize: 20,
+      headerSize: 8,
+      payloadOffset: 1,
+      payloadAbsoluteOffset: 25,
+      chunk: [0xbb, 0xcc, 0xdd, 0xee, 0xff],
+    },
+    {
+      path: "mdat",
+      type: "mdat",
+      boxOffset: 16,
+      boxSize: 20,
+      headerSize: 8,
+      payloadOffset: 6,
+      payloadAbsoluteOffset: 30,
+      chunk: [0x11, 0x22, 0x33, 0x44, 0x55],
+    },
+    {
+      path: "mdat",
+      type: "mdat",
+      boxOffset: 16,
+      boxSize: 20,
+      headerSize: 8,
+      payloadOffset: 11,
+      payloadAbsoluteOffset: 35,
+      chunk: [0x66],
+    },
+  ]);
+});
+
+test("event parser can forward selected payloads for buffer inputs", async () => {
+  const bytes = new Uint8Array([
+    0x00, 0x00, 0x00, 0x14, 0x6d, 0x64, 0x61, 0x74, 0xaa, 0xbb, 0xcc, 0xdd,
+    0xee, 0xff, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66,
+  ]);
+
+  const seenChunks = [];
+  for await (const _event of parseEvents(bytes, {
+    payloads: {
+      include: ["mdat"],
+      onChunk(info, chunk) {
+        seenChunks.push({
+          path: info.path.join("/"),
+          payloadOffset: info.payloadOffset,
+          payloadAbsoluteOffset: info.payloadAbsoluteOffset,
+          chunk: Array.from(chunk),
+        });
+      },
+    },
+  })) {
+    // Drain events while payloads are forwarded.
+  }
+
+  assert.deepEqual(seenChunks, [
+    {
+      path: "mdat",
+      payloadOffset: 0,
+      payloadAbsoluteOffset: 8,
+      chunk: [0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66],
+    },
+  ]);
+});

@@ -157,10 +157,11 @@ function recursiveParseBoxes(arr, baseOffset = 0, parentType) {
 /**
  * Progressively parse ISOBMFF data and yield metadata events as boxes are found.
  * @param {import("../types.js").ISOBMFFInput} input
+ * @param {import("../types.js").ParseEventsOptions=} options
  * @returns {AsyncGenerator<import("../types.js").ParsedBoxParseEvent, void, void>}
  */
-export async function* parseEvents(input) {
-  yield* parseBoxEventsFromInput(input, recursiveParseBoxes);
+export async function* parseEvents(input, options) {
+  yield* parseBoxEventsFromInput(input, recursiveParseBoxes, options);
 }
 
 /**

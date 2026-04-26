@@ -1,9 +1,9 @@
 import ftypBox from "./ftyp.js";
 /**
  * @typedef {Object} SegmentTypeBoxContent
- * @property {string} major_brand
+ * @property {string|number} major_brand
  * @property {number} minor_version
- * @property {string} compatible_brands
+ * @property {Array<string|number>} compatible_brands
  */
 
 /** @type {import("./types.js").BoxDefinition<SegmentTypeBoxContent>} */

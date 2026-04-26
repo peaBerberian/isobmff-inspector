@@ -51,6 +51,31 @@ for await (const event of parseEvents(response)) {
 }
 ```
 
+You can also opt in to raw payload chunks for selected boxes while the parser is
+consuming them:
+```js
+import { parseEvents } from "isobmff-inspector";
+
+for await (const event of parseEvents(response, {
+  payloads: {
+    include: ["mdat"],
+    onChunk(info, chunk) {
+      console.log(
+        "mdat bytes",
+        info.payloadAbsoluteOffset,
+        info.payloadAbsoluteOffset + chunk.length,
+      );
+    },
+  },
+})) {
+  // metadata events are still yielded as usual
+}
+```
+
+Payload callbacks are forward-only and do not retain media data in memory. If
+the offsets you need are only known after the relevant payload bytes have
+already passed, you need to re-open the resource and parse again.
+
 ## Command line ###############################################################
 
 You can also run the inspector directly from npm:
@@ -131,7 +156,7 @@ The default return value is:
 ParsedBox[]
 ```
 
-### `parseEvents(input)`
+### `parseEvents(input, options)`
 
 ```js
 import { parseEvents } from "isobmff-inspector";
@@ -145,6 +170,23 @@ for await (const event of parseEvents(input)) {
   // event.event is "box-start" or "box-complete"
 }
 ```
+
+Options:
+
+```js
+{
+  payloads: {
+    include: ["mdat"],
+    onChunk(info, chunk) {
+      // called with forward-only raw payload chunks for the selected boxes
+    }
+  }
+}
+```
+
+`payloads` is optional. When provided, `include` selects the box types whose raw
+payload should be forwarded as the parser consumes them. This is especially
+useful for large payload boxes such as `mdat`.
 
 Events:
 
@@ -171,6 +213,43 @@ the matching `box-complete` event.
   box: ParsedBox
 }
 ```
+
+Payload callback info:
+
+```js
+{
+  path: ["mdat"], // "Path" of containers from top-level boxes, to the current one included
+
+  type: "mdat", // FourCc of this box as string
+
+  // Absolute start position of the box (including size and name) in the whole given
+  // resource, in bytes
+  boxOffset: 1024,
+
+  boxSize: 4096, // announced box size, in bytes; stays 0 for extends-to-end boxes
+
+  headerSize: 8, // size of the box header, in bytes
+
+  // indicates how the box declared its size: `"size"` for the normal
+  // 32-bit size field, `"largeSize"` for a 64-bit large-size field, or
+  // `"extendsToEnd"` for boxes declared with size `0`.
+  sizeField: "size",
+
+  // Start position, in bytes, of the payload chunk communicated here, relative
+  // to the beginning of this box's payload.
+  // This is 0 for the first payload chunk of a box, then increases for later
+  // chunks of the same box.
+  payloadOffset: 512,
+
+  // Absolute start position, in bytes, of the payload chunk communicated here
+  // in the whole given resource.
+  payloadAbsoluteOffset: 1544
+}
+```
+
+The payload callback is invoked between the matching `box-start` and
+`box-complete` events. It is a zero-retention, forward-only stream of bytes: the
+parser does not keep those chunks after delivering them.
 
 ### `ParsedBox`
 

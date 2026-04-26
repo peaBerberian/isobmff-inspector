@@ -210,7 +210,7 @@ const FIELD_CHECKS = {
       dumpInteger(dumpScalar(dumpNode, "minor_version")),
     );
     assert.deepEqual(
-      actualNode.values.compatible_brands.split(", "),
+      actualNode.values.compatible_brands,
       dumpList(dumpNode, "compatible_brand"),
     );
   },
