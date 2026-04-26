@@ -1,4 +1,4 @@
-import { fixedPointField, macDateField } from "../fields.js";
+import { fixedPointField } from "../fields.js";
 import { parseTransformationMatrix, toSignedInt } from "./helpers.js";
 
 /**
@@ -26,28 +26,25 @@ export default {
   description: "Characteristics of a single track.",
 
   parser(r) {
-    // TODO: To new reader API
-    const version = r.readUint(1);
-    const flags = r.readUint(3);
-    const creation_time = version ? r.readUint64() : r.readUint(4);
-    const modification_time = version ? r.readUint64() : r.readUint(4);
-    return {
-      version,
-      flags,
-      creation_time: macDateField(creation_time),
-      modification_time: macDateField(modification_time),
-      track_ID: r.readUint(4),
-      reserved_1: r.readUint(4),
-      duration: version ? r.readUint64() : r.readUint(4),
-      reserved_2: [r.readUint(4), r.readUint(4)],
+    const version = r.fieldUint("version", 1);
+    r.fieldUint("flags", 3);
+    r.fieldMacDate("creation_time", version ? 8 : 4);
+    r.fieldMacDate("modification_time", version ? 8 : 4);
+    r.fieldUint("track_ID", 4);
+    r.fieldUint("reserved_1", 4);
+    if (version) {
+      r.fieldUint64("duration");
+    } else {
+      r.fieldUint("duration", 4);
+    }
 
-      layer: toSignedInt(r.readUint(2), 16),
-      alternate_group: toSignedInt(r.readUint(2), 16),
-      volume: fixedPointField(r.readUint(2), 16, 8, "8.8"),
-      reserved_3: r.readUint(2),
-      matrix: parseTransformationMatrix(r),
-      width: fixedPointField(r.readUint(4), 32, 16, "16.16"),
-      height: fixedPointField(r.readUint(4), 32, 16, "16.16"),
-    };
+    r.addField("reserved_2", [r.readUint(4), r.readUint(4)]);
+    r.addField("layer", toSignedInt(r.readUint(2), 16));
+    r.addField("alternate_group", toSignedInt(r.readUint(2), 16));
+    r.addField("volume", fixedPointField(r.readUint(2), 16, 8, "8.8"));
+    r.fieldUint("reserved_3", 2);
+    r.addField("matrix", parseTransformationMatrix(r));
+    r.addField("width", fixedPointField(r.readUint(4), 32, 16, "16.16"));
+    r.addField("height", fixedPointField(r.readUint(4), 32, 16, "16.16"));
   },
 };

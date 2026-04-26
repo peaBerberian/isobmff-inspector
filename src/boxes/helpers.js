@@ -1,7 +1,6 @@
 import {
   decodeFixedPoint,
   decodeSignedFixedPoint,
-  fixedPointField,
   parsedBoxValue,
   signedFixedPointField,
   structField,
@@ -195,54 +194,51 @@ function readVisualSampleEntry(reader) {
  */
 
 /**
- * @param {import("../BoxReader.js").BoxReader<AudioSampleEntry>} r
- * @returns {AudioSampleEntry}
+ * Internal field shape used by `BoxReader` while parsing audio sample entries.
+ *
+ * It intentionally accepts both version-specific field sets so the helper can
+ * emit them conditionally while the public `AudioSampleEntry` typedef remains
+ * strict.
+ *
+ * @typedef {AudioSampleEntryBase & Partial<AudioSampleEntryVersion1Fields> & Partial<AudioSampleEntryVersion2Fields>} AudioSampleEntryParserShape
+ */
+
+/**
+ * @param {import("../BoxReader.js").BoxReader<AudioSampleEntryParserShape>} r
+ * @returns {void}
  */
 function parseAudioSampleEntry(r) {
-  // TODO: To new reader API
   const reserved = [];
   for (let i = 0; i < 6; i++) {
     reserved.push(r.readUint(1));
   }
+  r.addField("reserved", reserved);
 
-  const base = {
-    reserved,
-    data_reference_index: r.readUint(2),
-    version: r.readUint(2),
-    revision_level: r.readUint(2),
-    vendor: r.readUint(4),
-    channelcount: r.readUint(2),
-    samplesize: r.readUint(2),
-    compression_id: r.readUint(2),
-    packet_size: r.readUint(2),
-    samplerate: fixedPointField(r.readUint(4), 32, 16, "16.16"),
-  };
+  r.fieldUint("data_reference_index", 2);
+  const version = r.fieldUint("version", 2);
+  r.fieldUint("revision_level", 2);
+  r.fieldUint("vendor", 4);
+  r.fieldUint("channelcount", 2);
+  r.fieldUint("samplesize", 2);
+  r.fieldUint("compression_id", 2);
+  r.fieldUint("packet_size", 2);
+  r.fieldFixedPoint("samplerate", 4, 16, "16.16");
 
-  if (base.version === 1) {
-    const result = {
-      ...base,
-      samples_per_packet: r.readUint(4),
-      bytes_per_packet: r.readUint(4),
-      bytes_per_frame: r.readUint(4),
-      bytes_per_sample: r.readUint(4),
-    };
-    return /** @type {AudioSampleEntryV1} */ (result);
-  } else if (base.version === 2) {
-    const result = {
-      ...base,
-      struct_size: r.readUint(4),
-      sample_rate: fixedPointField(r.readUint(4), 32, 16, "16.16"),
-      channel_count: r.readUint(4),
-      reserved_1: r.readUint(4),
-      bits_per_channel: r.readUint(4),
-      format_specific_flags: r.readUint(4),
-      bytes_per_audio_packet: r.readUint(4),
-      LPCM_frames_per_audio_packet: r.readUint(4),
-    };
-    return /** @type {AudioSampleEntryV2} */ (result);
+  if (version === 1) {
+    r.fieldUint("samples_per_packet", 4);
+    r.fieldUint("bytes_per_packet", 4);
+    r.fieldUint("bytes_per_frame", 4);
+    r.fieldUint("bytes_per_sample", 4);
+  } else if (version === 2) {
+    r.fieldUint("struct_size", 4);
+    r.fieldFixedPoint("sample_rate", 4, 16, "16.16");
+    r.fieldUint("channel_count", 4);
+    r.fieldUint("reserved_1", 4);
+    r.fieldUint("bits_per_channel", 4);
+    r.fieldUint("format_specific_flags", 4);
+    r.fieldUint("bytes_per_audio_packet", 4);
+    r.fieldUint("LPCM_frames_per_audio_packet", 4);
   }
-
-  return base;
 }
 
 /**

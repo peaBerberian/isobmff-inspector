@@ -12,12 +12,12 @@ export default {
     "The absolute decode time, measured on the media timeline, of " +
     "the first sample in decode order in the track fragment",
   parser(r) {
-    // TODO: To new reader API
-    const version = r.readUint(1);
-    return {
-      version,
-      flags: r.readUint(3),
-      baseMediaDecodeTime: version ? r.readUint64() : r.readUint(4),
-    };
+    const version = r.fieldUint("version", 1);
+    r.fieldUint("flags", 3);
+    if (version) {
+      r.fieldUint64("baseMediaDecodeTime");
+    } else {
+      r.fieldUint("baseMediaDecodeTime", 4);
+    }
   },
 };

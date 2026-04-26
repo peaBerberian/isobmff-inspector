@@ -8,6 +8,6 @@ export default {
   container: true,
 
   parser(reader) {
-    return parseAudioSampleEntry(reader);
+    parseAudioSampleEntry(reader);
   },
 };

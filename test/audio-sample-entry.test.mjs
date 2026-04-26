@@ -1,77 +1,138 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import mp4a from "../src/boxes/mp4a.js";
+import { parseBuffer } from "../src/main.js";
 
-function readerFor(entries) {
-  const pending = [...entries];
-
-  return {
-    readUint(nbBytes) {
-      const next = pending.shift();
-      assert.ok(next, `unexpected ${nbBytes}-byte read`);
-      assert.equal(nbBytes, next[0]);
-      return next[1];
-    },
-  };
+function box(type, payload) {
+  const size = payload.length + 8;
+  return new Uint8Array([
+    (size >>> 24) & 0xff,
+    (size >>> 16) & 0xff,
+    (size >>> 8) & 0xff,
+    size & 0xff,
+    type.charCodeAt(0),
+    type.charCodeAt(1),
+    type.charCodeAt(2),
+    type.charCodeAt(3),
+    ...payload,
+  ]);
 }
 
 function baseAudioSampleEntry(version) {
   return [
-    [1, 0],
-    [1, 0],
-    [1, 0],
-    [1, 0],
-    [1, 0],
-    [1, 0],
-    [2, 1],
-    [2, version],
-    [2, 0],
-    [4, 0],
-    [2, 2],
-    [2, 16],
-    [2, 0],
-    [2, 0],
-    [4, 0xac440000],
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    version,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    2,
+    0,
+    16,
+    0,
+    0,
+    0,
+    0,
+    0xac,
+    0x44,
+    0x00,
+    0x00,
   ];
 }
 
 test("version 1 audio sample entry fields are parsed flat", () => {
-  const result = mp4a.parser(
-    readerFor([...baseAudioSampleEntry(1), [4, 1024], [4, 4], [4, 8], [4, 2]]),
+  const parsed = parseBuffer(
+    box("mp4a", [
+      ...baseAudioSampleEntry(1),
+      0x00,
+      0x00,
+      0x04,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x04,
+      0x00,
+      0x00,
+      0x00,
+      0x08,
+      0x00,
+      0x00,
+      0x00,
+      0x02,
+    ]),
+  );
+  const values = Object.fromEntries(
+    parsed[0].values.map((value) => [value.key, value]),
   );
 
-  assert.equal(result.version_1_fields, undefined);
-  assert.equal(result.samples_per_packet, 1024);
-  assert.equal(result.bytes_per_packet, 4);
-  assert.equal(result.bytes_per_frame, 8);
-  assert.equal(result.bytes_per_sample, 2);
+  assert.equal(values.samples_per_packet.value, 1024);
+  assert.equal(values.bytes_per_packet.value, 4);
+  assert.equal(values.bytes_per_frame.value, 8);
+  assert.equal(values.bytes_per_sample.value, 2);
 });
 
 test("version 2 audio sample entry fields are parsed flat", () => {
-  const result = mp4a.parser(
-    readerFor([
+  const parsed = parseBuffer(
+    box("mp4a", [
       ...baseAudioSampleEntry(2),
-      [4, 36],
-      [4, 0xac440000],
-      [4, 2],
-      [4, 0],
-      [4, 16],
-      [4, 0],
-      [4, 4],
-      [4, 1024],
+      0x00,
+      0x00,
+      0x00,
+      0x24,
+      0xac,
+      0x44,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x02,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x10,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x00,
+      0x04,
+      0x00,
+      0x00,
+      0x04,
+      0x00,
     ]),
   );
+  const values = Object.fromEntries(
+    parsed[0].values.map((value) => [value.key, value]),
+  );
 
-  assert.equal(result.version_2_fields, undefined);
-  assert.equal(result.struct_size, 36);
-  assert.equal(result.sample_rate.kind, "fixed-point");
-  assert.equal(result.sample_rate.value, 44100);
-  assert.equal(result.sample_rate.raw, 0xac440000);
-  assert.equal(result.channel_count, 2);
-  assert.equal(result.reserved_1, 0);
-  assert.equal(result.bits_per_channel, 16);
-  assert.equal(result.format_specific_flags, 0);
-  assert.equal(result.bytes_per_audio_packet, 4);
-  assert.equal(result.LPCM_frames_per_audio_packet, 1024);
+  assert.equal(values.struct_size.value, 36);
+  assert.equal(values.sample_rate.kind, "fixed-point");
+  assert.equal(values.sample_rate.value, 44100);
+  assert.equal(values.sample_rate.raw, 0xac440000);
+  assert.equal(values.channel_count.value, 2);
+  assert.equal(values.reserved_1.value, 0);
+  assert.equal(values.bits_per_channel.value, 16);
+  assert.equal(values.format_specific_flags.value, 0);
+  assert.equal(values.bytes_per_audio_packet.value, 4);
+  assert.equal(values.LPCM_frames_per_audio_packet.value, 1024);
 });

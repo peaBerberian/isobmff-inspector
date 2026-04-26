@@ -135,7 +135,13 @@ function createPayloadChunkForwarder(payloadForwarding, box, path) {
 
   let payloadOffset = 0;
   return async (chunk) => {
-    await forwardPayloadChunk(payloadForwarding, box, path, chunk, payloadOffset);
+    await forwardPayloadChunk(
+      payloadForwarding,
+      box,
+      path,
+      chunk,
+      payloadOffset,
+    );
     payloadOffset += chunk.length;
   };
 }
@@ -165,14 +171,22 @@ async function* emitParsedBoxEvents(
       sizeField: box.sizeField,
       uuid: box.uuid,
     };
-    if (sourceBytes !== undefined && shouldForwardPayload(payloadForwarding, box)) {
+    if (
+      sourceBytes !== undefined &&
+      shouldForwardPayload(payloadForwarding, box)
+    ) {
       const payloadStart = box.offset + box.headerSize;
       const payloadEnd = box.offset + box.actualSize;
       const chunk = sourceBytes.subarray(payloadStart, payloadEnd);
       await forwardPayloadChunk(payloadForwarding, box, path, chunk, 0);
     }
     if (box.children) {
-      yield* emitParsedBoxEvents(box.children, path, payloadForwarding, sourceBytes);
+      yield* emitParsedBoxEvents(
+        box.children,
+        path,
+        payloadForwarding,
+        sourceBytes,
+      );
       yield { event: "box-complete", path, box };
     } else {
       yield { event: "box-complete", path, box };
@@ -187,13 +201,8 @@ async function* emitParsedBoxEvents(
  */
 async function* parseBoxEventsFromReader(context, state) {
   const { reader, parseBuffer, payloadForwarding } = context;
-  const {
-    remainingLength,
-    parentPath,
-    onParsedBox,
-    baseOffset,
-    parentType,
-  } = state;
+  const { remainingLength, parentPath, onParsedBox, baseOffset, parentType } =
+    state;
   let consumedLength = 0;
 
   while (remainingLength === undefined || consumedLength < remainingLength) {

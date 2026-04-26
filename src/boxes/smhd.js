@@ -14,17 +14,12 @@ export default {
   description: "Stores audio presentation information for a sound track.",
 
   parser(r) {
-    // TODO: To new reader API
-    const version = r.readUint(1);
+    const version = r.fieldUint("version", 1);
     if (version !== 0) {
       throw new Error("invalid version");
     }
-
-    return {
-      version,
-      flags: r.readUint(3),
-      balance: toSignedInt(r.readUint(2), 16) / 256,
-      reserved: r.readUint(2),
-    };
+    r.fieldUint("flags", 3);
+    r.addField("balance", toSignedInt(r.readUint(2), 16) / 256);
+    r.fieldUint("reserved", 2);
   },
 };

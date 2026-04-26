@@ -1,4 +1,4 @@
-import { macDateField, parsedBoxValue, structField } from "../fields.js";
+import { parsedBoxValue, structField } from "../fields.js";
 
 /**
  * @typedef {Object} MediaHeaderBoxContent
@@ -18,35 +18,31 @@ export default {
   name: "Media Header Box",
   description: "Timing and language metadata for one track's media.",
   parser(r) {
-    // TODO: To new reader API
-    const version = r.readUint(1);
-    const flags = r.readUint(3);
-    const creation_time = version ? r.readUint64() : r.readUint(4);
-    const modification_time = version ? r.readUint64() : r.readUint(4);
-    const timescale = r.readUint(4);
-    const duration = version ? r.readUint64() : r.readUint(4);
+    const version = r.fieldUint("version", 1);
+    r.fieldUint("flags", 3);
+    r.fieldMacDate("creation_time", version ? 8 : 4);
+    r.fieldMacDate("modification_time", version ? 8 : 4);
+    r.fieldUint("timescale", 4);
+    if (version) {
+      r.fieldUint64("duration");
+    } else {
+      r.fieldUint("duration", 4);
+    }
 
     const next2Bytes = r.readUint(2);
-    const pad = (next2Bytes >> 15) & 0x01;
+    r.addField("pad", (next2Bytes >> 15) & 0x01);
     const language = [
       String.fromCharCode(((next2Bytes >> 10) & 0x1f) + 0x60),
       String.fromCharCode(((next2Bytes >> 5) & 0x1f) + 0x60),
       String.fromCharCode((next2Bytes & 0x1f) + 0x60),
     ].join("");
-    const pre_defined = r.readUint(2);
-    return {
-      version,
-      flags,
-      creation_time: macDateField(creation_time),
-      modification_time: macDateField(modification_time),
-      timescale,
-      duration,
-      pad,
-      language: structField(
+    r.addField(
+      "language",
+      structField(
         [parsedBoxValue("value", language), parsedBoxValue("raw", next2Bytes)],
         "iso-639-2-t",
       ),
-      pre_defined,
-    };
+    );
+    r.fieldUint("pre_defined", 2);
   },
 };
