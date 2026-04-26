@@ -13,65 +13,47 @@ export default {
     "Lists sample records and optional per-sample data for a track fragment.",
 
   parser(r) {
-    // TODO: To new reader API
-    /** @type Partial<Record<string, unknown>> */
-    const ret = {};
-    ret.version = r.readUint(1);
+    const version = r.fieldUint("version", 1);
 
-    const flags = r.readUint(3);
+    const flags = r.fieldFlags("flags", 3, {
+      "data-offset-present": 0x000001,
+      "first-sample-flags-present": 0x000004,
+      "sample-duration-present": 0x000100,
+      "sample-size-present": 0x000200,
+      "sample-flags-present": 0x000400,
+      "sample-composition-time-offset-present": 0x000800,
+    });
 
-    const hasDataOffset = flags & 0x000001;
-    const hasFirstSampleFlags = flags & 0x000004;
-    const hasSampleDuration = flags & 0x000100;
-    const hasSampleSize = flags & 0x000200;
-    const hasSampleFlags = flags & 0x000400;
-    const hasSampleCompositionOffset = flags & 0x000800;
+    const sample_count = r.fieldUint("sample_count", 4);
 
-    ret.flags = {
-      "data-offset-present": !!hasDataOffset,
-      "first-sample-flags-present": !!hasFirstSampleFlags,
-      "sample-duration-present": !!hasSampleDuration,
-      "sample-size-present": !!hasSampleSize,
-      "sample-flags-present": !!hasSampleFlags,
-      "sample-composition-time-offset-present": !!hasSampleCompositionOffset,
-    };
-
-    const sample_count = r.readUint(4);
-    ret.sample_count = sample_count;
-
-    // two's complement
-    if (hasDataOffset) {
-      ret.data_offset = ~~r.readUint(4);
+    if (flags & 0x000001) {
+      r.addField("data_offset", ~~r.readUint(4));
+    }
+    if (flags & 0x000004) {
+      r.addField("first_sample_flags", r.readUint(4));
     }
 
-    if (hasFirstSampleFlags) {
-      ret.first_sample_flags = r.readUint(4);
-    }
-
-    let i = sample_count;
     /** @type {Array.<TrunSample>} */
     const samples = [];
-    ret.samples = samples;
-    while (i--) {
+    for (let i = 0; i < sample_count; i++) {
       /** @type {TrunSample} */
       const sample = {};
 
-      if (hasSampleDuration) {
+      if (flags & 0x000100) {
         sample.sample_duration = r.readUint(4);
       }
-      if (hasSampleSize) {
+      if (flags & 0x000200) {
         sample.sample_size = r.readUint(4);
       }
-      if (hasSampleFlags) {
+      if (flags & 0x000400) {
         sample.sample_flags = r.readUint(4);
       }
-      if (hasSampleCompositionOffset) {
+      if (flags & 0x000800) {
         sample.sample_composition_time_offset =
-          ret.version === 0 ? r.readUint(4) : ~~r.readUint(4);
+          version === 0 ? r.readUint(4) : ~~r.readUint(4);
       }
       samples.push(sample);
     }
-
-    return ret;
+    r.addField("samples", samples);
   },
 };

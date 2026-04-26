@@ -5,28 +5,21 @@ export default {
     "Gives file offsets for auxiliary sample information such as encryption data.",
 
   parser(r) {
-    // TODO: To new reader API
-    /** @type Partial<Record<string, unknown>> */
-    const ret = {};
-    ret.version = r.readUint(1);
-    ret.flags = r.readUint(3);
+    const version = r.fieldUint("version", 1);
+    const flags = r.fieldUint("flags", 3);
 
-    if (ret.flags === 1) {
-      ret.aux_info_type = r.readUint(4);
-      ret.aux_info_type_parameter = r.readUint(4);
+    if (flags === 1) {
+      r.fieldUint("aux_info_type", 4);
+      r.fieldUint("aux_info_type_parameter", 4);
     }
 
-    const entry_count = r.readUint(4);
-    ret.entry_count = entry_count;
+    const entry_count = r.fieldUint("entry_count", 4);
 
     /** @type {Array.<number|bigint>} */
     const offset = [];
-    ret.offset = offset;
-    let i = entry_count;
-    while (i--) {
-      offset.push(ret.version === 0 ? r.readUint(4) : r.readInt64());
+    for (let i = 0; i < entry_count; i++) {
+      offset.push(version === 0 ? r.readUint(4) : r.readInt64());
     }
-
-    return ret;
+    r.addField("offset", offset);
   },
 };

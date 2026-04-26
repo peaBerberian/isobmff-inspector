@@ -1,6 +1,5 @@
 import BoxReader from "../BoxReader.js";
 import definitions from "../boxes/index.js";
-import { parsedBoxValue } from "../fields.js";
 
 /**
  * @param {unknown} error
@@ -97,12 +96,8 @@ export function parseBoxContent(
   if (typeof config.parser === "function") {
     const parserReader = new BoxReader(content);
     /** @type {import("../types.js").BoxParserFields | undefined} */
-    let result;
     try {
-      result =
-        /** @type {import("../types.js").BoxParserFields | undefined} */ (
-          config.parser(parserReader)
-        );
+      config.parser(parserReader);
     } catch (e) {
       addBoxIssue(atomObject, "error", formatErrorMessage(e));
     }
@@ -122,17 +117,6 @@ export function parseBoxContent(
     }
 
     atomObject.values.push(...parserReader.getValues());
-
-    try {
-      // TODO: Remove when API transition done
-      if (result !== undefined) {
-        Object.keys(result).forEach((key) => {
-          atomObject.values.push(parsedBoxValue(key, result[key]));
-        });
-      }
-    } catch (e) {
-      addBoxIssue(atomObject, "error", formatErrorMessage(e));
-    }
   }
 
   if (hasChildren) {

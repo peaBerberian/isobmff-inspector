@@ -4,35 +4,25 @@ export default {
   description:
     "Carries DRM system identifiers and system-specific protection data.",
   parser(reader) {
-    // TODO: To new reader API
-    /** @type Partial<Record<string, unknown>> */
-    const ret = {};
-    const version = reader.readUint(1);
-    ret.version = version;
+    const version = reader.fieldUint("version", 1);
     if (version > 1) {
       throw new Error("invalid version");
     }
 
-    ret.flags = reader.readUint(3);
-    const systemID = reader.readBytes(16);
-    ret.systemID = systemID;
-    if (ret.version === 1) {
-      const KID_count = reader.readUint(4);
-      ret.KID_count = KID_count;
+    reader.fieldUint("flags", 3);
+    reader.fieldBytes("systemID", 16, "DRM system identifier");
+    if (version === 1) {
+      const KID_count = reader.fieldUint("KID_count", 4);
 
       /** @type {Array<Uint8Array>} */
       const KIDs = [];
-      ret.KIDs = KIDs;
-
-      let i = KID_count;
-      while (i--) {
+      for (let i = 0; i < KID_count; i++) {
         KIDs.push(reader.readBytes(16));
       }
+      reader.addField("KIDs", KIDs);
     }
 
-    const data_length = reader.readUint(4);
-    ret.data_length = data_length;
-    ret.data = reader.readBytes(data_length);
-    return ret;
+    const data_length = reader.fieldUint("data_length", 4);
+    reader.addField("data", reader.readBytes(data_length));
   },
 };

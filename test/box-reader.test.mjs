@@ -95,28 +95,6 @@ test("reader-emitted issues are attached to parsed boxes", () => {
   }
 });
 
-test("legacy parser return objects still append after reader fields", () => {
-  definitions.TST3 = {
-    parser(r) {
-      r.fieldUint("emitted", 1);
-      return { returned: r.readUint(1) };
-    },
-  };
-
-  try {
-    const parsed = parseBuffer(boxBytes("TST3", new Uint8Array([4, 5])));
-
-    assert.deepEqual(
-      parsed[0].values.map((value) => value.key),
-      ["emitted", "returned"],
-    );
-    assert.equal(parsed[0].values[0].value, 4);
-    assert.equal(parsed[0].values[1].value, 5);
-  } finally {
-    delete definitions.TST3;
-  }
-});
-
 test("read aliases consume bytes without emitting fields", () => {
   definitions.TST4 = {
     parser(r) {
@@ -231,25 +209,5 @@ test("unsupported reader field values are reported as parser errors", () => {
     );
   } finally {
     delete definitions.TST7;
-  }
-});
-
-test("unsupported legacy return values are reported as parser errors", () => {
-  definitions.TST8 = {
-    parser() {
-      return { bad: undefined };
-    },
-  };
-
-  try {
-    const parsed = parseBuffer(boxBytes("TST8", new Uint8Array([])));
-
-    assert.deepEqual(parsed[0].values, []);
-    assert.deepEqual(
-      parsed[0].issues.map((issue) => issue.message),
-      ["Unsupported parsed field value: undefined"],
-    );
-  } finally {
-    delete definitions.TST8;
   }
 });

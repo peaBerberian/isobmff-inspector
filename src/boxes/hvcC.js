@@ -1,3 +1,5 @@
+import { bitsField } from "../fields.js";
+
 /** @type {import("./types.js").BoxDefinition<{ [k: string]: unknown }>} */
 export default {
   name: "HEVC Decoder Configuration Record",
@@ -5,25 +7,78 @@ export default {
     "Stores HEVC decoder configuration, including profile data and NAL arrays.",
 
   parser(r) {
-    // TODO: To new reader API
-    const configurationVersion = r.readUint(1);
-    const generalProfileByte = r.readUint(1);
-    const generalCompatibilityFlagsUpper = r.readUint(4);
-    const generalLevelIdc = r.readUint(1);
+    r.fieldUint("configurationVersion", 1);
+
+    const generalProfile = bitsField(r.readUint(1), 8, [
+      { key: "general_profile_space", bits: 2 },
+      { key: "general_tier_flag", bits: 1 },
+      { key: "general_profile_idc", bits: 5 },
+    ]);
+    r.addField("general_profile_space", generalProfile.fields[0].value);
+    r.addField("general_tier_flag", generalProfile.fields[1].value !== 0);
+    r.addField("general_profile_idc", generalProfile.fields[2].value);
+
+    r.fieldUint("general_profile_compatibility_flags", 4);
+    r.fieldUint("general_level_idc", 1);
     const constraintUpper = r.readUint(4);
     const constraintLower = r.readUint(2);
-    const minSpatialSegmentation = r.readUint(2);
-    const parallelismType = r.readUint(1);
-    const chromaFormat = r.readUint(1);
-    const bitDepthLumaMinus8 = r.readUint(1);
-    const bitDepthChromaMinus8 = r.readUint(1);
-    const avgFrameRate = r.readUint(2);
-    const miscByte = r.readUint(1);
-    const numOfArrays = r.readUint(1);
+    r.addField(
+      "general_constraint_indicator_flags",
+      constraintUpper * 0x10000 + constraintLower,
+    );
+
+    const minSpatialSegmentation = bitsField(r.readUint(2), 16, [
+      { key: "reserved", bits: 4 },
+      { key: "value", bits: 12 },
+    ]);
+    r.addField("min_spatial_segmentation_idc", minSpatialSegmentation.value);
+
+    const parallelismType = bitsField(r.readUint(1), 8, [
+      { key: "reserved", bits: 6 },
+      { key: "value", bits: 2 },
+    ]);
+    r.addField("parallelismType", parallelismType.value);
+
+    const chromaFormat = bitsField(r.readUint(1), 8, [
+      { key: "reserved", bits: 6 },
+      { key: "value", bits: 2 },
+    ]);
+    r.addField("chromaFormat", chromaFormat.value);
+
+    const bitDepthLumaMinus8 = bitsField(r.readUint(1), 8, [
+      { key: "reserved", bits: 5 },
+      { key: "value", bits: 3 },
+    ]);
+    r.addField("bitDepthLumaMinus8", bitDepthLumaMinus8.value);
+
+    const bitDepthChromaMinus8 = bitsField(r.readUint(1), 8, [
+      { key: "reserved", bits: 5 },
+      { key: "value", bits: 3 },
+    ]);
+    r.addField("bitDepthChromaMinus8", bitDepthChromaMinus8.value);
+
+    r.fieldUint("avgFrameRate", 2);
+
+    const misc = bitsField(r.readUint(1), 8, [
+      { key: "constantFrameRate", bits: 2 },
+      { key: "numTemporalLayers", bits: 3 },
+      { key: "temporalIdNested", bits: 1 },
+      { key: "lengthSizeMinusOne", bits: 2 },
+    ]);
+    r.addField("constantFrameRate", misc.fields[0].value);
+    r.addField("numTemporalLayers", misc.fields[1].value);
+    r.addField("temporalIdNested", misc.fields[2].value !== 0);
+    r.addField("lengthSizeMinusOne", misc.fields[3].value);
+
+    const numOfArrays = r.fieldUint("numOfArrays", 1);
     const arrays = [];
 
     for (let i = 0; i < numOfArrays; i++) {
-      const arrayCompletenessByte = r.readUint(1);
+      const arrayCompleteness = bitsField(r.readUint(1), 8, [
+        { key: "array_completeness", bits: 1 },
+        { key: "reserved", bits: 1 },
+        { key: "NAL_unit_type", bits: 6 },
+      ]);
       const numNalus = r.readUint(2);
       const nalus = [];
 
@@ -36,35 +91,13 @@ export default {
       }
 
       arrays.push({
-        array_completeness: !!((arrayCompletenessByte >> 7) & 0x01),
-        reserved: !!((arrayCompletenessByte >> 6) & 0x01),
-        NAL_unit_type: arrayCompletenessByte & 0x3f,
+        array_completeness: arrayCompleteness.fields[0].value !== 0,
+        reserved: arrayCompleteness.fields[1].value !== 0,
+        NAL_unit_type: arrayCompleteness.fields[2].value,
         numNalus,
         nalus,
       });
     }
-
-    return {
-      configurationVersion,
-      general_profile_space: (generalProfileByte >> 6) & 0x03,
-      general_tier_flag: !!((generalProfileByte >> 5) & 0x01),
-      general_profile_idc: generalProfileByte & 0x1f,
-      general_profile_compatibility_flags: generalCompatibilityFlagsUpper,
-      general_constraint_indicator_flags:
-        constraintUpper * 0x10000 + constraintLower,
-      general_level_idc: generalLevelIdc,
-      min_spatial_segmentation_idc: minSpatialSegmentation & 0x0fff,
-      parallelismType: parallelismType & 0x03,
-      chromaFormat: chromaFormat & 0x03,
-      bitDepthLumaMinus8: bitDepthLumaMinus8 & 0x07,
-      bitDepthChromaMinus8: bitDepthChromaMinus8 & 0x07,
-      avgFrameRate,
-      constantFrameRate: (miscByte >> 6) & 0x03,
-      numTemporalLayers: (miscByte >> 3) & 0x07,
-      temporalIdNested: !!((miscByte >> 2) & 0x01),
-      lengthSizeMinusOne: miscByte & 0x03,
-      numOfArrays,
-      arrays,
-    };
+    r.addField("arrays", arrays);
   },
 };

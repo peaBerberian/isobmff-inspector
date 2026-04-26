@@ -27,20 +27,22 @@ export default {
   description: "Index of the media stream",
 
   parser(r) {
-    // TODO: To new reader API
-    const version = r.readUint(1);
-    const flags = r.readUint(3);
-    const reference_ID = r.readUint(4);
-    const timescale = r.readUint(4);
-    const earliest_presentation_time =
-      version === 0 ? r.readUint(4) : r.readInt64();
-    const first_offset = version === 0 ? r.readUint(4) : r.readInt64();
-    const reserved = r.readUint(2);
-    const reference_count = r.readUint(2);
+    const version = r.fieldUint("version", 1);
+    r.fieldUint("flags", 3);
+    r.fieldUint("reference_ID", 4);
+    r.fieldUint("timescale", 4);
+    if (version === 0) {
+      r.fieldUint("earliest_presentation_time", 4);
+      r.fieldUint("first_offset", 4);
+    } else {
+      r.addField("earliest_presentation_time", r.readInt64());
+      r.addField("first_offset", r.readInt64());
+    }
+    r.fieldUint("reserved", 2);
+    const reference_count = r.fieldUint("reference_count", 2);
 
     const items = [];
-    let i = reference_count;
-    while (i--) {
+    for (let i = 0; i < reference_count; i++) {
       const first4Bytes = r.readUint(4);
       const second4Bytes = r.readUint(4);
       const third4Bytes = r.readUint(4);
@@ -53,17 +55,6 @@ export default {
         SAP_delta_time: third4Bytes & 0x0fffffff,
       });
     }
-
-    return {
-      version,
-      flags,
-      reference_ID,
-      timescale,
-      earliest_presentation_time,
-      first_offset,
-      reserved,
-      reference_count,
-      items,
-    };
+    r.addField("items", items);
   },
 };

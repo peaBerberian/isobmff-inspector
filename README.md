@@ -751,21 +751,10 @@ You can help me to add parsing logic for other boxes by updating the
 
 You can base yourself on already-defined boxes. Each of the ``parser`` functions
 there receive a ``BoxReader`` object.
-They can parse the associated box either:
+They should emit parsed fields directly through that `BoxReader`.
 
-- By "reading" the box (with the given `BoxReader` e.g. though
-  `reader.readUint(4)`) and ultimately returning an object from that ``parser``
-  function, whose keys are in the same order than the fields in the source
-  ISOBMFF, where each key corresponds to a different box field, and whose value
-  is the corresponding parsed value in the most expected format (e.g. `number`
-  for integers, `string` for ASCII/UTF-8 etc.)
-
-- Or by declaring directly all fields with the given `BoxReader` without having
-  to return any object.
-
-  This can e.g. be done through a method like
-  `reader.fieldUint("version", 1, "The box version")` and allows to also provide
-  a description for the field.
+This can e.g. be done through a method like
+`reader.fieldUint("version", 1, "The box version")`.
 
 Note that each of those call advance the `BoxReader`'s internal cursor so
 consecutive calls will progress through the file.

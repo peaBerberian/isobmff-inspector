@@ -1,32 +1,29 @@
+import { bitsField, parsedBoxValue, structField } from "../fields.js";
+
 /** @type {import("./types.js").BoxDefinition<{ [k: string]: unknown }>} */
 export default {
   name: "Independent and Disposable Samples Box",
   description: "Records dependency flags for samples in decoding order.",
 
   parser(r) {
-    // TODO: To new reader API
-    /** @type Partial<Record<string, unknown>> */
-    const ret = {
-      version: r.readUint(1),
-      flags: r.readUint(3),
-    };
-
-    const remaining = r.getRemainingLength();
-
-    let i = remaining;
+    r.fieldUint("version", 1);
+    r.fieldUint("flags", 3);
 
     /** @type Array<Partial<Record<string, unknown>>> */
     const samples = [];
-    ret.samples = samples;
-    while (i--) {
-      const byte = r.readUint(1);
-      samples.push({
-        is_leading: (byte >> 6) & 0x03,
-        sample_depends_on: (byte >> 4) & 0x03,
-        sample_is_depended_on: (byte >> 2) & 0x03,
-        sample_has_redundancy: byte & 0x03,
-      });
+    while (!r.isFinished()) {
+      const packed = bitsField(r.readUint(1), 8, [
+        { key: "is_leading", bits: 2 },
+        { key: "sample_depends_on", bits: 2 },
+        { key: "sample_is_depended_on", bits: 2 },
+        { key: "sample_has_redundancy", bits: 2 },
+      ]);
+      samples.push(
+        structField(
+          packed.fields.map((field) => parsedBoxValue(field.key, field.value)),
+        ),
+      );
     }
-    return ret;
+    r.addField("samples", samples);
   },
 };

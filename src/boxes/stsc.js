@@ -12,19 +12,13 @@ export default {
     "Maps chunks to the number and description index of their samples.",
 
   parser(r) {
-    // TODO: To new reader API
-    /** @type Partial<Record<string, unknown>> */
-    const ret = {};
-    ret.version = r.readUint(1);
-    ret.flags = r.readUint(3);
-    const entry_count = r.readUint(4);
-    ret.entry_count = entry_count;
+    r.fieldUint("version", 1);
+    r.fieldUint("flags", 3);
+    const entry_count = r.fieldUint("entry_count", 4);
 
     /** @type {Array.<StscEntry>} */
     const entries = [];
-    ret.entries = entries;
-    let i = entry_count;
-    while (i--) {
+    for (let i = 0; i < entry_count; i++) {
       const e = {
         first_chunk: r.readUint(4),
         samples_per_chunk: r.readUint(4),
@@ -32,6 +26,6 @@ export default {
       };
       entries.push(e);
     }
-    return ret;
+    r.addField("entries", entries);
   },
 };

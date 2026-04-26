@@ -12,25 +12,18 @@ export default {
   description: "Lists samples that can be used as random access points.",
 
   parser(r) {
-    // TODO: To new reader API
-    const version = r.readUint(1);
+    const version = r.fieldUint("version", 1);
     if (version !== 0) {
       throw new Error("invalid version");
     }
 
-    const flags = r.readUint(3);
-    const entry_count = r.readUint(4);
+    r.fieldUint("flags", 3);
+    const entry_count = r.fieldUint("entry_count", 4);
     const sample_numbers = [];
 
     for (let i = 0; i < entry_count; i++) {
       sample_numbers.push(r.readUint(4));
     }
-
-    return {
-      version,
-      flags,
-      entry_count,
-      sample_numbers,
-    };
+    r.addField("sample_numbers", sample_numbers);
   },
 };
