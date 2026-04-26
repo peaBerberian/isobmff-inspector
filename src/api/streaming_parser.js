@@ -22,7 +22,30 @@ const LARGE_BOX_SIZE_BYTES = 8;
 const UUID_SUBTYPE_BYTES = 16;
 
 /**
+ * @typedef {object} PayloadForwarding
+ * @property {Set<string>} include
+ * @property {import("../types.js").BoxPayloadChunkCallback} onChunk
+ */
+
+/**
+ * @typedef {object} StreamingParserContext
+ * @property {ProgressiveByteReader} reader
+ * @property {(content: Uint8Array, offset: number, parentType?: string) => import("../types.js").ParsedBox[]} parseBuffer
+ * @property {PayloadForwarding | undefined} payloadForwarding
+ */
+
+/**
+ * @typedef {object} BoxParsingState
+ * @property {number | undefined} remainingLength
+ * @property {string[]} parentPath
+ * @property {((box: import("../types.js").ParsedBox) => void) | undefined} onParsedBox
+ * @property {number} baseOffset
+ * @property {string | undefined} parentType
+ */
+
+/**
  * @param {import("../types.js").ParseEventsOptions | undefined} options
+ * @returns {PayloadForwarding | undefined}
  */
 function normalizePayloadForwarding(options) {
   const payloads = options?.payloads;
@@ -62,7 +85,7 @@ function createPayloadChunkInfo(box, path, payloadOffset) {
 }
 
 /**
- * @param {{ include: Set<string>, onChunk: import("../types.js").BoxPayloadChunkCallback } | undefined} payloadForwarding
+ * @param {PayloadForwarding | undefined} payloadForwarding
  * @param {import("../types.js").ParsedBox} box
  * @returns {boolean}
  */
@@ -71,7 +94,7 @@ function shouldForwardPayload(payloadForwarding, box) {
 }
 
 /**
- * @param {{ include: Set<string>, onChunk: import("../types.js").BoxPayloadChunkCallback } | undefined} payloadForwarding
+ * @param {PayloadForwarding | undefined} payloadForwarding
  * @param {import("../types.js").ParsedBox} box
  * @param {string[]} path
  * @param {Uint8Array} chunk
@@ -100,9 +123,27 @@ async function forwardPayloadChunk(
 }
 
 /**
+ * @param {PayloadForwarding | undefined} payloadForwarding
+ * @param {import("../types.js").ParsedBox} box
+ * @param {string[]} path
+ * @returns {((chunk: Uint8Array) => Promise<void>) | undefined}
+ */
+function createPayloadChunkForwarder(payloadForwarding, box, path) {
+  if (!shouldForwardPayload(payloadForwarding, box)) {
+    return undefined;
+  }
+
+  let payloadOffset = 0;
+  return async (chunk) => {
+    await forwardPayloadChunk(payloadForwarding, box, path, chunk, payloadOffset);
+    payloadOffset += chunk.length;
+  };
+}
+
+/**
  * @param {import("../types.js").ParsedBox[]} boxes
  * @param {string[]} parentPath
- * @param {{ include: Set<string>, onChunk: import("../types.js").BoxPayloadChunkCallback } | undefined} payloadForwarding
+ * @param {PayloadForwarding | undefined} payloadForwarding
  * @param {Uint8Array=} sourceBytes
  * @returns {AsyncGenerator<import("../types.js").ParsedBoxParseEvent, void, void>}
  */
@@ -140,26 +181,19 @@ async function* emitParsedBoxEvents(
 }
 
 /**
- * @param {ProgressiveByteReader} reader
- * @param {(content: Uint8Array, offset: number, parentType?: string) => import("../types.js").ParsedBox[]} parseBuffer
- * @param {number | undefined} remainingLength
- * @param {string[]} parentPath
- * @param {((box: import("../types.js").ParsedBox) => void)=} onParsedBox
- * @param {number=} baseOffset
- * @param {string=} parentType
- * @param {{ include: Set<string>, onChunk: import("../types.js").BoxPayloadChunkCallback } | undefined=} payloadForwarding
+ * @param {StreamingParserContext} context
+ * @param {BoxParsingState} state
  * @returns {AsyncGenerator<import("../types.js").ParsedBoxParseEvent, number, void>}
  */
-async function* parseBoxEventsFromReader(
-  reader,
-  parseBuffer,
-  remainingLength,
-  parentPath,
-  onParsedBox,
-  baseOffset = 0,
-  parentType,
-  payloadForwarding,
-) {
+async function* parseBoxEventsFromReader(context, state) {
+  const { reader, parseBuffer, payloadForwarding } = context;
+  const {
+    remainingLength,
+    parentPath,
+    onParsedBox,
+    baseOffset,
+    parentType,
+  } = state;
   let consumedLength = 0;
 
   while (remainingLength === undefined || consumedLength < remainingLength) {
@@ -317,18 +351,15 @@ async function* parseBoxEventsFromReader(
     ) {
       /** @type {import("../types.js").ParsedBox[]} */
       const children = [];
-      const childConsumedLength = yield* parseBoxEventsFromReader(
-        reader,
-        parseBuffer,
-        contentSize,
-        path,
-        (child) => {
+      const childConsumedLength = yield* parseBoxEventsFromReader(context, {
+        remainingLength: contentSize,
+        parentPath: path,
+        onParsedBox: (child) => {
           children.push(child);
         },
-        boxOffset + headerSize,
-        name,
-        payloadForwarding,
-      );
+        baseOffset: boxOffset + headerSize,
+        parentType: name,
+      });
       consumedLength += childConsumedLength;
       if (contentSize === undefined) {
         box.actualSize = headerSize + childConsumedLength;
@@ -358,22 +389,11 @@ async function* parseBoxEventsFromReader(
     }
 
     if (shouldReadContent(name, parentType)) {
-      let payloadOffset = 0;
-      const onPayloadChunk =
-        shouldForwardPayload(payloadForwarding, box)
-          ? async (
-              /** @type {Uint8Array} */ chunk,
-            ) => {
-              await forwardPayloadChunk(
-                payloadForwarding,
-                box,
-                path,
-                chunk,
-                payloadOffset,
-              );
-              payloadOffset += chunk.length;
-            }
-          : undefined;
+      const onPayloadChunk = createPayloadChunkForwarder(
+        payloadForwarding,
+        box,
+        path,
+      );
       const content =
         contentSize === undefined
           ? onPayloadChunk === undefined
@@ -417,22 +437,11 @@ async function* parseBoxEventsFromReader(
       continue;
     }
 
-    let payloadOffset = 0;
-    const onPayloadChunk =
-      shouldForwardPayload(payloadForwarding, box)
-        ? async (
-            /** @type {Uint8Array} */ chunk,
-          ) => {
-            await forwardPayloadChunk(
-              payloadForwarding,
-              box,
-              path,
-              chunk,
-              payloadOffset,
-            );
-            payloadOffset += chunk.length;
-          }
-        : undefined;
+    const onPayloadChunk = createPayloadChunkForwarder(
+      payloadForwarding,
+      box,
+      path,
+    );
     const skippedContentSize =
       contentSize === undefined
         ? onPayloadChunk === undefined
@@ -498,14 +507,18 @@ export default async function* parseBoxEvents(input, parseBuffer, options) {
     const iterator =
       asyncByteIterable(progressiveSource)[Symbol.asyncIterator]();
     yield* parseBoxEventsFromReader(
-      new ProgressiveByteReader(iterator),
-      parseBuffer,
-      undefined,
-      [],
-      undefined,
-      0,
-      undefined,
-      payloadForwarding,
+      {
+        reader: new ProgressiveByteReader(iterator),
+        parseBuffer,
+        payloadForwarding,
+      },
+      {
+        remainingLength: undefined,
+        parentPath: [],
+        onParsedBox: undefined,
+        baseOffset: 0,
+        parentType: undefined,
+      },
     );
     return;
   }
