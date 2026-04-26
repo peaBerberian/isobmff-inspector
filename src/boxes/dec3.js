@@ -1,4 +1,3 @@
-// XXX TODO:
 import { bitsField, parsedBoxValue, structField } from "../fields.js";
 
 /** @type {import("./types.js").BoxDefinition<{ [k: string]: unknown }>} */
@@ -8,21 +7,11 @@ export default {
     "Packed EC-3 decoder configuration listing independent substreams and optional Atmos/JOC extension signalling.",
 
   parser(reader) {
-    const headerOffset = reader.getCurrentOffset();
-    const header = bitsField(reader.readUint(2), 16, [
+    const header = reader.fieldBits("header", 2, [
       { key: "data_rate", bits: 13 },
       { key: "num_ind_sub", bits: 3 },
     ]);
-    let substreamCount = 1;
-    for (const field of header.fields) {
-      reader.addField(field.key, field.value, {
-        offset: headerOffset,
-        byteLength: 2,
-      });
-      if (field.key === "num_ind_sub") {
-        substreamCount = field.value + 1;
-      }
-    }
+    const substreamCount = (header & 0x7) + 1;
 
     /** @type {import("../types.js").ParsedStructField[]} */
     const substreams = [];

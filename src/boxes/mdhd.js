@@ -1,6 +1,3 @@
-// XXX TODO:
-import { parsedBoxValue, structField } from "../fields.js";
-
 /**
  * @typedef {Object} MediaHeaderBoxContent
  * @property {number} version
@@ -9,8 +6,7 @@ import { parsedBoxValue, structField } from "../fields.js";
  * @property {import("../types.js").ParsedDateField} modification_time
  * @property {number} timescale
  * @property {number|bigint} duration
- * @property {number} pad
- * @property {import("../types.js").ParsedStructField} language
+ * @property {import("../types.js").ParsedBitsField} language
  * @property {number} pre_defined
  */
 
@@ -30,28 +26,10 @@ export default {
       r.fieldUint("duration", 4);
     }
 
-    const baseOffset = r.getCurrentOffset();
-    const next2Bytes = r.readUint(2);
-    r.addField("pad", (next2Bytes >> 15) & 0x01, {
-      offset: baseOffset,
-      byteLength: 2,
-    });
-    const language = [
-      String.fromCharCode(((next2Bytes >> 10) & 0x1f) + 0x60),
-      String.fromCharCode(((next2Bytes >> 5) & 0x1f) + 0x60),
-      String.fromCharCode((next2Bytes & 0x1f) + 0x60),
-    ].join("");
-    r.addField(
-      "language",
-      structField(
-        [parsedBoxValue("value", language), parsedBoxValue("raw", next2Bytes)],
-        "iso-639-2-t",
-      ),
-      {
-        offset: baseOffset,
-        byteLength: 2,
-      },
-    );
+    r.fieldBits("language", 2, [
+      { key: "pad", bits: 1 },
+      { key: "value", bits: 15 },
+    ]);
     r.fieldUint("pre_defined", 2);
   },
 };

@@ -195,6 +195,14 @@ function normalizeHexDump(raw) {
   return raw.replace(/[[\]\s]/g, "").toUpperCase();
 }
 
+function decodeMdhdLanguage(raw) {
+  return [
+    String.fromCharCode(((raw >> 10) & 0x1f) + 0x60),
+    String.fromCharCode(((raw >> 5) & 0x1f) + 0x60),
+    String.fromCharCode((raw & 0x1f) + 0x60),
+  ].join("");
+}
+
 function findRawChild(node, alias) {
   return node.rawChildren.find((child) => child.alias === alias);
 }
@@ -318,7 +326,10 @@ const FIELD_CHECKS = {
         ? dumpBigInt(dumpScalar(dumpNode, "duration"))
         : dumpInteger(dumpScalar(dumpNode, "duration")),
     );
-    assert.equal(actualNode.values.language, dumpScalar(dumpNode, "language"));
+    assert.equal(
+      decodeMdhdLanguage(actualNode.values.language),
+      dumpScalar(dumpNode, "language"),
+    );
   },
 
   vmhd(dumpNode, actualNode) {

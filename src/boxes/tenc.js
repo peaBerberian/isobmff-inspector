@@ -1,15 +1,10 @@
-// XXX TODO:
-import { parsedBoxValue, structField } from "../fields.js";
-
 /**
  * @typedef {Object} TrackEncryptionBoxContent
  * @property {number} version
  * @property {number} flags
  * @property {number} reserved
  * @property {number=} reserved_1
- * @property {import("../types.js").ParsedStructField=} default_pattern
- * @property {number=} default_crypt_byte_block
- * @property {number=} default_skip_byte_block
+ * @property {import("../types.js").ParsedBitsField=} default_pattern
  * @property {number} default_IsProtected
  * @property {number} default_Per_Sample_IV_Size
  * @property {Uint8Array} default_KID
@@ -35,33 +30,10 @@ export default {
     if (version === 0) {
       r.fieldUint("reserved_1", 1);
     } else {
-      const blocksOffset = r.getCurrentOffset();
-      const blocks = r.readUint(1);
-      const default_crypt_byte_block = (blocks >> 4) & 0x0f;
-      const default_skip_byte_block = blocks & 0x0f;
-      r.addField("default_crypt_byte_block", default_crypt_byte_block, {
-        offset: blocksOffset,
-        byteLength: 1,
-      });
-      r.addField("default_skip_byte_block", default_skip_byte_block, {
-        offset: blocksOffset,
-        byteLength: 1,
-      });
-      r.addField(
-        "default_pattern",
-        structField(
-          [
-            parsedBoxValue("crypt_byte_block", default_crypt_byte_block),
-            parsedBoxValue("skip_byte_block", default_skip_byte_block),
-            parsedBoxValue("raw", blocks),
-          ],
-          "cenc-pattern",
-        ),
-        {
-          offset: blocksOffset,
-          byteLength: 1,
-        },
-      );
+      r.fieldBits("default_pattern", 1, [
+        { key: "crypt_byte_block", bits: 4 },
+        { key: "skip_byte_block", bits: 4 },
+      ]);
     }
 
     r.fieldUint("default_IsProtected", 1);
@@ -72,12 +44,10 @@ export default {
     r.fieldBytes("default_KID", 16);
 
     if (default_Per_Sample_IV_Size === 0 && !r.isFinished()) {
-      const constantIvSizeOffset = r.getCurrentOffset();
-      const default_constant_IV_size = r.readUint(1);
-      r.addField("default_constant_IV_size", default_constant_IV_size, {
-        offset: constantIvSizeOffset,
-        byteLength: 1,
-      });
+      const default_constant_IV_size = r.fieldUint(
+        "default_constant_IV_size",
+        1,
+      );
       r.fieldBytes("default_constant_IV", default_constant_IV_size);
     }
   },

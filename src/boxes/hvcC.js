@@ -1,5 +1,4 @@
-// XXX TODO:
-import { bitsField } from "../fields.js";
+import { bitsField, parsedBoxValue, structField } from "../fields.js";
 
 /** @type {import("./types.js").BoxDefinition<{ [k: string]: unknown }>} */
 export default {
@@ -10,24 +9,11 @@ export default {
   parser(r) {
     r.fieldUint("configurationVersion", 1);
 
-    const generalProfileOffset = r.getCurrentOffset();
-    const generalProfile = bitsField(r.readUint(1), 8, [
+    r.fieldBits("general_profile", 1, [
       { key: "general_profile_space", bits: 2 },
       { key: "general_tier_flag", bits: 1 },
       { key: "general_profile_idc", bits: 5 },
     ]);
-    r.addField("general_profile_space", generalProfile.fields[0].value, {
-      offset: generalProfileOffset,
-      byteLength: 1,
-    });
-    r.addField("general_tier_flag", generalProfile.fields[1].value !== 0, {
-      offset: generalProfileOffset,
-      byteLength: 1,
-    });
-    r.addField("general_profile_idc", generalProfile.fields[2].value, {
-      offset: generalProfileOffset,
-      byteLength: 1,
-    });
 
     r.fieldUint("general_profile_compatibility_flags", 4);
     r.fieldUint("general_level_idc", 1);
@@ -43,81 +29,39 @@ export default {
       },
     );
 
-    const minSpatialSegmentationOffset = r.getCurrentOffset();
-    const minSpatialSegmentation = bitsField(r.readUint(2), 16, [
+    r.fieldBits("min_spatial_segmentation_idc", 2, [
       { key: "reserved", bits: 4 },
       { key: "value", bits: 12 },
     ]);
-    r.addField("min_spatial_segmentation_idc", minSpatialSegmentation.value, {
-      offset: minSpatialSegmentationOffset,
-      byteLength: 2,
-    });
 
-    const parallelismTypeOffset = r.getCurrentOffset();
-    const parallelismType = bitsField(r.readUint(1), 8, [
+    r.fieldBits("parallelismType", 1, [
       { key: "reserved", bits: 6 },
       { key: "value", bits: 2 },
     ]);
-    r.addField("parallelismType", parallelismType.value, {
-      offset: parallelismTypeOffset,
-      byteLength: 1,
-    });
 
-    const chromaFormatOffset = r.getCurrentOffset();
-    const chromaFormat = bitsField(r.readUint(1), 8, [
+    r.fieldBits("chromaFormat", 1, [
       { key: "reserved", bits: 6 },
       { key: "value", bits: 2 },
     ]);
-    r.addField("chromaFormat", chromaFormat.value, {
-      offset: chromaFormatOffset,
-      byteLength: 1,
-    });
 
-    const bitDepthLumaOffset = r.getCurrentOffset();
-    const bitDepthLumaMinus8 = bitsField(r.readUint(1), 8, [
+    r.fieldBits("bitDepthLumaMinus8", 1, [
       { key: "reserved", bits: 5 },
       { key: "value", bits: 3 },
     ]);
-    r.addField("bitDepthLumaMinus8", bitDepthLumaMinus8.value, {
-      offset: bitDepthLumaOffset,
-      byteLength: 1,
-    });
 
-    const bitDepthChromaOffset = r.getCurrentOffset();
-    const bitDepthChromaMinus8 = bitsField(r.readUint(1), 8, [
+    r.fieldBits("bitDepthChromaMinus8", 1, [
       { key: "reserved", bits: 5 },
       { key: "value", bits: 3 },
     ]);
-    r.addField("bitDepthChromaMinus8", bitDepthChromaMinus8.value, {
-      offset: bitDepthChromaOffset,
-      byteLength: 1,
-    });
 
     r.fieldUint("avgFrameRate", 2);
 
-    const miscOffset = r.getCurrentOffset();
-    const misc = bitsField(r.readUint(1), 8, [
+    r.fieldBits("misc", 1, [
       { key: "constantFrameRate", bits: 2 },
       { key: "numTemporalLayers", bits: 3 },
       { key: "temporalIdNested", bits: 1 },
       { key: "lengthSizeMinusOne", bits: 2 },
     ]);
-    r.addField("constantFrameRate", misc.fields[0].value, {
-      offset: miscOffset,
-      byteLength: 1,
-    });
-    r.addField("numTemporalLayers", misc.fields[1].value, {
-      offset: miscOffset,
-      byteLength: 1,
-    });
-    r.addField("temporalIdNested", misc.fields[2].value !== 0, {
-      offset: miscOffset,
-      byteLength: 1,
-    });
-    r.addField("lengthSizeMinusOne", misc.fields[3].value, {
-      offset: miscOffset,
-      byteLength: 1,
-    });
 
     const numOfArrays = r.fieldUint("numOfArrays", 1);
     const arrays = [];
@@ -140,13 +84,18 @@ export default {
         });
       }
 
-      arrays.push({
-        array_completeness: arrayCompleteness.fields[0].value !== 0,
-        reserved: arrayCompleteness.fields[1].value !== 0,
-        NAL_unit_type: arrayCompleteness.fields[2].value,
-        numNalus,
-        nalus,
-      });
+      arrays.push(
+        structField([
+          parsedBoxValue(
+            "array_completeness",
+            arrayCompleteness.fields[0].value,
+          ),
+          parsedBoxValue("reserved", arrayCompleteness.fields[1].value),
+          parsedBoxValue("NAL_unit_type", arrayCompleteness.fields[2].value),
+          parsedBoxValue("numNalus", numNalus),
+          parsedBoxValue("nalus", nalus),
+        ]),
+      );
     }
     r.addField("arrays", arrays, {
       offset: arraysOffset,
