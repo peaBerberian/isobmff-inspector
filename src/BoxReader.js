@@ -37,6 +37,8 @@ export { BoxReader };
 export default class BoxReader {
   /** @type {Uint8Array} */
   #buffer;
+  /** @type {number} */
+  #baseOffset;
   /** @type {import("./types.js").ParsedBoxValue[]} */
   #values = [];
   /** @type {import("./types.js").ParsedBoxIssue[]} */
@@ -51,9 +53,11 @@ export default class BoxReader {
 
   /**
    * @param {Uint8Array} buffer
+   * @param {number=} baseOffset
    */
-  constructor(buffer) {
+  constructor(buffer, baseOffset = 0) {
     this.#buffer = buffer;
+    this.#baseOffset = baseOffset;
   }
 
   /**
@@ -105,7 +109,7 @@ export default class BoxReader {
    */
   fieldUint(key, nbBytes, meta) {
     const baseOffset = this.#currentOffset;
-    return this.addField(key, this.#bytesToInt(nbBytes), {
+    return this.#pushField(key, this.#bytesToInt(nbBytes), {
       ...this.#withSpan(baseOffset, meta),
     });
   }
@@ -123,7 +127,7 @@ export default class BoxReader {
    */
   fieldUint64(key, meta) {
     const baseOffset = this.#currentOffset;
-    return this.addField(key, this.#bytesToUint64BigInt(), {
+    return this.#pushField(key, this.#bytesToUint64BigInt(), {
       ...this.#withSpan(baseOffset, meta),
     });
   }
@@ -141,7 +145,7 @@ export default class BoxReader {
    */
   fieldInt64(key, meta) {
     const baseOffset = this.#currentOffset;
-    return this.addField(key, this.#bytesToInt64BigInt(), {
+    return this.#pushField(key, this.#bytesToInt64BigInt(), {
       ...this.#withSpan(baseOffset, meta),
     });
   }
@@ -155,7 +159,7 @@ export default class BoxReader {
    */
   fieldSignedInt(key, nbBytes, meta) {
     const baseOffset = this.#currentOffset;
-    return this.addField(
+    return this.#pushField(
       key,
       toSignedInt(this.#bytesToInt(nbBytes), nbBytes * 8),
       { ...this.#withSpan(baseOffset, meta) },
@@ -192,7 +196,7 @@ export default class BoxReader {
    */
   fieldNullTerminatedAscii(key, meta) {
     const baseOffset = this.#currentOffset;
-    return this.addField(key, this.#parseNullTerminatedAscii(), {
+    return this.#pushField(key, this.#parseNullTerminatedAscii(), {
       ...this.#withSpan(baseOffset, meta),
     });
   }
@@ -205,7 +209,7 @@ export default class BoxReader {
    */
   fieldNullTerminatedUtf8(key, meta) {
     const baseOffset = this.#currentOffset;
-    return this.addField(key, this.#parseNullTerminatedUtf8(), {
+    return this.#pushField(key, this.#parseNullTerminatedUtf8(), {
       ...this.#withSpan(baseOffset, meta),
     });
   }
@@ -224,7 +228,7 @@ export default class BoxReader {
    */
   fieldFourCc(key, meta) {
     const baseOffset = this.#currentOffset;
-    return this.addField(key, this.#readFourCc(), {
+    return this.#pushField(key, this.#readFourCc(), {
       ...this.#withSpan(baseOffset, meta),
     });
   }
@@ -246,7 +250,7 @@ export default class BoxReader {
       fractionalBits,
       format,
     );
-    this.addField(key, value, { ...this.#withSpan(baseOffset, meta) });
+    this.#pushField(key, value, { ...this.#withSpan(baseOffset, meta) });
     return value;
   }
 
@@ -268,7 +272,7 @@ export default class BoxReader {
       fractionalBits,
       format,
     );
-    this.addField(key, value, { ...this.#withSpan(baseOffset, meta) });
+    this.#pushField(key, value, { ...this.#withSpan(baseOffset, meta) });
     return value;
   }
 
@@ -284,7 +288,7 @@ export default class BoxReader {
     const raw =
       nbBytes === 8 ? this.#bytesToUint64BigInt() : this.#bytesToInt(nbBytes);
     const value = macDateField(raw);
-    this.addField(key, value, { ...this.#withSpan(baseOffset, meta) });
+    this.#pushField(key, value, { ...this.#withSpan(baseOffset, meta) });
     return value;
   }
 
@@ -299,7 +303,7 @@ export default class BoxReader {
   fieldBits(key, nbBytes, parts, meta) {
     const baseOffset = this.#currentOffset;
     const value = bitsField(this.#bytesToInt(nbBytes), nbBytes * 8, parts);
-    this.addField(key, value, { ...this.#withSpan(baseOffset, meta) });
+    this.#pushField(key, value, { ...this.#withSpan(baseOffset, meta) });
     return value.value;
   }
 
@@ -314,7 +318,7 @@ export default class BoxReader {
   fieldFlags(key, nbBytes, flags, meta) {
     const baseOffset = this.#currentOffset;
     const value = flagsField(this.#bytesToInt(nbBytes), nbBytes * 8, flags);
-    this.addField(key, value, { ...this.#withSpan(baseOffset, meta) });
+    this.#pushField(key, value, { ...this.#withSpan(baseOffset, meta) });
     return value.value;
   }
 
@@ -327,8 +331,13 @@ export default class BoxReader {
    * @returns {V}
    */
   addField(key, value, meta) {
-    this.#values.push(parsedBoxValue(key, value, meta));
-    return value;
+    return this.#pushField(
+      key,
+      value,
+      typeof meta === "string" || meta?.offset === undefined
+        ? meta
+        : { ...meta, offset: this.#baseOffset + meta.offset },
+    );
   }
 
   /**
@@ -460,9 +469,25 @@ export default class BoxReader {
       typeof meta === "string" ? { description: meta } : (meta ?? {});
     return {
       ...normalized,
-      offset: normalized.offset ?? baseOffset,
+      offset:
+        normalized.offset === undefined
+          ? this.#baseOffset + baseOffset
+          : this.#baseOffset + normalized.offset,
       byteLength: normalized.byteLength ?? this.#currentOffset - baseOffset,
     };
+  }
+
+  /**
+   * @template V
+   * @template {KeysForValue<T, V>} K
+   * @param {K} key
+   * @param {V} value
+   * @param {string | ParsedBoxFieldMetadata=} [meta]
+   * @returns {V}
+   */
+  #pushField(key, value, meta) {
+    this.#values.push(parsedBoxValue(key, value, meta));
+    return value;
   }
 
   /**

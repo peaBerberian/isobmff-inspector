@@ -94,7 +94,7 @@ export function parseBoxContent(
   let contentForChildren;
 
   if (typeof config.parser === "function") {
-    const parserReader = new BoxReader(content);
+    const parserReader = new BoxReader(content, contentOffset);
     /** @type {import("../types.js").BoxParserFields | undefined} */
     try {
       config.parser(parserReader);

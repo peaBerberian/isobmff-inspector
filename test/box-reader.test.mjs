@@ -36,14 +36,14 @@ test("box parsers can emit ordered fields through the reader", () => {
     );
     assert.equal(parsed[0].values[0].description, "first byte");
     assert.equal(parsed[0].values[0].value, 1);
-    assert.equal(parsed[0].values[0].offset, 0);
+    assert.equal(parsed[0].values[0].offset, 8);
     assert.equal(parsed[0].values[0].byteLength, 1);
     assert.equal(parsed[0].values[1].description, "derived value");
     assert.equal(parsed[0].values[1].value, 2);
     assert.equal(parsed[0].values[1].offset, undefined);
     assert.equal(parsed[0].values[1].byteLength, undefined);
     assert.equal(parsed[0].values[2].value, "0203");
-    assert.equal(parsed[0].values[2].offset, 1);
+    assert.equal(parsed[0].values[2].offset, 9);
     assert.equal(parsed[0].values[2].byteLength, 2);
   } finally {
     delete definitions.TST1;
@@ -124,7 +124,7 @@ test("read aliases consume bytes without emitting fields", () => {
     );
     assert.equal(parsed[0].values[0].description, "skipped 1");
     assert.equal(parsed[0].values[0].value, "0203");
-    assert.equal(parsed[0].values[0].offset, 1);
+    assert.equal(parsed[0].values[0].offset, 9);
     assert.equal(parsed[0].values[0].byteLength, 2);
   } finally {
     delete definitions.TST4;
